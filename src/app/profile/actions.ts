@@ -9,7 +9,10 @@ export async function getProfile() {
   try {
     const session = await getServerSession(authOptions);
     const userId = (session?.user as { id: string } | undefined)?.id;
-    if (!userId) return null;
+    if (!userId) {
+      console.log("getProfile: No userId found in session", { hasSession: !!session });
+      return null;
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
