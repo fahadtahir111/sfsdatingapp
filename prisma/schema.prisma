@@ -1,0 +1,370 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  
+  // Settings & Status
+  isSuspended   Boolean   @default(false)
+  lastActive    DateTime  @default(now())
+  roseBalance   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile       Profile?
+  
+  // Chat / Messages
+  messagesSent  Message[] @relation("SentMessages")
+  
+  // Swipes 
+  swipesGiven   Swipe[]   @relation("SwipesGiven")
+  swipesReceived Swipe[]  @relation("SwipesReceived")
+
+  // Matches
+  matches1      Match[]   @relation("User1Matches")
+  matches2      Match[]   @relation("User2Matches")
+
+  // Conversations (Many to Many handled manually in Prisma for simplicity or implicit mapping)
+  userConversations UserConversation[]
+
+  // Media
+  reels         Reel[]
+  stories       Story[]
+
+  // SaaS Features
+  subscriptions Subscription[]
+  roseTransactions RoseTransaction[]
+  eventRSVPs    EventRSVP[]
+  verification  Verification?
+  profileViews  ProfileView[] @relation("ViewedBy")
+  viewedMyProfile ProfileView[] @relation("TargetProfile")
+  prompts       PromptResponse[]
+  filterPref    FilterPreference?
+  
+  reelComments  ReelComment[]
+  reelLikes     ReelLike[]
+  
+  // Social Feed
+  posts         Post[]
+  postLikes     PostLike[]
+  postComments  PostComment[]
+
+  // Connections
+  sentRequests     FriendRequest[] @relation("SentRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedRequests")
+  friendships1     Friendship[]    @relation("Friendships1")
+  friendships2     Friendship[]    @relation("Friendships2")
+
+  // Referrals
+  referralCode     String?         @unique
+  referredById     String?
+  referredBy       User?           @relation("Referrals", fields: [referredById], references: [id])
+  referrals        User[]          @relation("Referrals")
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  bio       String?
+  photos    String   // JSON stringified array of URLs for simplicity in sqlite
+  gender    String?
+  interestedIn String?
+  birthDate DateTime?
+  locationString String?
+  
+  // SaaS Elite Features
+  age           Int?
+  occupation    String?
+  incognitoMode Boolean @default(false)
+  trustScore    Int     @default(50)
+  verificationStatus String @default("PENDING") // "PENDING", "VERIFIED", "REJECTED"
+  networkingGoals    String? // JSON stringified array of tags
+
+  // Notification Settings
+  pushEnabled    Boolean @default(true)
+  emailEnabled   Boolean @default(false)
+  matchesEnabled Boolean @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([gender, interestedIn])
+  @@index([userId])
+}
+
+model FilterPreference {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  minAge    Int      @default(18)
+  maxAge    Int      @default(50)
+  maxDistance Int    @default(50) // in miles
+  
+  mustHaveDegree Boolean @default(false)
+  noSmoking      Boolean @default(false)
+}
+
+model Swipe {
+  id          String   @id @default(cuid())
+  fromUserId  String   
+  toUserId    String   
+  action      String   // "LIKE", "PASS", "ROSE"
+  
+  fromUser    User     @relation("SwipesGiven", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser      User     @relation("SwipesReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@unique([fromUserId, toUserId])
+}
+
+model Match {
+  id        String   @id @default(cuid())
+  user1Id   String   
+  user2Id   String   
+
+  user1     User     @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2     User     @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([user1Id, user2Id])
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  
+  messages  Message[]
+  userLinks UserConversation[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserConversation {
+  userId         String
+  conversationId String
+  
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, conversationId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  content        String
+  mediaUrl       String?
+  
+  senderId       String   
+  sender         User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  conversationId String   
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  read           Boolean  @default(false)
+  messageType   String   @default("text") // "text", "audio", "image", "video_call", "audio_call"
+  callDuration  Int?     // duration in seconds if it was a call
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+model Story {
+  id        String   @id @default(cuid())
+  userId    String   
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaUrl  String
+  mediaType String   // "image" or "video"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Reel {
+  id        String   @id @default(cuid())
+  userId    String   
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoUrl  String
+  caption   String?
+  likesCount Int     @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  comments   ReelComment[]
+  likes      ReelLike[]
+}
+
+// ----------------------------------------------------
+// EXTENDED SAAS MODELS
+// ----------------------------------------------------
+
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String   
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier      String   // "Free", "Signature", "Elite"
+  stripeSubId String?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model RoseTransaction {
+  id        String   @id @default(cuid())
+  userId    String   
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int      // Positive if purchased, negative if spent
+  type      String   @default("PURCHASE") // "PURCHASE", "REFERRAL_BONUS", "GIFT"
+  createdAt DateTime @default(now())
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  location    String
+  date        DateTime
+  isEliteOnly Boolean  @default(true)
+  rsvps       EventRSVP[]
+  createdAt   DateTime @default(now())
+}
+
+model EventRSVP {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, eventId])
+}
+
+model Verification {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idUrl       String?
+  selfieUrl   String?
+  status      String  // "PENDING", "VERIFIED", "REJECTED"
+  createdAt   DateTime @default(now())
+}
+
+model ProfileView {
+  id          String   @id @default(cuid())
+  viewerId    String
+  targetId    String
+  viewer      User     @relation("ViewedBy", fields: [viewerId], references: [id], onDelete: Cascade)
+  target      User     @relation("TargetProfile", fields: [targetId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model PromptResponse {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promptText String
+  answer     String
+  createdAt DateTime @default(now())
+}
+
+model ReelComment {
+  id        String   @id @default(cuid())
+  userId    String
+  reelId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reel      Reel     @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model ReelLike {
+  id        String   @id @default(cuid())
+  userId    String
+  reelId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reel      Reel     @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, reelId])
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaUrl    String?
+  mediaType   String?  // "IMAGE", "VIDEO", "STATUS"
+  content     String?  // Text content or caption
+  likesCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  likes       PostLike[]
+  comments    PostComment[]
+
+  @@index([userId, createdAt])
+}
+
+model PostLike {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+}
+
+model PostComment {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+}
+
+model FriendRequest {
+  id          String   @id @default(cuid())
+  senderId    String
+  receiverId  String
+  status      String   // "PENDING", "ACCEPTED", "REJECTED"
+  createdAt   DateTime @default(now())
+  
+  senderUser    User     @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverUser  User     @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+}
+
+model Friendship {
+  id          String   @id @default(cuid())
+  user1Id     String
+  user2Id     String
+  createdAt   DateTime @default(now())
+  
+  user1       User     @relation("Friendships1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2       User     @relation("Friendships2", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  @@unique([user1Id, user2Id])
+}
+

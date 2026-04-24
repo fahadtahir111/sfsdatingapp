@@ -1,0 +1,127 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { FaCrown, FaHeart, FaComment, FaShare } from "react-icons/fa";
+import Link from "next/link";
+import Image from "next/image";
+import { formatRelativeTime } from "@/lib/utils/format";
+
+interface PostCardProps {
+  post: {
+    id: string;
+    type: string; // "POST" | "REEL"
+    content: string;
+    mediaUrl?: string | null;
+    mediaType?: string | null;
+    createdAt: string | Date;
+    user: {
+      id: string;
+      name: string | null;
+      image: string;
+      tier: string;
+    };
+    likesCount: number;
+    commentsCount: number;
+    isLiked: boolean;
+  };
+  onLike: (id: string, type: string) => void;
+  index?: number;
+}
+
+export default function PostCard({ post, onLike, index = 0 }: PostCardProps) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-stone-100"
+    >
+      <div className="p-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-stone-100 overflow-hidden border border-stone-100 relative">
+            <Image 
+              src={post.user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.user.name || 'User')}`} 
+              alt={post.user.name || "User"} 
+              fill
+              className="object-cover"
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Link href={`/profile/${post.user.id}`} className="hover:underline">
+                <p className="text-sm font-black text-stone-900">{post.user.name || "Anonymous"}</p>
+              </Link>
+              {post.user.tier === "Elite" && (
+                <FaCrown className="text-[10px] text-yellow-500" />
+              )}
+            </div>
+            <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter">
+              {formatRelativeTime(post.createdAt)}
+            </p>
+          </div>
+        </div>
+        <button className="text-stone-300">•••</button>
+      </div>
+
+      <div className="px-6 pb-4">
+        <p className="text-sm text-stone-800 leading-relaxed font-medium whitespace-pre-wrap">
+          {post.content}
+        </p>
+      </div>
+
+      {post.mediaUrl && (
+        <div className="px-4 pb-4">
+          {post.mediaType === "VIDEO" ? (
+            <video 
+              src={post.mediaUrl} 
+              className="w-full h-80 object-cover rounded-[2rem]" 
+              controls
+              playsInline
+            />
+          ) : (
+            <div className="relative w-full h-80 rounded-[2rem] overflow-hidden">
+              <Image 
+                src={post.mediaUrl} 
+                alt="Post content" 
+                fill
+                className="object-cover"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="px-6 py-4 flex items-center gap-6 border-t border-stone-50">
+        <button 
+          onClick={() => onLike(post.id, post.type)}
+          className={`flex items-center gap-2 text-xs font-black transition-colors ${post.isLiked ? 'text-primary' : 'text-stone-400 hover:text-stone-900'}`}
+        >
+          <FaHeart className={post.isLiked ? "scale-110" : ""} />
+          {post.likesCount}
+        </button>
+        <button className="flex items-center gap-2 text-xs font-black text-stone-400 hover:text-stone-900 transition-colors">
+          <FaComment />
+          {post.commentsCount}
+        </button>
+        <button 
+          onClick={() => {
+            const shareData = {
+              title: 'SFS Elite Post',
+              text: post.content,
+              url: window.location.origin + '/feed/' + post.id,
+            };
+            if (navigator.share) {
+              navigator.share(shareData).catch(console.error);
+            } else {
+              navigator.clipboard.writeText(shareData.url);
+              alert("Link copied to clipboard!");
+            }
+          }}
+          className="flex items-center gap-2 text-xs font-black text-stone-400 hover:text-stone-900 transition-colors ml-auto"
+        >
+          <FaShare />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
