@@ -1,46 +1,26 @@
-"use client";
-
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import SettingsClient from "./SettingsClient";
 import Link from "next/link";
-import { FaUser, FaBell, FaCreditCard, FaLock, FaSignOutAlt, FaChevronRight } from "react-icons/fa";
+import { FaCog } from "react-icons/fa";
 
-export default function SettingsHub() {
-  const settingsLinks = [
-    { name: "Account Details", href: "/settings/account", icon: <FaUser /> },
-    { name: "Notifications", href: "/settings/notifications", icon: <FaBell /> },
-    { name: "Billing & Subscriptions", href: "/settings/billing", icon: <FaCreditCard /> },
-    { name: "Privacy & Ghost Mode", href: "/settings/privacy", icon: <FaLock /> },
-  ];
+export default async function SettingsHub() {
+  const session = await getServerSession(authOptions);
 
-  return (
-    <div className="min-h-screen bg-secondary/20 pt-8 px-4 pb-24 flex flex-col">
-      <h1 className="text-3xl font-black text-black tracking-tight mb-8 ml-2">Settings</h1>
-      
-      <div className="flex-1 space-y-3">
-        {settingsLinks.map((link) => (
-          <Link href={link.href} key={link.name}>
-            <div className="bg-white p-5 rounded-2xl flex items-center justify-between border border-border shadow-sm active:scale-95 transition-all mb-3">
-              <div className="flex items-center gap-4 text-foreground font-bold">
-                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-primary">
-                  {link.icon}
-                </div>
-                {link.name}
-              </div>
-              <FaChevronRight className="text-muted-foreground text-sm" />
-            </div>
-          </Link>
-        ))}
-
-        <div className="mt-8">
-          <Link href="/api/auth/signout">
-            <div className="bg-white p-5 rounded-2xl flex items-center gap-4 text-red-500 font-bold border border-red-500/20 shadow-sm active:scale-95 transition-all">
-              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-                <FaSignOutAlt />
-              </div>
-              Sign Out
-            </div>
-          </Link>
+  if (!session) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-6 p-8">
+        <FaCog className="text-6xl text-stone-200 animate-spin-slow" />
+        <div className="text-center">
+          <h2 className="text-2xl font-black text-stone-900 mb-2">Member Settings</h2>
+          <p className="text-stone-500 text-sm max-w-xs mx-auto">Sign in to manage your elite profile and account preferences.</p>
         </div>
+        <Link href="/auth/login" className="px-10 py-4 bg-stone-900 text-white font-black rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-xs">
+          Sign In
+        </Link>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return <SettingsClient />;
 }
