@@ -24,8 +24,7 @@ import {
 } from "react-icons/fa";
 import EmojiPicker from "@/app/components/EmojiPicker";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface ProfileData {
+export interface ProfileData {
   id: string;
   name: string | null;
   email: string | null;
@@ -42,14 +41,14 @@ interface ProfileData {
   networkingGoals: string[];
 }
 
-interface FriendData {
+export interface FriendData {
   id: string;
   friendId: string;
   name: string | null;
   image: string;
 }
 
-interface PendingRequestData {
+export interface PendingRequestData {
   id: string;
   senderUser: {
     id: string;
@@ -465,7 +464,7 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
   const [showPostModal, setShowPostModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"posts" | "reels" | "friends">("posts");
   const [pendingRequests, setPendingRequests] = useState<PendingRequestData[]>(initialPendingRequests);
-  const [friends, setFriends] = useState<FriendData[]>(initialFriends);
+  const [friends] = useState<FriendData[]>(initialFriends);
 
   const fetchProfile = useCallback(async () => {
     const { getProfile } = await import("./actions");

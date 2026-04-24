@@ -1,6 +1,6 @@
 import { getProfile } from "./actions";
 import { getPendingRequests, getFriends } from "../friends/actions";
-import ProfileClient from "./ProfileClient";
+import ProfileClient, { ProfileData, PendingRequestData, FriendData } from "./ProfileClient";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -32,7 +32,7 @@ export default async function ProfilePage() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-4 text-center px-6">
         <div className="text-6xl">👤</div>
         <h2 className="text-xl font-black text-stone-800">Profile Not Found</h2>
-        <p className="text-stone-500 max-w-xs">We couldn't retrieve your profile data. Please try logging out and back in.</p>
+        <p className="text-stone-500 max-w-xs">We couldn&apos;t retrieve your profile data. Please try logging out and back in.</p>
         <Link href="/auth/login" className="px-8 py-4 bg-stone-900 text-white font-black rounded-[2rem] shadow-xl active:scale-95 transition-all">
           Return to Login
         </Link>
@@ -42,9 +42,9 @@ export default async function ProfilePage() {
 
   return (
     <ProfileClient 
-      initialProfile={profile as any} 
-      initialPendingRequests={pendingRequests as any} 
-      initialFriends={friends as any} 
+      initialProfile={profile as ProfileData} 
+      initialPendingRequests={pendingRequests as PendingRequestData[]} 
+      initialFriends={friends as FriendData[]} 
     />
   );
 }
