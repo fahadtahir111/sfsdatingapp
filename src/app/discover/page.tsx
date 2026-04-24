@@ -5,17 +5,14 @@ import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-mo
 import { FaHeart, FaTimes, FaCheckCircle, FaBriefcase, FaSlidersH } from "react-icons/fa";
 import Image from "next/image";
 import { fetchDiscoverFeed, submitSwipe } from "./actions";
-import { useSession } from "next-auth/react";
+
 import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function DiscoverPage() {
-  const { data: session } = useSession();
   const [cards, setCards] = useState<Array<{ id: string; name: string; image: string; age: number; role: string; trustScore: number; isVerified: boolean; networkingGoals: string[] }>>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({ minAge: 18, maxAge: 50 });
-  
-  const userId = (session?.user as { id: string } | undefined)?.id;
 
   const loadMatches = useCallback(async () => {
     try {
