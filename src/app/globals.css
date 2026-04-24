@@ -1,4 +1,5 @@
-/* @import "tailwindcss"; */
+@import "tailwindcss" source(none);
+@source "./src";
 @layer base {
   :root {
     --background: #ffffff;
