@@ -63,8 +63,23 @@ body {
     @apply bg-black/70 backdrop-blur-xl border border-white/10;
   }
 
+  .bg-luxury-mesh {
+    background-color: #0a0a0a;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(250, 204, 21, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(250, 204, 21, 0.03) 0px, transparent 50%);
+  }
+
+  .text-gold {
+    @apply bg-gradient-to-b from-[#fef08a] via-[#facc15] to-[#a16207] bg-clip-text text-transparent;
+  }
+
+  .border-gold {
+    @apply border border-[#facc15]/20 hover:border-[#facc15]/40 transition-colors;
+  }
+
   .premium-shadow {
-    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.25);
   }
 
   .text-glow {
