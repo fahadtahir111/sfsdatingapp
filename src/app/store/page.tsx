@@ -1,13 +1,13 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 import StoreClient from "./StoreClient";
 import Link from "next/link";
 import { FaCrown } from "react-icons/fa";
 
 export default async function StorePage() {
-  const session = await getServerSession(authOptions);
+  const user = await getCurrentUser();
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-8 p-8">
         <FaCrown className="text-6xl text-stone-200 animate-pulse" />

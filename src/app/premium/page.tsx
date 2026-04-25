@@ -1,13 +1,13 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 import PremiumClient from "./PremiumClient";
 import Link from "next/link";
 import { FaCrown } from "react-icons/fa";
 
 export default async function PremiumPage() {
-  const session = await getServerSession(authOptions);
+  const user = await getCurrentUser();
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white gap-8 p-8">
         <FaCrown className="text-6xl text-primary animate-pulse" />

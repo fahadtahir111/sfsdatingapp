@@ -1,8 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 
 /**
  * Fetch referral data for the current user.
@@ -10,21 +10,21 @@ import { authOptions } from "@/lib/auth";
  */
 export async function getReferralData() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
-    let user = await prisma.user.findUnique({
+    let userData = await prisma.user.findUnique({
       where: { id: userId },
       select: { referralCode: true, id: true, name: true }
     });
 
-    if (!user) throw new Error("User not found");
+    if (!userData) throw new Error("User not found");
 
     // Lazy generate referral code if missing
-    if (!user.referralCode) {
-      const newCode = `SFS-${user.name?.split(' ')[0].toUpperCase() || 'ELITE'}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-      user = await prisma.user.update({
+    if (!userData.referralCode) {
+      const newCode = `SFS-${userData.name?.split(' ')[0].toUpperCase() || 'ELITE'}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      userData = await prisma.user.update({
         where: { id: userId },
         data: { referralCode: newCode },
         select: { referralCode: true, id: true, name: true }
@@ -62,7 +62,7 @@ export async function getReferralData() {
     const totalEarned = stats.reduce((acc, curr) => acc + curr.reward, 0);
 
     return {
-      referralCode: user.referralCode,
+      referralCode: userData.referralCode,
       referrals: stats,
       totalEarned,
       success: true

@@ -1,8 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 
 /**
  * Fetch all conversations for the current user.
@@ -10,8 +9,8 @@ import { authOptions } from "@/lib/auth";
  */
 export async function getConversations() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) return [];
 
     const userConvs = await prisma.userConversation.findMany({
@@ -80,8 +79,8 @@ export async function getConversations() {
  */
 export async function getMessages(conversationId: string) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     // SECURITY: Ensure the user is a member of this conversation
@@ -117,8 +116,8 @@ export async function getMessages(conversationId: string) {
  */
 export async function sendMessage(conversationId: string, content: string, type: string = "text") {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     // SECURITY: Ensure the user is a member of this conversation
@@ -154,8 +153,8 @@ export async function sendMessage(conversationId: string, content: string, type:
  */
 export async function getConversation(conversationId: string) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     const conv = await prisma.conversation.findUnique({
@@ -212,8 +211,8 @@ function formatRelativeTime(date: Date) {
  */
 export async function getOrCreateConversation(otherUserId: string) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     // 1. Find existing conversation with both users

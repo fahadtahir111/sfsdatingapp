@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaCamera } from "react-icons/fa";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/app/providers/AuthProvider";
 import Image from "next/image";
 
 interface StoryGroup {
@@ -25,7 +25,7 @@ interface StoryTrayProps {
 }
 
 export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [selectedGroup, setSelectedGroup] = useState<StoryGroup | null>(null);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
 
@@ -70,7 +70,7 @@ export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
           >
             <div className="w-full h-full rounded-full bg-stone-100 overflow-hidden relative">
               <img 
-                src={session?.user?.image || `https://ui-avatars.com/api/?name=${session?.user?.name || 'Me'}`} 
+                src={user?.image || `https://ui-avatars.com/api/?name=${user?.name || 'Me'}`} 
                 alt="Me" 
                 className="w-full h-full object-cover opacity-60"
               />

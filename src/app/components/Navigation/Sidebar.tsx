@@ -6,11 +6,12 @@ import { usePathname } from "next/navigation";
 import { FaCompass, FaCommentDots, FaUser, FaVideo, FaCrown, FaSignOutAlt } from "react-icons/fa";
 import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getPendingRequestsCount } from "@/app/friends/actions";
-import { signOut } from "next-auth/react";
+import { useAuth } from "@/app/providers/AuthProvider";
 import CreateReelCTA from "../Feed/CreateReelCTA";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const navItems = [
     { name: "Society Feed", href: "/feed", icon: FaCompass },
@@ -60,7 +61,7 @@ export default function Sidebar() {
       <div className="mt-auto space-y-4">
         <CreateReelCTA variant="sidebar" />
         <button 
-          onClick={() => signOut()}
+          onClick={() => logout()}
           className="flex items-center gap-4 px-4 py-3 w-full rounded-2xl text-stone-400 hover:bg-stone-50 hover:text-stone-900 transition-all font-bold text-sm"
         >
           <FaSignOutAlt />

@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 
 const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
 
 export async function POST(request: Request) {
   try {
     // Auth guard
-    const session = await getServerSession(authOptions);
-    if (!session) {
+    const user = await getCurrentUser();
+    if (!user) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 

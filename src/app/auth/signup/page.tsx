@@ -35,7 +35,8 @@ function SignupContent() {
       });
 
       if (res.ok) {
-        router.push("/auth/login?registered=true");
+        router.push("/discover");
+        router.refresh();
       } else {
         const { message } = await res.json();
         setError(message || "An error occurred during registration.");

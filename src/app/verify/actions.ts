@@ -1,8 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -12,8 +11,8 @@ import { revalidatePath } from "next/cache";
  */
 export async function submitVerification() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     // 1. Update Profile Status
@@ -42,8 +41,8 @@ export async function submitVerification() {
  * Instant verification for development/demo purposes.
  */
 export async function simulateVerifyUser() {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as { id: string } | undefined)?.id;
+  const user = await getCurrentUser();
+  const userId = user?.id;
   if (!userId) return { success: false };
 
   await prisma.profile.update({

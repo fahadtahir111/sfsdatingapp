@@ -1,14 +1,14 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function getStories() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) return [];
 
     // Fetch friends first to see stories only from friends
@@ -74,8 +74,8 @@ export async function getStories() {
 
 export async function createStory(mediaUrl: string, mediaType: "IMAGE" | "VIDEO") {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now

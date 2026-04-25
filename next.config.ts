@@ -15,10 +15,14 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "ui-avatars.com",
-        port: "",
-        pathname: "/api/**",
+      },
+      {
+        protocol: "https",
+        hostname: "avatar.iran.liara.run",
       },
     ],
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { FaLock, FaChevronRight } from "react-icons/fa";
@@ -12,6 +11,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/discover";
 
@@ -21,17 +21,19 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
-      // Use native redirection for maximum reliability in production.
-      // NextAuth will handle the callbackUrl and session propagation.
-      const res = await signIn("credentials", {
-        redirect: true,
-        email,
-        password,
-        callbackUrl,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (res?.error) {
-        setError("Invalid access credentials.");
+      const data = await res.json();
+
+      if (res.ok) {
+        router.push(callbackUrl);
+        router.refresh();
+      } else {
+        setError(data.message || "Invalid access credentials.");
         setIsLoading(false);
       }
     } catch (error) {

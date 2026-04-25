@@ -1,8 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function fetchDiscoverFeed(filters?: {
   minAge?: number;
@@ -10,8 +9,8 @@ export async function fetchDiscoverFeed(filters?: {
   networkingGoals?: string[];
 }) {
   try {
-    const session = await getServerSession(authOptions);
-    const currentUserId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const currentUserId = user?.id;
 
     if (!currentUserId) return [];
 
@@ -97,8 +96,8 @@ export async function fetchDiscoverFeed(filters?: {
 
 export async function submitSwipe(toUserId: string, action: "LIKE" | "PASS") {
   try {
-    const session = await getServerSession(authOptions);
-    const fromUserId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const fromUserId = user?.id;
 
     if (!fromUserId) {
       throw new Error("Unauthorized: Please log in to swipe.");

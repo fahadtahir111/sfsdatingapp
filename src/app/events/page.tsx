@@ -1,14 +1,14 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 import { getEvents } from "./actions";
 import EventsClient from "./EventsClient";
 import Link from "next/link";
 import { FaCalendarAlt } from "react-icons/fa";
 
 export default async function EventsPage() {
-  const session = await getServerSession(authOptions);
+  const user = await getCurrentUser();
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8f7f5] gap-8 p-8">
         <FaCalendarAlt className="text-6xl text-stone-200 animate-pulse" />

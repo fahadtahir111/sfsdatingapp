@@ -1,14 +1,14 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 // revalidatePath removed
 
 export async function fetchFeedPosts() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) return [];
 
     // 1. Get list of friend IDs
@@ -90,29 +90,29 @@ export async function fetchFeedPosts() {
   }
 }
 
-export async function getCurrentUser() {
+export async function getFeedUser() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) return null;
 
-    const user = await prisma.user.findUnique({
+    const dbUser = await prisma.user.findUnique({
       where: { id: userId },
       include: { profile: true }
     });
 
-    if (!user) return null;
+    if (!dbUser) return null;
 
     let image = null;
     try {
-      const photos = JSON.parse(user.profile?.photos || "[]");
+      const photos = JSON.parse(dbUser.profile?.photos || "[]");
       image = photos[0];
     } catch {}
 
     return {
-      id: user.id,
-      name: user.name,
-      image: image || `https://ui-avatars.com/api/?name=${user.name}`
+      id: dbUser.id,
+      name: dbUser.name,
+      image: image || `https://ui-avatars.com/api/?name=${dbUser.name}`
     };
   } catch {
     return null;

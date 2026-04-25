@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/app/providers/AuthProvider";
 import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getConversations } from "@/app/chat/actions";
 import { getPendingRequestsCount } from "@/app/friends/actions";
@@ -28,7 +28,9 @@ interface ConversationSummary {
 }
 
 export default function GlobalSignaling() {
-  const { status } = useSession();
+  const { user, loading } = useAuth();
+  const isAuthenticated = !!user && !loading;
+
   const [activeCall, setActiveCall] = useState<ConversationSummary | null>(null);
   const [newMatch, setNewMatch] = useState<ConversationSummary | null>(null);
   const [newRequest, setNewRequest] = useState<boolean>(false);
@@ -37,16 +39,16 @@ export default function GlobalSignaling() {
   const { data: conversations } = useRealTime(
     getConversations,
     5000,
-    [status],
-    status === "authenticated"
+    [user, loading],
+    isAuthenticated
   );
 
   // Poll for friend requests count
   const { data: requestCount } = useRealTime(
     getPendingRequestsCount,
     8000,
-    [status],
-    status === "authenticated"
+    [user, loading],
+    isAuthenticated
   );
 
   const [prevCount, setPrevCount] = useState(0);

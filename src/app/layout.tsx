@@ -4,7 +4,7 @@ import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 config.autoAddCss = false
 import "./globals.css";
-import NextAuthProvider from "./providers/NextAuthProvider";
+import AuthProvider from "./providers/AuthProvider";
 import BottomNav from "./components/Navigation/BottomNav";
 import GlobalSignaling from "./components/GlobalSignaling";
 
@@ -44,7 +44,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className="antialiased bg-[#f8f7f5] text-stone-900 font-sans min-h-screen"
       >
-        <NextAuthProvider>
+        <AuthProvider>
           <GlobalSignaling />
           <div className="flex flex-col md:flex-row min-h-screen bg-[#f8f7f5] overflow-x-hidden">
             <Sidebar />
@@ -57,7 +57,7 @@ export default function RootLayout({
           <div className="md:hidden">
             <BottomNav />
           </div>
-        </NextAuthProvider>
+        </AuthProvider>
       </body>
     </html>
   );

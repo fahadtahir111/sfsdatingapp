@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { FaCamera, FaTimes, FaSmile } from "react-icons/fa";
-import { fetchFeedPosts, getCurrentUser } from "./actions";
+import { fetchFeedPosts, getFeedUser } from "./actions";
 import { getStories, createStory } from "./storyActions";
 import { toggleLike, createSocialContent } from "@/lib/actions/social";
 import StoryTray from "../components/Feed/StoryTray";
@@ -60,7 +60,7 @@ export default function FeedPage() {
   }, []);
 
   const fetchCurrentUser = async () => {
-    const user = await getCurrentUser();
+    const user = await getFeedUser();
     setCurrentUser(user);
   };
 

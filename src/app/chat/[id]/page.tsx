@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { FaChevronLeft, FaVideo, FaPhone, FaPaperPlane, FaPlay, FaMicrophone, FaStop, FaImage, FaSmile } from "react-icons/fa";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/app/providers/AuthProvider";
 
 import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getMessages, sendMessage, getConversation } from "@/app/chat/actions";
@@ -21,7 +21,8 @@ interface ConversationData {
 
 export default function ChatRoomPage() {
   const { id: conversationId } = useParams() as { id: string };
-  const { status, data: session } = useSession();
+  const { user, loading } = useAuth();
+  const isAuthenticated = !!user && !loading;
   const [inputText, setInputText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [callActive, setCallActive] = useState<"video" | "audio" | null>(null);
@@ -30,7 +31,7 @@ export default function ChatRoomPage() {
 
   // Fetch conversation details once
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (!isAuthenticated) return;
     async function loadConv() {
       const data = await getConversation(conversationId);
       if (data) setConversation(data as ConversationData);
@@ -42,15 +43,15 @@ export default function ChatRoomPage() {
   const { data: messages = [], setData: setMessages } = useRealTime(
     () => getMessages(conversationId),
     2000,
-    [conversationId, status],
-    status === "authenticated"
+    [conversationId, user, loading],
+    isAuthenticated
   );
 
   // Check for incoming call signals in the message stream
   useEffect(() => {
     if (messages && messages.length > 0) {
       const latestMsg = messages[messages.length - 1];
-      const isIncomingCall = latestMsg.senderId !== (session?.user as { id: string } | undefined)?.id && 
+      const isIncomingCall = latestMsg.senderId !== user?.id && 
                             (latestMsg.messageType === "video_call" || latestMsg.messageType === "audio_call");
       
       // If there's a very recent call request, show the overlay
@@ -59,7 +60,7 @@ export default function ChatRoomPage() {
         setCallActive(latestMsg.messageType === "video_call" ? "video" : "audio");
       }
     }
-  }, [messages, session, callActive]);
+  }, [messages, user, callActive]);
 
   const handleSend = async () => {
     if (!inputText.trim()) return;
@@ -171,7 +172,7 @@ export default function ChatRoomPage() {
         
         <AnimatePresence>
           {(messages || []).map((msg) => {
-            const isMe = msg.senderId === (session?.user as { id: string } | undefined)?.id;
+            const isMe = msg.senderId === user?.id;
             const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return (
               <motion.div 

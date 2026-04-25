@@ -1,8 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -10,8 +10,8 @@ import { revalidatePath } from "next/cache";
  */
 export async function createReel(videoUrl: string, caption: string) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
 
     if (!userId) {
       throw new Error("Unauthorized: You must be logged in to post reels.");

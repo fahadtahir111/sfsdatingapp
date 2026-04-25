@@ -1,8 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -10,8 +10,8 @@ import { revalidatePath } from "next/cache";
  * Includes RSVP status for the current user.
  */
 export async function getEvents() {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as { id: string } | undefined)?.id;
+  const user = await getCurrentUser();
+  const userId = user?.id;
 
   const events = await prisma.event.findMany({
     where: {
@@ -47,8 +47,8 @@ export async function getEvents() {
  */
 export async function rsvpToEvent(eventId: string) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     // 1. Check event and requirements
@@ -103,8 +103,8 @@ export async function rsvpToEvent(eventId: string) {
  */
 export async function getEventAttendees(eventId: string) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) return [];
 
     const rsvps = await prisma.eventRSVP.findMany({

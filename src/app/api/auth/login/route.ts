@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { hash } from 'bcryptjs';
+import { compare } from 'bcryptjs';
 import { prisma } from '../../../../lib/prisma';
 import { signJWT, setAuthCookie } from '../../../../lib/auth';
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name, referralCode } = await req.json();
+    const { email, password } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -14,36 +14,26 @@ export async function POST(req: Request) {
       );
     }
 
-    const exist = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         email: email,
       },
     });
 
-    if (exist) {
+    if (!user || !user.password) {
       return NextResponse.json(
-        { message: 'User already exists' },
-        { status: 400 }
+        { message: 'Invalid credentials' },
+        { status: 401 }
       );
     }
 
-    const hashedPassword = await hash(password, 10);
+    const isPasswordValid = await compare(password, user.password);
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-      },
-    });
-
-    if (referralCode) {
-      try {
-        const { linkReferral } = await import("../../../referrals/actions");
-        await linkReferral(user.id, referralCode);
-      } catch (err) {
-        console.error("Failed to link referral:", err);
-      }
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { message: 'Invalid credentials' },
+        { status: 401 }
+      );
     }
 
     const token = await signJWT({
@@ -55,7 +45,7 @@ export async function POST(req: Request) {
     await setAuthCookie(token);
 
     return NextResponse.json({
-      message: 'User created successfully',
+      message: 'Logged in successfully',
       user: {
         id: user.id,
         email: user.email,
@@ -64,7 +54,7 @@ export async function POST(req: Request) {
       token,
     });
   } catch (error) {
-    console.error(error);
+    console.error('Login error:', error);
     return NextResponse.json(
       { message: 'Something went wrong' },
       { status: 500 }

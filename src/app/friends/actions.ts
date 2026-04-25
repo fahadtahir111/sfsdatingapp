@@ -1,8 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -10,8 +10,8 @@ import { revalidatePath } from "next/cache";
  */
 export async function sendFriendRequest(receiverId: string) {
   try {
-    const session = await getServerSession(authOptions);
-    const senderId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const senderId = user?.id;
     if (!senderId) return { success: false, error: "Unauthorized" };
     if (senderId === receiverId) return { success: false, error: "Cannot add yourself" };
 
@@ -53,8 +53,8 @@ export async function sendFriendRequest(receiverId: string) {
  */
 export async function acceptFriendRequest(requestId: string) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const request = await prisma.friendRequest.findUnique({
@@ -89,8 +89,8 @@ export async function acceptFriendRequest(requestId: string) {
  */
 export async function rejectFriendRequest(requestId: string) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) return { success: false, error: "Unauthorized" };
 
     await prisma.friendRequest.update({
@@ -110,8 +110,8 @@ export async function rejectFriendRequest(requestId: string) {
  */
 export async function getPendingRequests() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) return [];
 
     return await prisma.friendRequest.findMany({
@@ -133,8 +133,8 @@ export async function getPendingRequests() {
  */
 export async function getPendingRequestsCount() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) return 0;
 
     return await prisma.friendRequest.count({
@@ -151,8 +151,8 @@ export async function getPendingRequestsCount() {
  */
 export async function getFriends() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) return [];
 
     const friendships = await prisma.friendship.findMany({

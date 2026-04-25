@@ -1,13 +1,13 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 import SettingsClient from "./SettingsClient";
 import Link from "next/link";
 import { FaCog } from "react-icons/fa";
 
 export default async function SettingsHub() {
-  const session = await getServerSession(authOptions);
+  const user = await getCurrentUser();
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-6 p-8">
         <FaCog className="text-6xl text-stone-200 animate-spin-slow" />

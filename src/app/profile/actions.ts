@@ -1,20 +1,19 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function getProfile() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) {
-      console.log("getProfile: No userId found in session", { hasSession: !!session });
+      console.log("getProfile: No userId found");
       return null;
     }
 
-    const user = await prisma.user.findUnique({
+    const dbUser = await prisma.user.findUnique({
       where: { id: userId },
       include: {
         profile: true,
@@ -38,11 +37,11 @@ export async function getProfile() {
       },
     });
 
-    if (!user) return null;
+    if (!dbUser) return null;
 
     let photos: string[] = [];
     try {
-      photos = JSON.parse(user.profile?.photos || "[]");
+      photos = JSON.parse(dbUser.profile?.photos || "[]");
     } catch { }
 
     const subscription = await prisma.subscription.findFirst({
@@ -53,32 +52,32 @@ export async function getProfile() {
     const tier = subscription?.tier || "Free";
 
     return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      age: user.profile?.age || null,
-      occupation: user.profile?.occupation || null,
-      bio: user.profile?.bio || "",
+      id: dbUser.id,
+      name: dbUser.name,
+      email: dbUser.email,
+      age: dbUser.profile?.age || null,
+      occupation: dbUser.profile?.occupation || null,
+      bio: dbUser.profile?.bio || "",
       photos:
         photos.length > 0
           ? photos
           : [
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "U")}&background=random&size=400`,
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(dbUser.name || "U")}&background=random&size=400`,
             ],
       matchesCount:
-        ((user._count as unknown) as { matches1: number; matches2: number }).matches1 + ((user._count as unknown) as { matches1: number; matches2: number }).matches2,
-      reelsCount: user._count.reels,
-      storiesCount: user._count.stories,
-      reels: user.reels,
-      stories: user.stories,
+        ((dbUser._count as unknown) as { matches1: number; matches2: number }).matches1 + ((dbUser._count as unknown) as { matches1: number; matches2: number }).matches2,
+      reelsCount: dbUser._count.reels,
+      storiesCount: dbUser._count.stories,
+      reels: dbUser.reels,
+      stories: dbUser.stories,
       membership: tier === "Elite" ? "Elite Concierge" : tier === "Signature" ? "Signature Member" : "Apply for Elite",
       tier,
-      verificationStatus: user.profile?.verificationStatus || "PENDING",
-      incognito: user.profile?.incognitoMode || false,
-      pushEnabled: user.profile?.pushEnabled ?? true,
-      emailEnabled: user.profile?.emailEnabled ?? false,
-      matchesEnabled: user.profile?.matchesEnabled ?? true,
-      networkingGoals: user.profile?.networkingGoals ? JSON.parse(user.profile.networkingGoals) : [],
+      verificationStatus: dbUser.profile?.verificationStatus || "PENDING",
+      incognito: dbUser.profile?.incognitoMode || false,
+      pushEnabled: dbUser.profile?.pushEnabled ?? true,
+      emailEnabled: dbUser.profile?.emailEnabled ?? false,
+      matchesEnabled: dbUser.profile?.matchesEnabled ?? true,
+      networkingGoals: dbUser.profile?.networkingGoals ? JSON.parse(dbUser.profile.networkingGoals) : [],
     };
   } catch (error) {
     console.error("Error fetching profile:", error);
@@ -98,8 +97,8 @@ export async function updateProfile(data: {
   networkingGoals?: string[];
 }) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     const updateData: Record<string, string | number | null> = {};
@@ -143,6 +142,8 @@ export async function updateProfile(data: {
     }
 
     revalidatePath("/profile");
+    revalidatePath("/discover");
+    revalidatePath("/feed");
     return { success: true };
   } catch (error) {
     console.error("Error updating profile:", error);
@@ -159,8 +160,8 @@ export async function updateAccount(data: {
   occupation?: string;
 }) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     await prisma.user.update({
@@ -183,6 +184,9 @@ export async function updateAccount(data: {
       },
     });
 
+    revalidatePath("/profile");
+    revalidatePath("/discover");
+    revalidatePath("/feed");
     return { success: true };
   } catch (error) {
     console.error("Error updating account:", error);
@@ -195,8 +199,8 @@ export async function updateAccount(data: {
  */
 export async function updatePrivacy(incognito: boolean) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     await prisma.profile.update({
@@ -220,8 +224,8 @@ export async function updateNotifications(data: {
   matchesEnabled?: boolean;
 }) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     await prisma.profile.update({

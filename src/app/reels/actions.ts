@@ -1,8 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 
 import { formatRelativeTime } from "@/lib/utils/format";
 
@@ -11,8 +11,8 @@ import { formatRelativeTime } from "@/lib/utils/format";
  */
 export async function getReels() {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     // We don't strictly require a session to VIEW reels, but let's check for Likes
     
     const reels = await prisma.reel.findMany({
@@ -56,8 +56,8 @@ export async function getReels() {
  */
 export async function postReelComment(reelId: string, text: string) {
   try {
-    const session = await getServerSession(authOptions);
-    const userId = (session?.user as { id: string } | undefined)?.id;
+    const user = await getCurrentUser();
+    const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
 
     const comment = await prisma.reelComment.create({

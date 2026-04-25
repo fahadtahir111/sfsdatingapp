@@ -3,38 +3,63 @@
 import { motion } from "framer-motion";
 import { FaUserCircle, FaVideo, FaCommentDots, FaPlay } from "react-icons/fa";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+interface BgElement {
+  initial: { x: number; y: number; scale: number };
+  animate: { x: number[]; y: number[] };
+  duration: number;
+  style: { width: string; height: string; left: string; top: string };
+}
 
 export default function Main() {
+  const [isMounted, setIsMounted] = useState(false);
+  const [bgElements, setBgElements] = useState<BgElement[]>([]);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const count = window.innerWidth < 640 ? 3 : 5;
+    const elements = [...Array(count)].map(() => ({
+      initial: {
+        x: Math.random() * 100 - 50,
+        y: Math.random() * 100 - 50,
+        scale: Math.random() * 0.5 + 0.5
+      },
+      animate: {
+        x: [0, (Math.random() - 0.5) * 100],
+        y: [0, (Math.random() - 0.5) * 100],
+      },
+      duration: Math.random() * 20 + 20,
+      style: {
+        width: `${Math.random() * 400 + 100}px`,
+        height: `${Math.random() * 400 + 100}px`,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`
+      }
+    }));
+    setBgElements(elements);
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-white to-secondary overflow-hidden">
-      {/* Floating background elements - keeping it modern and subtle */}
+      {/* Floating background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(typeof window !== 'undefined' && window.innerWidth < 640 ? 3 : 5)].map((_, i) => (
+        {isMounted && bgElements.map((el, i) => (
           <motion.div
             key={i}
             className="absolute rounded-full opacity-60 blur-[100px] bg-gradient-to-r from-primary to-accent"
-            initial={{
-              x: Math.random() * 100 - 50,
-              y: Math.random() * 100 - 50,
-              scale: Math.random() * 0.5 + 0.5
-            }}
+            initial={el.initial}
             animate={{
-              x: [0, (Math.random() - 0.5) * 100],
-              y: [0, (Math.random() - 0.5) * 100],
+              x: el.animate.x,
+              y: el.animate.y,
               transition: {
-                duration: Math.random() * 20 + 20,
+                duration: el.duration,
                 repeat: Infinity,
                 repeatType: "reverse",
                 ease: "linear"
               }
             }}
-            style={{
-              width: `${Math.random() * 400 + 100}px`,
-              height: `${Math.random() * 400 + 100}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`
-            }}
+            style={el.style}
           />
         ))}
       </div>

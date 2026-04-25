@@ -2,13 +2,12 @@ import { getProfile } from "./actions";
 import { getPendingRequests, getFriends } from "../friends/actions";
 import ProfileClient, { ProfileData, PendingRequestData, FriendData } from "./ProfileClient";
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 
 export default async function ProfilePage() {
-  const session = await getServerSession(authOptions);
+  const user = await getCurrentUser();
   
-  if (!session) {
+  if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-4">
         <div className="text-6xl">🔒</div>

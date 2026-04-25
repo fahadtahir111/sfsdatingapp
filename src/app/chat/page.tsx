@@ -1,13 +1,13 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+
+import { getCurrentUser } from "@/lib/auth";
 import { getConversations } from "./actions";
 import ChatClient from "./ChatClient";
 import Link from "next/link";
 
 export default async function ChatPage() {
-  const session = await getServerSession(authOptions);
+  const user = await getCurrentUser();
 
-  if (!session) {
+  if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-6">
         <div className="w-24 h-24 bg-stone-50 border border-stone-200 rounded-full flex items-center justify-center shadow-sm">
