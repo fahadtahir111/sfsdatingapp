@@ -37,7 +37,7 @@ export default function ChatRoomPage() {
       if (data) setConversation(data as ConversationData);
     }
     loadConv();
-  }, [conversationId, status]);
+  }, [conversationId, isAuthenticated]);
 
   // Real-time message polling
   const { data: messages = [], setData: setMessages } = useRealTime(
