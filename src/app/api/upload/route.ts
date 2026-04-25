@@ -1,7 +1,5 @@
+import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-
 import { getCurrentUser } from "@/lib/auth";
 
 const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -13,6 +11,9 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const filename = searchParams.get("filename") || `upload-${Date.now()}`;
 
     const data = await request.formData();
     const file: File | null = data.get("file") as unknown as File;
@@ -30,22 +31,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "File type not allowed" }, { status: 415 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Ensure uploads directory exists
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
-
-    const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const filepath = path.join(uploadDir, filename);
-
-    await writeFile(filepath, buffer);
+    // Upload to Vercel Blob
+    const blob = await put(file.name, file, {
+      access: "public",
+    });
 
     return NextResponse.json({
       success: true,
-      url: `/uploads/${filename}`,
+      url: blob.url,
       message: "File uploaded successfully",
     });
   } catch (error) {
