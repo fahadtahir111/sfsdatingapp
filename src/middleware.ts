@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
     try {
       await jwtVerify(token, SECRET);
       return NextResponse.next();
-    } catch (error) {
+    } catch {
       const url = new URL('/auth/login', request.url);
       url.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(url);

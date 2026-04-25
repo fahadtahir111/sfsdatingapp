@@ -6,7 +6,7 @@ const SECRET = new TextEncoder().encode(
   process.env.NEXTAUTH_SECRET || 'fallback-secret-for-dev'
 );
 
-export async function signJWT(payload: any) {
+export async function signJWT(payload: Record<string, unknown>) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -18,7 +18,7 @@ export async function verifyJWT(token: string) {
   try {
     const { payload } = await jwtVerify(token, SECRET);
     return payload;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -35,7 +35,7 @@ export async function getCurrentUser() {
       where: { id: payload.userId as string },
     });
     return user;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
