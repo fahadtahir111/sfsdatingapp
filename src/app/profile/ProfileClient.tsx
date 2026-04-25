@@ -93,21 +93,26 @@ function EditProfileModal({
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const { upload } = await import("@vercel/blob/client");
+
     setUploading(true);
     setUploadProgress(10);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
       setUploadProgress(40);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      setUploadProgress(80);
-      const data = await res.json();
-      if (data.success) {
-        setPhotos((prev) => [data.url, ...prev.slice(0, 5)]);
-        setUploadProgress(100);
-      }
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload/blob",
+        onUploadProgress: (progressEvent) => {
+          setUploadProgress(progressEvent.percentage);
+        }
+      });
+
+      setPhotos((prev) => [blob.url, ...prev.slice(0, 5)]);
+      setUploadProgress(100);
     } catch (err) {
       console.error("Upload failed", err);
+      alert("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setTimeout(() => {
         setUploading(false);

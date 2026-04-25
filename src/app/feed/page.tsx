@@ -77,14 +77,22 @@ export default function FeedPage() {
   const handleCreatePost = async () => {
     if (!newPostContent.trim() && !mediaUrl) return;
     setIsPosting(true);
-    const res = await createSocialContent(newPostContent, mediaUrl, mediaType || undefined);
-    if (res.success) {
-      setNewPostContent("");
-      setMediaUrl("");
-      setMediaType(null);
-      loadFeed();
+    try {
+      const res = await createSocialContent(newPostContent, mediaUrl, mediaType || undefined);
+      if (res.success) {
+        setNewPostContent("");
+        setMediaUrl("");
+        setMediaType(null);
+        loadFeed();
+      } else {
+        alert("Failed to share: " + (res.error || "Unknown error"));
+      }
+    } catch (err) {
+      console.error("Post creation error:", err);
+      alert("An unexpected error occurred while sharing.");
+    } finally {
+      setIsPosting(false);
     }
-    setIsPosting(false);
   };
 
   const handleAddStory = async () => {
@@ -98,17 +106,18 @@ export default function FeedPage() {
       
       setUploadingMedia(true);
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        const data = await res.json();
-        if (data.success) {
-          const type = file.type.startsWith("video") ? "VIDEO" : "IMAGE";
-          await createStory(data.url, type);
-          loadFeed();
-        }
+        const { upload } = await import("@vercel/blob/client");
+        const blob = await upload(file.name, file, {
+          access: "public",
+          handleUploadUrl: "/api/upload/blob",
+        });
+
+        const type = file.type.startsWith("video") ? "VIDEO" : "IMAGE";
+        await createStory(blob.url, type);
+        loadFeed();
       } catch (err) {
         console.error("Story upload failed", err);
+        alert("Story upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
       } finally {
         setUploadingMedia(false);
       }
@@ -226,16 +235,17 @@ export default function FeedPage() {
                          if (!file) return;
                          setUploadingMedia(true);
                          try {
-                           const formData = new FormData();
-                           formData.append("file", file);
-                           const res = await fetch("/api/upload", { method: "POST", body: formData });
-                           const data = await res.json();
-                           if (data.success) {
-                             setMediaUrl(data.url);
-                             setMediaType(file.type.startsWith("video") ? "VIDEO" : "IMAGE");
-                           }
+                           const { upload } = await import("@vercel/blob/client");
+                           const blob = await upload(file.name, file, {
+                             access: "public",
+                             handleUploadUrl: "/api/upload/blob",
+                           });
+                           
+                           setMediaUrl(blob.url);
+                           setMediaType(file.type.startsWith("video") ? "VIDEO" : "IMAGE");
                          } catch (err) {
                            console.error("Upload failed", err);
+                           alert("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
                          } finally {
                            setUploadingMedia(false);
                          }

@@ -122,21 +122,19 @@ export default function CreateReelPage() {
     setUploadProgress(10);
 
     try {
-      const formData = new FormData();
-      formData.append("file", videoBlob, "reel.webm");
-
       setUploadProgress(30);
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      const { upload } = await import("@vercel/blob/client");
+      const filename = (videoBlob as any).name || "reel.webm";
+      const blob = await upload(filename, videoBlob, {
+        access: "public",
+        handleUploadUrl: "/api/upload/blob",
+        onUploadProgress: (progressEvent) => {
+          setUploadProgress(30 + (progressEvent.percentage * 0.4)); // 30% to 70%
+        }
       });
 
-      setUploadProgress(70);
-      const uploadData = await uploadRes.json();
-      if (!uploadData.success) throw new Error(uploadData.error);
-
       setUploadProgress(90);
-      const res = await createReel(uploadData.url, caption);
+      const res = await createReel(blob.url, caption);
       if (res.success) {
         setUploadProgress(100);
         setTimeout(() => router.push("/reels"), 500);
@@ -146,7 +144,7 @@ export default function CreateReelPage() {
       }
     } catch (err) {
       console.error("Posting error:", err);
-      alert("Failed to post reel. Check console for details.");
+      alert("Failed to post reel: " + (err instanceof Error ? err.message : "Unknown error"));
       setStep("preview");
     }
   };
