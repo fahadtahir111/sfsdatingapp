@@ -124,7 +124,7 @@ export default function CreateReelPage() {
     try {
       setUploadProgress(30);
       const { upload } = await import("@vercel/blob/client");
-      const filename = (videoBlob as any).name || "reel.webm";
+      const filename = "name" in videoBlob ? (videoBlob as { name: string }).name : "reel.webm";
       const blob = await upload(filename, videoBlob, {
         access: "public",
         handleUploadUrl: "/api/upload/blob",
