@@ -8,6 +8,10 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL is missing! Database connections will fail.");
+}
+
 const prisma =
   global.prisma ||
   new PrismaClient({

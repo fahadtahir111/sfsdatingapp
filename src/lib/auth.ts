@@ -18,22 +18,35 @@ export async function verifyJWT(token: string) {
   try {
     const { payload } = await jwtVerify(token, SECRET);
     return payload;
-  } catch {
+  } catch (error) {
+    console.error("JWT Verification failed:", error instanceof Error ? error.message : "Unknown error");
     return null;
   }
 }
 
 export async function getCurrentUser() {
   const token = await getAuthToken();
-  if (!token) return null;
+  if (!token) {
+    console.log("No auth token found in cookies");
+    return null;
+  }
 
   const payload = await verifyJWT(token);
-  if (!payload || !payload.userId) return null;
+  if (!payload) {
+    console.log("JWT verification returned null");
+    return null;
+  }
+  
+  if (!payload.userId) {
+    console.log("JWT payload missing userId");
+    return null;
+  }
 
   try {
     const user = await prisma.user.findUnique({
       where: { id: payload.userId as string },
     });
+    if (!user) console.log("User not found in DB for ID:", payload.userId);
     return user;
   } catch (error) {
     console.error("getCurrentUser Prisma Error:", error);

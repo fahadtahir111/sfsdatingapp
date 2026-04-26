@@ -133,20 +133,31 @@ export default function CreateReelPage() {
     setUploadProgress(10);
 
     try {
+      setUploadProgress(20);
+      const sigRes = await fetch("/api/upload/signature");
+      const sigData = await sigRes.json();
+      console.log("Signature response:", sigData);
+      if (!sigData.success) throw new Error(sigData.error || "Failed to get upload signature");
+
       setUploadProgress(30);
+      console.log("Uploading to Cloudinary cloud:", sigData.cloudName);
       const formData = new FormData();
       formData.append("file", videoBlob);
+      formData.append("api_key", sigData.apiKey);
+      formData.append("timestamp", sigData.timestamp);
+      formData.append("signature", sigData.signature);
+      formData.append("folder", sigData.folder);
       
-      const resUpload = await fetch("/api/upload", {
+      const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloudName}/auto/upload`, {
         method: "POST",
         body: formData
       });
       
-      const data = await resUpload.json();
-      if (!data.success) throw new Error(data.error || "Upload failed");
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadData.error?.message || "Upload failed");
 
       setUploadProgress(90);
-      const res = await createReel(data.url, caption);
+      const res = await createReel(uploadData.secure_url, caption);
 
       if (res.success) {
         setUploadProgress(100);

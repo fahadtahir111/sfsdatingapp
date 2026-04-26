@@ -76,7 +76,10 @@ export async function createStory(mediaUrl: string, mediaType: "IMAGE" | "VIDEO"
   try {
     const user = await getCurrentUser();
     const userId = user?.id;
-    if (!userId) throw new Error("Unauthorized");
+    if (!userId) {
+      console.log("createStory: No userId found (unauthorized)");
+      throw new Error("Unauthorized");
+    }
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
 

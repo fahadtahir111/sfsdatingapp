@@ -130,19 +130,30 @@ export default function FeedPage() {
   const performStoryUpload = async (file: File) => {
     setUploadingMedia(true);
     try {
+      const sigRes = await fetch("/api/upload/signature");
+      const sigData = await sigRes.json();
+      console.log("Story upload signature response:", sigData);
+      if (!sigData.success) throw new Error(sigData.error || "Failed to get upload signature");
+
+      console.log("Story uploading to Cloudinary cloud:", sigData.cloudName);
+
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("api_key", sigData.apiKey);
+      formData.append("timestamp", sigData.timestamp);
+      formData.append("signature", sigData.signature);
+      formData.append("folder", sigData.folder);
 
-      const res = await fetch("/api/upload", {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloudName}/auto/upload`, {
         method: "POST",
         body: formData,
       });
 
       const data = await res.json();
-      if (!data.success) throw new Error(data.error || "Upload failed");
+      if (!res.ok) throw new Error(data.error?.message || "Upload failed");
 
       const type = file.type.startsWith("video") ? "VIDEO" : "IMAGE";
-      await createStory(data.url, type);
+      await createStory(data.secure_url, type);
       loadFeed();
     } catch (err) {
       console.error("Story upload failed", err);
@@ -270,18 +281,26 @@ export default function FeedPage() {
 
                          setUploadingMedia(true);
                          try {
+                           const sigRes = await fetch("/api/upload/signature");
+                           const sigData = await sigRes.json();
+                           if (!sigData.success) throw new Error(sigData.error || "Failed to get upload signature");
+
                            const formData = new FormData();
                            formData.append("file", file);
+                           formData.append("api_key", sigData.apiKey);
+                           formData.append("timestamp", sigData.timestamp);
+                           formData.append("signature", sigData.signature);
+                           formData.append("folder", sigData.folder);
 
-                           const res = await fetch("/api/upload", {
+                           const res = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloudName}/auto/upload`, {
                              method: "POST",
                              body: formData,
                            });
 
                            const data = await res.json();
-                           if (!data.success) throw new Error(data.error || "Upload failed");
+                           if (!res.ok) throw new Error(data.error?.message || "Upload failed");
                            
-                           setMediaUrl(data.url);
+                           setMediaUrl(data.secure_url);
                            setMediaType(file.type.startsWith("video") ? "VIDEO" : "IMAGE");
                          } catch (err) {
                            console.error("Upload failed", err);

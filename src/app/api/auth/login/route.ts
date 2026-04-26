@@ -6,6 +6,11 @@ import { signJWT, setAuthCookie } from '../../../../lib/auth';
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
+    console.log("Login attempt for:", email);
+
+    if (!process.env.NEXTAUTH_SECRET) {
+      console.warn("WARNING: NEXTAUTH_SECRET is not set in environment variables.");
+    }
 
     if (!email || !password) {
       return NextResponse.json(

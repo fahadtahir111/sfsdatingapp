@@ -102,19 +102,28 @@ function EditProfileModal({
     setUploading(true);
     setUploadProgress(10);
     try {
+      setUploadProgress(20);
+      const sigRes = await fetch("/api/upload/signature");
+      const sigData = await sigRes.json();
+      if (!sigData.success) throw new Error(sigData.error || "Failed to get upload signature");
+
       setUploadProgress(40);
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("api_key", sigData.apiKey);
+      formData.append("timestamp", sigData.timestamp);
+      formData.append("signature", sigData.signature);
+      formData.append("folder", sigData.folder);
 
-      const res = await fetch("/api/upload", {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloudName}/auto/upload`, {
         method: "POST",
         body: formData,
       });
 
       const data = await res.json();
-      if (!data.success) throw new Error(data.error || "Upload failed");
+      if (!res.ok) throw new Error(data.error?.message || "Upload failed");
 
-      setPhotos((prev) => [data.url, ...prev.slice(0, 5)]);
+      setPhotos((prev) => [data.secure_url, ...prev.slice(0, 5)]);
       setUploadProgress(100);
 
     } catch (err) {
@@ -350,14 +359,26 @@ function CreatePostModal({
   const performPostUpload = async (file: File) => {
     setUploading(true);
     try {
+      const sigRes = await fetch("/api/upload/signature");
+      const sigData = await sigRes.json();
+      if (!sigData.success) throw new Error(sigData.error || "Failed to get upload signature");
+
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      formData.append("api_key", sigData.apiKey);
+      formData.append("timestamp", sigData.timestamp);
+      formData.append("signature", sigData.signature);
+      formData.append("folder", sigData.folder);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloudName}/auto/upload`, {
+        method: "POST",
+        body: formData
+      });
       const data = await res.json();
-      if (data.success) {
-        setMediaUrl(data.url);
+      if (res.ok) {
+        setMediaUrl(data.secure_url);
       } else {
-        alert(data.error || "Upload failed");
+        alert(data.error?.message || "Upload failed");
       }
     } catch (err) {
       console.error("Upload failed", err);
