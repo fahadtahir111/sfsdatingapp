@@ -151,12 +151,19 @@ const Reel = ({ reel, isMuted, onToggleMute }: { reel: ReelData, isMuted: boolea
   };
 
   return (
-    <div className="relative w-full h-[100dvh] snap-center bg-black flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-[100dvh] snap-center bg-black flex items-center justify-center overflow-hidden group">
+      {/* Fixed Discover Header */}
+      <div className="absolute top-0 left-0 right-0 z-[100] flex justify-center items-center pt-10 pb-20 px-6 bg-gradient-to-b from-black/60 to-transparent pointer-events-none">
+        <div className="flex items-center gap-8 pointer-events-auto">
+          <button className="text-white text-lg font-black tracking-widest uppercase border-b-2 border-primary pb-1">Discover</button>
+          <button className="text-white/50 text-lg font-bold tracking-widest uppercase hover:text-white transition-colors pb-1">Following</button>
+        </div>
+      </div>
+
       <video
         ref={videoRef}
         src={optimizedUrl}
-
-        className="w-full h-full object-cover"
+        className="w-full h-full object-contain"
         loop
         playsInline
         muted={isMuted}

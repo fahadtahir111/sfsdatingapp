@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { FaCompass, FaCommentDots, FaUser, FaVideo, FaCamera } from "react-icons/fa";
+import { FaCompass, FaCommentDots, FaUser, FaVideo, FaCamera, FaCrown } from "react-icons/fa";
 import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getPendingRequestsCount } from "@/app/friends/actions";
 
@@ -12,6 +12,7 @@ export default function BottomNav() {
 
   const navItems = [
     { name: "Feed", href: "/feed", icon: FaCompass },
+    { name: "Discover", href: "/discover", icon: FaCrown },
     { name: "Reels", href: "/reels", icon: FaVideo },
     { name: "Create", href: "/create", icon: FaCamera, central: true },
     { name: "Chat", href: "/chat", icon: FaCommentDots },
