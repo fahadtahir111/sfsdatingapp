@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 
 // This is the recommended approach for instantiating Prisma Client in a Next.js environment.
 // It prevents creating too many connections during development.
