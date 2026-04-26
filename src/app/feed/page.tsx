@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { FaCamera, FaTimes, FaSmile } from "react-icons/fa";
-import { fetchFeedPosts, getFeedUser } from "./actions";
+import { useAuth } from "@/app/providers/AuthProvider";
+import { fetchFeedPosts } from "./actions";
 import { getStories, createStory } from "./storyActions";
 import { toggleLike, createSocialContent } from "@/lib/actions/social";
 import StoryTray from "../components/Feed/StoryTray";
@@ -43,7 +44,7 @@ interface FeedStory {
 }
 
 export default function FeedPage() {
-  const [currentUser, setCurrentUser] = useState<{ id: string; name: string | null; image: string } | null>(null);
+  const { user } = useAuth();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [stories, setStories] = useState<FeedStory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,15 +57,10 @@ export default function FeedPage() {
 
   useEffect(() => {
     loadFeed();
-    fetchCurrentUser();
   }, []);
 
-  const fetchCurrentUser = async () => {
-    const user = await getFeedUser();
-    setCurrentUser(user);
-  };
-
   const loadFeed = async () => {
+    setLoading(true);
     const [postData, storyData] = await Promise.all([
       fetchFeedPosts(),
       getStories()
@@ -202,11 +198,11 @@ export default function FeedPage() {
            <div className="flex gap-4">
              <div className="w-12 h-12 rounded-full bg-stone-100 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm relative">
                <Image 
-                 src={currentUser?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'Me')}`} 
+                 src={user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Me')}`} 
                  alt="Me" 
                  fill
                  className="object-cover"
-                 unoptimized={currentUser?.image?.startsWith("https://ui-avatars.com")}
+                 unoptimized={user?.image?.startsWith("https://ui-avatars.com")}
                />
              </div>
              <div className="flex-1">

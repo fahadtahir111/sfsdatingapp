@@ -77,6 +77,7 @@ export async function createSocialContent(content: string, mediaUrl?: string, me
     }
   } catch (error) {
     console.error("createSocialContent error:", error);
-    return { success: false, error: "Failed to create content" };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
+

@@ -84,9 +84,9 @@ export async function fetchFeedPosts() {
     ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return merged.slice(0, 30);
-  } catch (error) {
+  } catch (error: any) {
     console.error("fetchFeedPosts error:", error);
-    return [];
+    throw new Error(error.message || "Failed to fetch feed posts");
   }
 }
 

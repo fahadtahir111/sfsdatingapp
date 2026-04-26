@@ -93,7 +93,8 @@ export async function createStory(mediaUrl: string, mediaType: "IMAGE" | "VIDEO"
     return { success: true, story };
   } catch (error) {
     console.error("Error creating story:", error);
-    return { success: false, error: "Failed to create story" };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
+
 
