@@ -167,7 +167,7 @@ export default function PublicProfilePage() {
                   } else {
                     alert("Failed to start chat");
                   }
-                } catch (e) {
+                } catch {
                   alert("Failed to start chat");
                 } finally {
                   setActionLoading(false);

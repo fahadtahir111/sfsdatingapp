@@ -121,7 +121,7 @@ export default function LikesPage() {
                     } else {
                       setLikes(prev => prev.filter(l => l.id !== like.id));
                     }
-                  } catch (e) {
+                  } catch {
                     alert("Failed to match");
                   } finally {
                     setActionLoading(null);

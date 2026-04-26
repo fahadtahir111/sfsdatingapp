@@ -44,7 +44,7 @@ export function useRealTime<T>(
       isMounted.current = false;
       clearInterval(timer);
     };
-  }, [fetchData, interval, ...dependencies]);
+  }, [fetchData, interval, ...dependencies]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refresh = useCallback(() => {
     fetchData();
