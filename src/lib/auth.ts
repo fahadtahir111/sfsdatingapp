@@ -35,7 +35,8 @@ export async function getCurrentUser() {
       where: { id: payload.userId as string },
     });
     return user;
-  } catch {
+  } catch (error) {
+    console.error("getCurrentUser Prisma Error:", error);
     return null;
   }
 }

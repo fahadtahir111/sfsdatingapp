@@ -46,9 +46,13 @@ export async function toggleLike(targetId: string, type: string) {
 
 export async function createSocialContent(content: string, mediaUrl?: string, mediaType?: string, asReel: boolean = false) {
   try {
-    const user = await getCurrentUser();
-    const userId = user?.id;
-    if (!userId) throw new Error("Unauthorized");
+    const token = await require("@/lib/auth").getAuthToken();
+    if (!token) throw new Error("Unauthorized - Missing Cookie");
+    const payload = await require("@/lib/auth").verifyJWT(token);
+    if (!payload || !payload.userId) throw new Error("Unauthorized - Invalid JWT");
+    const user = await prisma.user.findUnique({ where: { id: payload.userId as string } });
+    if (!user) throw new Error("Unauthorized - User not found in DB");
+    const userId = user.id;
 
     if (asReel && mediaUrl) {
       const reel = await prisma.reel.create({
