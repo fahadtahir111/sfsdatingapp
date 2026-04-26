@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getAuthToken, verifyJWT } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function toggleLike(targetId: string, type: string) {
@@ -46,9 +46,9 @@ export async function toggleLike(targetId: string, type: string) {
 
 export async function createSocialContent(content: string, mediaUrl?: string, mediaType?: string, asReel: boolean = false) {
   try {
-    const token = await require("@/lib/auth").getAuthToken();
+    const token = await getAuthToken();
     if (!token) throw new Error("Unauthorized - Missing Cookie");
-    const payload = await require("@/lib/auth").verifyJWT(token);
+    const payload = await verifyJWT(token);
     if (!payload || !payload.userId) throw new Error("Unauthorized - Invalid JWT");
     const user = await prisma.user.findUnique({ where: { id: payload.userId as string } });
     if (!user) throw new Error("Unauthorized - User not found in DB");
