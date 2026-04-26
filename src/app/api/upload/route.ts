@@ -42,8 +42,14 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    interface CloudinaryUploadResult {
+      secure_url: string;
+      public_id: string;
+      duration?: number;
+    }
+
     // Upload to Cloudinary
-    const result = await new Promise<any>((resolve, reject) => {
+    const result = await new Promise<CloudinaryUploadResult>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           resource_type: isVideo ? "video" : "image",
@@ -51,14 +57,15 @@ export async function POST(request: Request) {
         },
         (error, result) => {
           if (error) reject(error);
-          else resolve(result);
+          else if (result) resolve(result);
+          else reject(new Error("Upload failed, no result"));
         }
       );
       uploadStream.end(buffer);
     });
 
     // Post-upload validation for video duration
-    if (isVideo && result.duration > MAX_VIDEO_DURATION) {
+    if (isVideo && result.duration !== undefined && result.duration > MAX_VIDEO_DURATION) {
       // If video is too long, delete it from Cloudinary and return error
       await cloudinary.uploader.destroy(result.public_id, { resource_type: "video" });
       return NextResponse.json({ 
