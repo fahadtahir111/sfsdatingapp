@@ -104,26 +104,58 @@ export default function FeedPage() {
       const file = target.files?.[0];
       if (!file) return;
       
-      setUploadingMedia(true);
-      try {
-        const { upload } = await import("@vercel/blob/client");
-        const blob = await upload(file.name, file, {
-          access: "public",
-          handleUploadUrl: "/api/upload/blob",
-        });
+      // Client-side validations
+      if (file.size > 20 * 1024 * 1024) {
+        alert("File too large. Max 20MB allowed.");
+        return;
+      }
 
-        const type = file.type.startsWith("video") ? "VIDEO" : "IMAGE";
-        await createStory(blob.url, type);
-        loadFeed();
-      } catch (err) {
-        console.error("Story upload failed", err);
-        alert("Story upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
-      } finally {
-        setUploadingMedia(false);
+      const isVideo = file.type.startsWith("video");
+      if (isVideo) {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.onloadedmetadata = async () => {
+          window.URL.revokeObjectURL(video.src);
+          if (video.duration > 60) {
+            alert("Video too long. Max 1 minute allowed.");
+            setUploadingMedia(false);
+            return;
+          }
+          await performStoryUpload(file);
+        };
+        video.src = URL.createObjectURL(file);
+      } else {
+        await performStoryUpload(file);
       }
     };
     input.click();
   };
+
+  const performStoryUpload = async (file: File) => {
+    setUploadingMedia(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Upload failed");
+
+      const type = file.type.startsWith("video") ? "VIDEO" : "IMAGE";
+      await createStory(data.url, type);
+      loadFeed();
+    } catch (err) {
+      console.error("Story upload failed", err);
+      alert("Story upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
+
 
   const handleLike = async (id: string, type: string) => {
     // Optimistic update
@@ -233,15 +265,27 @@ export default function FeedPage() {
                        onChange={async (e) => {
                          const file = e.target.files?.[0];
                          if (!file) return;
+                         
+                         // Client-side validations
+                         if (file.size > 20 * 1024 * 1024) {
+                           alert("File too large. Max 20MB allowed.");
+                           return;
+                         }
+
                          setUploadingMedia(true);
                          try {
-                           const { upload } = await import("@vercel/blob/client");
-                           const blob = await upload(file.name, file, {
-                             access: "public",
-                             handleUploadUrl: "/api/upload/blob",
+                           const formData = new FormData();
+                           formData.append("file", file);
+
+                           const res = await fetch("/api/upload", {
+                             method: "POST",
+                             body: formData,
                            });
+
+                           const data = await res.json();
+                           if (!data.success) throw new Error(data.error || "Upload failed");
                            
-                           setMediaUrl(blob.url);
+                           setMediaUrl(data.url);
                            setMediaType(file.type.startsWith("video") ? "VIDEO" : "IMAGE");
                          } catch (err) {
                            console.error("Upload failed", err);
@@ -250,6 +294,7 @@ export default function FeedPage() {
                            setUploadingMedia(false);
                          }
                        }}
+
                      />
                      <label 
                        htmlFor="feed-media-upload"

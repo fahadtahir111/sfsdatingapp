@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { FaCrown, FaHeart, FaComment, FaShare } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
+import { CldImage } from 'next-cloudinary';
+
 import { formatRelativeTime } from "@/lib/utils/format";
 
 interface PostCardProps {
@@ -29,8 +31,14 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, onLike, index = 0 }: PostCardProps) {
+  // If the URL is a Cloudinary URL, ensure it uses auto quality and format
+  const optimizedVideoUrl = post.mediaType === "VIDEO" && post.mediaUrl?.includes('cloudinary.com') 
+    ? post.mediaUrl.replace('/upload/', '/upload/f_auto,q_auto/') 
+    : post.mediaUrl;
+
   return (
     <motion.div 
+
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
@@ -73,21 +81,35 @@ export default function PostCard({ post, onLike, index = 0 }: PostCardProps) {
         <div className="px-4 pb-4">
           {post.mediaType === "VIDEO" ? (
             <video 
-              src={post.mediaUrl} 
+              src={optimizedVideoUrl || undefined} 
               className="w-full h-80 object-cover rounded-[2rem]" 
               controls
               playsInline
             />
           ) : (
+
+
             <div className="relative w-full h-80 rounded-[2rem] overflow-hidden">
-              <Image 
-                src={post.mediaUrl} 
-                alt="Post content" 
-                fill
-                className="object-cover"
-              />
+              {post.mediaUrl?.includes('cloudinary') ? (
+                <CldImage 
+                  src={post.mediaUrl} 
+                  alt="Post content" 
+                  fill
+                  className="object-cover"
+                  crop="fill"
+                  gravity="auto"
+                />
+              ) : (
+                <Image 
+                  src={post.mediaUrl || ""} 
+                  alt="Post content" 
+                  fill
+                  className="object-cover"
+                />
+              )}
             </div>
           )}
+
         </div>
       )}
 

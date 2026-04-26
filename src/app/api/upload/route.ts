@@ -1,10 +1,10 @@
-import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import cloudinary from "@/lib/cloudinary";
 
-const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
+const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20 MB
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100 MB (optional, but good to have)
+const MAX_VIDEO_DURATION = 60; // 60 seconds
 
 export async function POST(request: Request) {
   try {
@@ -21,57 +21,57 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
 
-    if (file.size > MAX_SIZE_BYTES) {
-      return NextResponse.json({ success: false, error: "File too large (max 20 MB)" }, { status: 413 });
+    // Determine if it's a video or image
+    const isVideo = file.type.startsWith("video");
+    const isImage = file.type.startsWith("image");
+
+    if (!isVideo && !isImage) {
+      return NextResponse.json({ success: false, error: "Only images and videos are allowed" }, { status: 415 });
     }
 
-    const allowedTypes = [
-      "image/jpeg", "image/png", "image/gif", "image/webp", 
-      "video/mp4", "video/webm", "video/quicktime", "application/octet-stream"
-    ];
+    // Size validation
+    if (isImage && file.size > MAX_IMAGE_SIZE) {
+      return NextResponse.json({ success: false, error: "Image too large (max 20 MB)" }, { status: 413 });
+    }
     
-    if (!allowedTypes.includes(file.type) && !file.name.endsWith('.webm')) {
-      return NextResponse.json({ success: false, error: `File type ${file.type} not allowed` }, { status: 415 });
+    if (isVideo && file.size > MAX_VIDEO_SIZE) {
+      return NextResponse.json({ success: false, error: "Video file too large (max 100 MB)" }, { status: 413 });
     }
 
-    // FALLBACK LOGIC: Use local filesystem if no token is found (Local Dev Only)
-    // In Production (Vercel), BLOB_READ_WRITE_TOKEN must be set.
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      if (process.env.NODE_ENV === "production") {
-        return NextResponse.json({ 
-          success: false, 
-          error: "Vercel Blob storage not configured. Please link a Blob store in your Vercel dashboard." 
-        }, { status: 500 });
-      }
+    // Convert file to buffer for Cloudinary
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-      // Local development fallback
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-      await mkdir(uploadDir, { recursive: true });
-      
-      const ext = file.name.split(".").pop() || "bin";
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const filepath = path.join(uploadDir, filename);
-      
-      await writeFile(filepath, buffer);
-      
-      return NextResponse.json({
-        success: true,
-        url: `/uploads/${filename}`,
-        message: "File uploaded locally (Dev Mode)",
-      });
-    }
-
-    // PRODUCTION: Upload to Vercel Blob
-    const blob = await put(file.name || "upload", file, {
-      access: "public",
+    // Upload to Cloudinary
+    const result = await new Promise<any>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: isVideo ? "video" : "image",
+          folder: "sfs_dating",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(buffer);
     });
+
+    // Post-upload validation for video duration
+    if (isVideo && result.duration > MAX_VIDEO_DURATION) {
+      // If video is too long, delete it from Cloudinary and return error
+      await cloudinary.uploader.destroy(result.public_id, { resource_type: "video" });
+      return NextResponse.json({ 
+        success: false, 
+        error: `Video too long (${Math.round(result.duration)}s). Max 1 minute allowed.` 
+      }, { status: 400 });
+    }
 
     return NextResponse.json({
       success: true,
-      url: blob.url,
-      message: "File uploaded successfully to Vercel Blob",
+      url: result.secure_url,
+      public_id: result.public_id,
+      message: "File uploaded successfully to Cloudinary",
     });
   } catch (error) {
     console.error("Upload error details:", error);
@@ -81,3 +81,4 @@ export async function POST(request: Request) {
     }, { status: 500 });
   }
 }
+

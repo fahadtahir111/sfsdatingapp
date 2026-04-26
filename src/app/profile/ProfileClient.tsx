@@ -94,22 +94,29 @@ function EditProfileModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const { upload } = await import("@vercel/blob/client");
+    if (file.size > 20 * 1024 * 1024) {
+      alert("Image too large. Max 20MB allowed.");
+      return;
+    }
 
     setUploading(true);
     setUploadProgress(10);
     try {
       setUploadProgress(40);
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/upload/blob",
-        onUploadProgress: (progressEvent) => {
-          setUploadProgress(progressEvent.percentage);
-        }
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
 
-      setPhotos((prev) => [blob.url, ...prev.slice(0, 5)]);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Upload failed");
+
+      setPhotos((prev) => [data.url, ...prev.slice(0, 5)]);
       setUploadProgress(100);
+
     } catch (err) {
       console.error("Upload failed", err);
       alert("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
@@ -316,19 +323,50 @@ function CreatePostModal({
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Client-side validations
+    if (file.size > 20 * 1024 * 1024) {
+      alert("File too large. Max 20MB allowed.");
+      return;
+    }
+
+    if (file.type.startsWith("video")) {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        if (video.duration > 60) {
+          alert("Video too long. Max 1 minute allowed.");
+          return;
+        }
+        performPostUpload(file);
+      };
+      video.src = URL.createObjectURL(file);
+    } else {
+      performPostUpload(file);
+    }
+  };
+
+  const performPostUpload = async (file: File) => {
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
-      if (data.success) setMediaUrl(data.url);
+      if (data.success) {
+        setMediaUrl(data.url);
+      } else {
+        alert(data.error || "Upload failed");
+      }
     } catch (err) {
       console.error("Upload failed", err);
+      alert("Upload failed");
     } finally {
       setUploading(false);
     }
   };
+
 
   const handlePost = async () => {
     if (!mediaUrl) return;

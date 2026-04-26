@@ -60,7 +60,13 @@ export default function ReelsClient({ initialReels }: { initialReels: ReelData[]
 }
 
 const Reel = ({ reel, isMuted, onToggleMute }: { reel: ReelData, isMuted: boolean, onToggleMute: () => void }) => {
+  // If the URL is a Cloudinary URL, we can ensure it's using auto quality and format
+  const optimizedUrl = reel.url.includes('cloudinary.com') 
+    ? reel.url.replace('/upload/', '/upload/f_auto,q_auto/') 
+    : reel.url;
+
   const videoRef = useRef<HTMLVideoElement>(null);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLiked, setIsLiked] = useState(reel.isLiked);
   const [likesCount, setLikesCount] = useState(reel.likes);
@@ -148,7 +154,8 @@ const Reel = ({ reel, isMuted, onToggleMute }: { reel: ReelData, isMuted: boolea
     <div className="relative w-full h-[100dvh] snap-center bg-black flex items-center justify-center overflow-hidden">
       <video
         ref={videoRef}
-        src={reel.url}
+        src={optimizedUrl}
+
         className="w-full h-full object-cover"
         loop
         playsInline

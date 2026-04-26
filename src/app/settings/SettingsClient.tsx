@@ -40,7 +40,18 @@ export default function SettingsClient() {
             </div>
           </Link>
         </div>
+
+        <div className="mt-auto pt-10 pb-4 flex flex-col items-center gap-2 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-default">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-500">Media Infrastructure</p>
+          <div className="flex items-center gap-2">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#3448C5]" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.586 7.414c-.663 0-1.285.18-1.828.487a4.99 4.99 0 0 0-3.328-1.487 4.99 4.99 0 0 0-3.328 1.487c-.543-.307-1.165-.487-1.828-.487-2.025 0-3.667 1.642-3.667 3.667 0 .195.016.386.046.572A4.326 4.326 0 0 0 2 15.333c0 2.394 1.94 4.334 4.333 4.334h11.334c2.393 0 4.333-1.94 4.333-4.334 0-2.083-1.472-3.823-3.414-4.248.03-.186.046-.377.046-.572 0-2.025-1.642-3.667-3.666-3.667z"/>
+            </svg>
+            <span className="text-sm font-black tracking-tighter text-stone-700">Cloudinary</span>
+          </div>
+        </div>
       </div>
+
     </div>
   );
 }

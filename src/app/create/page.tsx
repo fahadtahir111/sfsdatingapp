@@ -110,11 +110,22 @@ export default function CreateReelPage() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setVideoBlob(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setStep("preview");
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        if (video.duration > 60) {
+          alert("Video too long. Max 1 minute allowed for reels.");
+          return;
+        }
+        setVideoBlob(file);
+        setPreviewUrl(URL.createObjectURL(file));
+        setStep("preview");
+      };
+      video.src = URL.createObjectURL(file);
     }
   };
+
 
   const handlePost = async () => {
     if (!videoBlob) return;
@@ -123,18 +134,20 @@ export default function CreateReelPage() {
 
     try {
       setUploadProgress(30);
-      const { upload } = await import("@vercel/blob/client");
-      const filename = "name" in videoBlob ? (videoBlob as { name: string }).name : "reel.webm";
-      const blob = await upload(filename, videoBlob, {
-        access: "public",
-        handleUploadUrl: "/api/upload/blob",
-        onUploadProgress: (progressEvent) => {
-          setUploadProgress(30 + (progressEvent.percentage * 0.4)); // 30% to 70%
-        }
+      const formData = new FormData();
+      formData.append("file", videoBlob);
+      
+      const resUpload = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
       });
+      
+      const data = await resUpload.json();
+      if (!data.success) throw new Error(data.error || "Upload failed");
 
       setUploadProgress(90);
-      const res = await createReel(blob.url, caption);
+      const res = await createReel(data.url, caption);
+
       if (res.success) {
         setUploadProgress(100);
         setTimeout(() => router.push("/reels"), 500);

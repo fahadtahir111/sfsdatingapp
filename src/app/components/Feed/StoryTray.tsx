@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaCamera } from "react-icons/fa";
 import { useAuth } from "@/app/providers/AuthProvider";
 import Image from "next/image";
+import { CldImage } from 'next-cloudinary';
+
 
 interface StoryGroup {
   userId: string;
@@ -92,13 +94,26 @@ export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
               className="w-16 h-16 rounded-full border-2 border-yellow-400 p-1 flex items-center justify-center active:scale-95 transition-transform"
             >
               <div className="w-full h-full rounded-full overflow-hidden border border-white">
-                <Image 
-                  src={group.userImage} 
-                  alt={group.userName} 
-                  width={64} 
-                  height={64} 
-                  className="w-full h-full object-cover"
-                />
+                {group.userImage.includes('cloudinary') ? (
+                  <CldImage 
+                    src={group.userImage} 
+                    alt={group.userName} 
+                    width={64} 
+                    height={64} 
+                    className="w-full h-full object-cover"
+                    crop="thumb"
+                    gravity="face"
+                  />
+                ) : (
+                  <Image 
+                    src={group.userImage} 
+                    alt={group.userName} 
+                    width={64} 
+                    height={64} 
+                    className="w-full h-full object-cover"
+                  />
+                )}
+
               </div>
             </button>
             <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest truncate w-16 text-center">
@@ -167,12 +182,23 @@ export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
                   playsInline
                 />
               ) : (
-                <img 
-                  src={selectedGroup.stories[currentStoryIndex].mediaUrl} 
-                  className="w-full h-full object-contain" 
-                  alt="Story"
-                />
+                selectedGroup.stories[currentStoryIndex].mediaUrl.includes('cloudinary') ? (
+                  <CldImage 
+                    src={selectedGroup.stories[currentStoryIndex].mediaUrl} 
+                    className="w-full h-full object-contain" 
+                    alt="Story"
+                    width={1080}
+                    height={1920}
+                  />
+                ) : (
+                  <img 
+                    src={selectedGroup.stories[currentStoryIndex].mediaUrl} 
+                    className="w-full h-full object-contain" 
+                    alt="Story"
+                  />
+                )
               )}
+
 
               {/* Navigation Zones */}
               <div className="absolute inset-0 flex">
