@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 export async function fetchDiscoverFeed(filters?: {
   minAge?: number;
@@ -157,6 +158,7 @@ export async function submitSwipe(toUserId: string, action: "LIKE" | "PASS") {
           }
         });
 
+        revalidatePath("/chat");
         return { matched: true, matchId: match.id, conversationId: conversation.id };
       }
     }

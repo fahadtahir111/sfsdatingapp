@@ -65,18 +65,44 @@ export async function acceptFriendRequest(requestId: string) {
       return { success: false, error: "Invalid request" };
     }
 
-    // Use transaction to delete request and create friendship
-    await prisma.$transaction([
-      prisma.friendRequest.delete({ where: { id: requestId } }),
-      prisma.friendship.create({
+    // Use transaction to delete request, create friendship, and create conversation
+    await prisma.$transaction(async (tx) => {
+      await tx.friendRequest.delete({ where: { id: requestId } });
+      
+      await tx.friendship.create({
         data: {
           user1Id: request.senderId,
           user2Id: request.receiverId
         }
-      })
-    ]);
+      });
+
+      // Check if conversation already exists (e.g. from a match)
+      const existingConv = await tx.conversation.findFirst({
+        where: {
+          AND: [
+            { userLinks: { some: { userId: request.senderId } } },
+            { userLinks: { some: { userId: request.receiverId } } },
+            { userLinks: { every: { userId: { in: [request.senderId, request.receiverId] } } } }
+          ]
+        }
+      });
+
+      if (!existingConv) {
+        await tx.conversation.create({
+          data: {
+            userLinks: {
+              create: [
+                { userId: request.senderId },
+                { userId: request.receiverId }
+              ]
+            }
+          }
+        });
+      }
+    });
 
     revalidatePath("/feed");
+    revalidatePath("/chat");
     return { success: true };
   } catch (error) {
     console.error("Error accepting request:", error);

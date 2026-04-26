@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 /**
  * useRealTime Polling Hook
@@ -17,40 +17,38 @@ export function useRealTime<T>(
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<unknown>(null);
+  const isMounted = useRef(true);
+
+  const fetchData = useCallback(async () => {
+    if (!enabled) return;
+    try {
+      const result = await action();
+      if (isMounted.current) {
+        setData(result);
+        setError(null);
+      }
+    } catch (err) {
+      if (isMounted.current) setError(err);
+    } finally {
+      if (isMounted.current) setLoading(false);
+    }
+  }, [action, enabled]);
 
   useEffect(() => {
-    if (!enabled) {
-      setLoading(false);
-      return;
-    }
-
-    let isMounted = true;
-
-    async function fetchData() {
-      try {
-        const result = await action();
-        if (isMounted) {
-          setData(result);
-          setError(null);
-        }
-      } catch (err) {
-        if (isMounted) setError(err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-
-    // Initial fetch
+    isMounted.current = true;
     fetchData();
 
-    // Set up interval
     const timer = setInterval(fetchData, interval);
 
     return () => {
-      isMounted = false;
+      isMounted.current = false;
       clearInterval(timer);
     };
-  }, [action, interval, ...dependencies, enabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchData, interval, ...dependencies]);
 
-  return { data, setData, loading, error };
+  const refresh = useCallback(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, setData, loading, error, refresh };
 }

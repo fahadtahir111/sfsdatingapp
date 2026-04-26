@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 
 /**
  * Fetch all conversations for the current user.
@@ -141,6 +142,7 @@ export async function sendMessage(conversationId: string, content: string, type:
       data: { updatedAt: new Date() }
     });
 
+    revalidatePath("/chat");
     return msg;
   } catch (error) {
     console.error("Error sending message:", error);

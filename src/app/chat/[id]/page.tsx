@@ -11,6 +11,7 @@ import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getMessages, sendMessage, getConversation } from "@/app/chat/actions";
 import { useParams } from "next/navigation";
 import EmojiPicker from "../../components/EmojiPicker";
+import { useCallback, useRef } from "react";
 
 interface ConversationData {
   id: string;
@@ -39,13 +40,25 @@ export default function ChatRoomPage() {
     loadConv();
   }, [conversationId, isAuthenticated]);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Memoize polling action to avoid recreation on every render
+  const fetchMessagesAction = useCallback(() => getMessages(conversationId), [conversationId]);
+
   // Real-time message polling
-  const { data: messages = [], setData: setMessages } = useRealTime(
-    () => getMessages(conversationId),
+  const { data: messages = [], setData: setMessages, refresh } = useRealTime(
+    fetchMessagesAction,
     2000,
     [conversationId, user, loading],
     isAuthenticated
   );
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   // Check for incoming call signals in the message stream
   useEffect(() => {
@@ -70,6 +83,7 @@ export default function ChatRoomPage() {
     try {
       const newMsg = await sendMessage(conversationId, text);
       setMessages([...(messages || []), newMsg]);
+      refresh(); // Trigger immediate poll refresh
     } catch (e) {
       console.error("Failed to send", e);
     }
@@ -165,7 +179,10 @@ export default function ChatRoomPage() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-secondary/30">
+      <div 
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-secondary/30"
+      >
         <div className="text-center text-[10px] text-muted-foreground font-black uppercase tracking-widest my-4">
           End-to-End Encrypted
         </div>

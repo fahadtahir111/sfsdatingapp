@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { FaCrown, FaHeart, FaLock } from "react-icons/fa";
+import { FaCrown, FaHeart, FaLock, FaSpinner } from "react-icons/fa";
 import { fetchWhoLikedMe } from "./actions";
+import { submitSwipe } from "../discover/actions";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -19,6 +21,8 @@ export default function LikesPage() {
   const [likes, setLikes] = useState<LikeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetchWhoLikedMe().then(res => {
@@ -106,9 +110,27 @@ export default function LikesPage() {
                 <p className="text-white/60 text-[10px] font-medium">{new Date(like.date).toLocaleDateString()}</p>
               </div>
 
-              <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                 <div className="bg-white text-stone-900 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-2xl">
-                    Match Now
+              <div 
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  setActionLoading(like.id);
+                  try {
+                    const res = await submitSwipe(like.id, "LIKE");
+                    if (res.matched) {
+                      router.push(`/chat/${res.conversationId}`);
+                    } else {
+                      setLikes(prev => prev.filter(l => l.id !== like.id));
+                    }
+                  } catch (e) {
+                    alert("Failed to match");
+                  } finally {
+                    setActionLoading(null);
+                  }
+                }}
+                className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+              >
+                 <div className="bg-white text-stone-900 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-2xl flex items-center gap-2">
+                    {actionLoading === like.id ? <FaSpinner className="animate-spin" /> : "Match Now"}
                  </div>
               </div>
             </motion.div>

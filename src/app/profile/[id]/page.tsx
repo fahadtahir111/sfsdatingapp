@@ -14,9 +14,12 @@ import {
   FaArrowLeft,
   FaCommentDots,
   FaUserPlus,
-  FaVideo
+  FaVideo,
+  FaSpinner
 } from "react-icons/fa";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import { getOrCreateConversation } from "../../chat/actions";
+import { sendFriendRequest } from "../../friends/actions";
 
 interface PublicProfileData {
   id: string;
@@ -38,6 +41,7 @@ export default function PublicProfilePage() {
   const { id } = useParams();
   const [profile, setProfile] = useState<PublicProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -137,11 +141,43 @@ export default function PublicProfilePage() {
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <button className="flex-1 py-4 bg-stone-900 text-white rounded-[2rem] font-black text-sm shadow-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95">
-              <FaUserPlus className="text-yellow-400" /> Connect
+            <button 
+              onClick={async () => {
+                if (!profile) return;
+                setActionLoading(true);
+                const res = await sendFriendRequest(profile.id);
+                setActionLoading(false);
+                if (res.success) alert("Friend request sent!");
+                else alert(res.error || "Failed to send request");
+              }}
+              disabled={actionLoading}
+              className="flex-1 py-4 bg-stone-900 text-white rounded-[2rem] font-black text-sm shadow-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+            >
+              {actionLoading ? <FaSpinner className="animate-spin" /> : <FaUserPlus className="text-yellow-400" />} 
+              Connect
             </button>
-            <button className="flex-1 py-4 bg-white border border-stone-200 rounded-[2rem] font-black text-stone-800 text-sm shadow-sm flex items-center justify-center gap-3 transition-all hover:border-yellow-400 active:scale-95">
-              <FaCommentDots className="text-stone-400" /> Message
+            <button 
+              onClick={async () => {
+                if (!profile) return;
+                setActionLoading(true);
+                try {
+                  const convId = await getOrCreateConversation(profile.id);
+                  if (convId) {
+                    router.push(`/chat/${convId}`);
+                  } else {
+                    alert("Failed to start chat");
+                  }
+                } catch (e) {
+                  alert("Failed to start chat");
+                } finally {
+                  setActionLoading(false);
+                }
+              }}
+              disabled={actionLoading}
+              className="flex-1 py-4 bg-white border border-stone-200 rounded-[2rem] font-black text-stone-800 text-sm shadow-sm flex items-center justify-center gap-3 transition-all hover:border-yellow-400 active:scale-95 disabled:opacity-50"
+            >
+              {actionLoading ? <FaSpinner className="animate-spin" /> : <FaCommentDots className="text-stone-400" />} 
+              Message
             </button>
           </div>
         </div>
