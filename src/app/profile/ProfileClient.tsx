@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { updateProfile } from "./actions";
-import { createSocialContent } from "@/lib/actions/social";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,516 +16,22 @@ import {
   FaArrowRight,
   FaVideo,
   FaCamera,
-  FaTimes,
-  FaImage,
-  FaSmile,
-  FaEyeSlash
+  FaEyeSlash,
 } from "react-icons/fa";
-import EmojiPicker from "@/app/components/EmojiPicker";
 import { claimDailyBonus, boostProfile } from "./economy-actions";
 import { toggleGhostMode } from "./actions";
 import { useToast } from "@/app/providers/ToastProvider";
+import type { ProfileData, FriendData, PendingRequestData } from "./types";
+import { EditProfileModal } from "./components/EditProfileModal";
+import { CreatePostModal } from "./components/CreatePostModal";
 
-export interface ProfileData {
-  id: string;
-  name: string | null;
-  email: string | null;
-  age: number | null;
-  occupation: string | null;
-  bio: string;
-  photos: string[];
-  matchesCount: number;
-  reelsCount: number;
-  storiesCount: number;
-  reels: { id: string; videoUrl: string; caption: string | null; likesCount: number; createdAt: Date | string }[];
-  membership: string;
-  verificationStatus: string;
-  networkingGoals: string[];
-  tokens: number;
-  professionalVerified: boolean;
-  incognito: boolean;
-}
+export type { ProfileData, FriendData, PendingRequestData } from "./types";
 
-export interface FriendData {
-  id: string;
-  friendId: string;
-  name: string | null;
-  image: string;
-}
-
-export interface PendingRequestData {
-  id: string;
-  senderUser: {
-    id: string;
-    name: string | null;
-    profile?: { photos: string } | null;
-  };
-}
-
-// ─── Edit Profile Modal ───────────────────────────────────────────────────────
-function EditProfileModal({
-  profile,
-  onClose,
-  onSaved,
+export default function ProfileClient({
+  initialProfile,
+  initialPendingRequests,
+  initialFriends,
 }: {
-  profile: ProfileData;
-  onClose: () => void;
-  onSaved: (updated: Partial<ProfileData>) => void;
-}) {
-  const { showToast } = useToast();
-  const [name, setName] = useState(profile.name || "");
-  const [age, setAge] = useState<string>(profile.age ? String(profile.age) : "");
-  const [occupation, setOccupation] = useState(profile.occupation || "");
-  const [bio, setBio] = useState(profile.bio || "");
-  const [photos, setPhotos] = useState<string[]>(profile.photos || []);
-  const [networkingGoals, setNetworkingGoals] = useState<string[]>(profile.networkingGoals || []);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [showEmojis, setShowEmojis] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    import("@/app/networking/actions").then(m => m.getNetworkingTags().then(setAvailableTags));
-  }, []);
-
-  const toggleTag = (tag: string) => {
-    setNetworkingGoals(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
-  };
-
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 20 * 1024 * 1024) {
-      showToast("Image too large. Max 20MB allowed.", "error");
-      return;
-    }
-
-    setUploading(true);
-    setUploadProgress(10);
-    try {
-      setUploadProgress(20);
-      const sigRes = await fetch("/api/upload/signature");
-      const sigData = await sigRes.json();
-      if (!sigData.success) throw new Error(sigData.error || "Failed to get upload signature");
-
-      setUploadProgress(40);
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("api_key", sigData.apiKey);
-      formData.append("timestamp", sigData.timestamp);
-      formData.append("signature", sigData.signature);
-      formData.append("folder", sigData.folder);
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloudName}/auto/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Upload failed");
-
-      setPhotos((prev) => [data.secure_url, ...prev.slice(0, 5)]);
-      setUploadProgress(100);
-
-    } catch (err) {
-      console.error("Upload failed", err);
-      showToast("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"), "error");
-    } finally {
-      setTimeout(() => {
-        setUploading(false);
-        setUploadProgress(0);
-      }, 500);
-    }
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    const result = await updateProfile({
-      name: name.trim() || undefined,
-      age: age ? parseInt(age) : null,
-      occupation: occupation.trim() || undefined,
-      bio: bio.trim(),
-      photos,
-      networkingGoals,
-    });
-    setSaving(false);
-    if (result.success) {
-      onSaved({ name, age: age ? parseInt(age) : null, occupation, bio, photos, networkingGoals });
-      onClose();
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="mt-auto w-full max-h-[92vh] bg-white rounded-t-[32px] overflow-hidden flex flex-col"
-      >
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100">
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors">
-            <FaTimes />
-          </button>
-          <h2 className="text-lg font-black text-stone-900">Edit Profile</h2>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-5 py-2 bg-yellow-400 text-yellow-950 font-black rounded-full text-sm shadow-md shadow-yellow-200 disabled:opacity-60 transition-all hover:bg-yellow-300 active:scale-95"
-          >
-            {saving ? "Saving…" : "Save"}
-          </button>
-        </div>
-
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-6">
-          <div>
-            <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">Profile Photo</p>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="relative flex-shrink-0 w-24 h-24 rounded-2xl border-2 border-dashed border-yellow-300 bg-yellow-50 flex flex-col items-center justify-center text-yellow-500 hover:bg-yellow-100 transition-colors"
-              >
-                {uploading ? (
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs font-bold">{uploadProgress}%</span>
-                  </div>
-                ) : (
-                  <>
-                    <FaCamera className="text-2xl mb-1" />
-                    <span className="text-[10px] font-bold">Add Photo</span>
-                  </>
-                )}
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-
-              {photos.map((photo, idx) => (
-                <div key={idx} className="relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden bg-stone-100 ring-2 ring-transparent hover:ring-yellow-400 transition-all">
-                  <Image src={photo} alt={`Photo ${idx + 1}`} fill className="object-cover" unoptimized={photo.startsWith("/")} />
-                  {idx === 0 && (
-                    <div className="absolute top-1 left-1 bg-yellow-400 text-yellow-950 text-[9px] font-black px-1.5 py-0.5 rounded-full">MAIN</div>
-                  )}
-                  <button
-                    onClick={() => setPhotos((prev) => prev.filter((_, i) => i !== idx))}
-                    className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center text-[10px] hover:bg-red-500 transition-colors"
-                  >
-                    <FaTimes />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-stone-400 uppercase tracking-widest">Display Name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-              className="w-full px-4 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl text-stone-900 font-medium placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-stone-400 uppercase tracking-widest">Age</label>
-              <input
-                value={age}
-                onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="e.g. 28"
-                maxLength={2}
-                className="w-full px-4 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl text-stone-900 font-medium placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-stone-400 uppercase tracking-widest">Occupation</label>
-              <input
-                value={occupation}
-                onChange={(e) => setOccupation(e.target.value)}
-                placeholder="Your role"
-                className="w-full px-4 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl text-stone-900 font-medium placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-stone-400 uppercase tracking-widest">Bio</label>
-              <button 
-                onClick={() => setShowEmojis(!showEmojis)}
-                className="text-stone-400 hover:text-yellow-500 transition-colors"
-              >
-                <FaSmile className="text-lg" />
-              </button>
-            </div>
-            
-            {showEmojis && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
-                <EmojiPicker onSelect={(e) => { setBio(prev => prev + e); setShowEmojis(false); }} />
-              </motion.div>
-            )}
-
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell people what makes you extraordinary…"
-              rows={4}
-              maxLength={300}
-              className="w-full px-4 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl text-stone-900 font-medium placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all resize-none"
-            />
-            <div className="flex justify-end">
-              <span className="text-xs text-stone-400 font-medium">{bio.length}/300</span>
-            </div>
-          </div>
-
-          <div className="space-y-3 pb-8">
-            <label className="text-xs font-bold text-stone-400 uppercase tracking-widest">Professional Goals</label>
-            <div className="flex flex-wrap gap-2">
-              {availableTags.map(tag => {
-                const isSelected = networkingGoals.includes(tag);
-                return (
-                  <button
-                    key={tag}
-                    onClick={() => toggleTag(tag)}
-                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all border-2 ${
-                      isSelected 
-                        ? "bg-stone-900 border-stone-900 text-white shadow-lg" 
-                        : "bg-white border-stone-100 text-stone-400 hover:border-stone-200"
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-[10px] text-stone-400 font-medium italic">Signal your intent to the community.</p>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-// ─── Create Post Modal ────────────────────────────────────────────────────────
-function CreatePostModal({
-  onClose,
-  onPosted,
-}: {
-  onClose: () => void;
-  onPosted: () => void;
-}) {
-  const { showToast } = useToast();
-  const [caption, setCaption] = useState("");
-  const [mediaUrl, setMediaUrl] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [posting, setPosting] = useState(false);
-  const [postType, setPostType] = useState<"image" | "video">("image");
-  const [showEmojis, setShowEmojis] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Client-side validations
-    if (file.size > 20 * 1024 * 1024) {
-      showToast("File too large. Max 20MB allowed.", "error");
-      return;
-    }
-
-    if (file.type.startsWith("video")) {
-      const video = document.createElement('video');
-      video.preload = 'metadata';
-      video.onloadedmetadata = () => {
-        window.URL.revokeObjectURL(video.src);
-        if (video.duration > 60) {
-          showToast("Video too long. Max 1 minute allowed.", "error");
-          return;
-        }
-        performPostUpload(file);
-      };
-      video.src = URL.createObjectURL(file);
-    } else {
-      performPostUpload(file);
-    }
-  };
-
-  const performPostUpload = async (file: File) => {
-    setUploading(true);
-    try {
-      const sigRes = await fetch("/api/upload/signature");
-      const sigData = await sigRes.json();
-      if (!sigData.success) throw new Error(sigData.error || "Failed to get upload signature");
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("api_key", sigData.apiKey);
-      formData.append("timestamp", sigData.timestamp);
-      formData.append("signature", sigData.signature);
-      formData.append("folder", sigData.folder);
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${sigData.cloudName}/auto/upload`, {
-        method: "POST",
-        body: formData
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMediaUrl(data.secure_url);
-      } else {
-        showToast(data.error?.message || "Upload failed", "error");
-      }
-    } catch (err) {
-      console.error("Upload failed", err);
-      showToast("Upload failed", "error");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-
-  const handlePost = async () => {
-    if (!mediaUrl) return;
-    setPosting(true);
-    const result = await createSocialContent(caption, mediaUrl, postType.toUpperCase(), postType === "video");
-    setPosting(false);
-    if (result.success) {
-      onPosted();
-      onClose();
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", damping: 28, stiffness: 300 }}
-        className="mt-auto w-full max-h-[85vh] bg-white rounded-t-[32px] overflow-hidden flex flex-col"
-      >
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-stone-100">
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-100 text-stone-600">
-            <FaTimes />
-          </button>
-          <h2 className="text-lg font-black text-stone-900">New Post</h2>
-          <button
-            onClick={handlePost}
-            disabled={!mediaUrl || posting}
-            className="px-5 py-2 bg-yellow-400 text-yellow-950 font-black rounded-full text-sm shadow-md shadow-yellow-200 disabled:opacity-40 transition-all hover:bg-yellow-300 active:scale-95"
-          >
-            {posting ? "Posting…" : "Share"}
-          </button>
-        </div>
-
-        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
-          <div className="flex gap-2 p-1 bg-stone-100 rounded-2xl">
-            {(["image", "video"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setPostType(t)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all ${postType === t ? "bg-white text-stone-900 shadow-sm" : "text-stone-400"}`}
-              >
-                {t === "image" ? <FaImage /> : <FaVideo />}
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="relative w-full aspect-square rounded-3xl overflow-hidden bg-stone-50 border-2 border-dashed border-stone-200 flex flex-col items-center justify-center cursor-pointer hover:bg-stone-100 transition-colors"
-          >
-            {mediaUrl ? (
-              postType === "image" ? (
-                <Image src={mediaUrl} alt="Preview" fill className="object-cover" unoptimized={mediaUrl.startsWith("/")} />
-              ) : (
-                <video src={mediaUrl} className="w-full h-full object-cover" muted loop autoPlay />
-              )
-            ) : uploading ? (
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-10 h-10 border-3 border-yellow-400 border-t-transparent rounded-full animate-spin" />
-                <p className="text-stone-400 font-medium text-sm">Uploading…</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-3 text-stone-400">
-                {postType === "image" ? <FaImage className="text-5xl text-stone-300" /> : <FaVideo className="text-5xl text-stone-300" />}
-                <p className="font-bold">Tap to select {postType}</p>
-                <p className="text-xs text-stone-300">Tap to browse your files</p>
-              </div>
-            )}
-            {mediaUrl && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setMediaUrl(""); }}
-                className="absolute top-3 right-3 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors"
-              >
-                <FaTimes className="text-xs" />
-              </button>
-            )}
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={postType === "image" ? "image/*" : "video/*"}
-            className="hidden"
-            onChange={handleUpload}
-          />
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-stone-400 uppercase tracking-widest">Caption</label>
-                <button 
-                  onClick={() => setShowEmojis(!showEmojis)}
-                  className="text-stone-400 hover:text-yellow-500 transition-colors"
-                >
-                  <FaSmile className="text-lg" />
-                </button>
-              </div>
-              
-              {showEmojis && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
-                  <EmojiPicker onSelect={(e) => { setCaption(prev => prev + e); setShowEmojis(false); }} />
-                </motion.div>
-              )}
-
-              <textarea
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-                placeholder="Write a caption…"
-                rows={3}
-                maxLength={200}
-                className="w-full px-4 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl text-stone-900 font-medium placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all resize-none"
-              />
-              <div className="flex justify-end">
-                <span className="text-xs text-stone-400 font-medium">{caption.length}/200</span>
-              </div>
-            </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-// ─── Main Profile Client Component ───────────────────────────────────────────
-export default function ProfileClient({ initialProfile, initialPendingRequests, initialFriends }: { 
   initialProfile: ProfileData;
   initialPendingRequests: PendingRequestData[];
   initialFriends: FriendData[];
@@ -552,11 +56,12 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
 
   const handleClaimBonus = async () => {
     const result = await claimDailyBonus();
-    if (result.success && 'amount' in result) {
-      setProfile(prev => ({ ...prev, tokens: prev.tokens + (result.amount || 0) }));
+    if (result.success && "amount" in result) {
+      setProfile((prev) => ({ ...prev, tokens: prev.tokens + (result.amount || 0) }));
       showToast(`Claimed ${result.amount} tokens!`, "success");
     } else {
-      const errorMsg = ('message' in result ? result.message : 'error' in result ? result.error : "Failed to claim bonus");
+      const errorMsg =
+        "message" in result ? result.message : "error" in result ? result.error : "Failed to claim bonus";
       showToast(errorMsg || "Failed to claim bonus", "error");
     }
   };
@@ -568,7 +73,7 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
     }
     const result = await boostProfile();
     if (result.success) {
-      setProfile(prev => ({ ...prev, tokens: prev.tokens - 300 }));
+      setProfile((prev) => ({ ...prev, tokens: prev.tokens - 300 }));
       showToast("Profile boosted for 24 hours!", "success");
     } else {
       showToast(result.error || "Failed to boost profile", "error");
@@ -579,255 +84,288 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
 
   return (
     <>
-      <div className="min-h-screen bg-white pb-28">
-        <div className="relative">
-          <div className="relative h-64 overflow-hidden rounded-b-[4rem] shadow-2xl">
-            <div className="absolute inset-0 bg-stone-900" />
-            <motion.div 
-              animate={{ x: [0, 50, 0], y: [0, 30, 0] }}
-              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-              className="absolute -top-20 -left-20 w-80 h-80 bg-yellow-400/20 blur-[100px] rounded-full" 
-            />
-            <motion.div 
-              animate={{ x: [0, -50, 0], y: [0, -30, 0] }}
+      <div className="page-shell min-h-screen bg-background pb-28 md:pb-12">
+        {/* Hero */}
+        <div className="relative -mx-[var(--page-gutter)] px-[var(--page-gutter)] mb-8 md:mb-0 md:mx-0 md:px-0 md:rounded-3xl overflow-hidden shadow-premium border border-border/60">
+          <div className="relative h-[min(52vw,280px)] sm:h-72 lg:h-80 bg-gradient-to-br from-zinc-900 via-zinc-800 to-primary/25">
+            <motion.div
+              animate={{ x: [0, 40, 0], y: [0, 24, 0] }}
               transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-              className="absolute -bottom-20 -right-20 w-80 h-80 bg-amber-500/10 blur-[100px] rounded-full" 
+              className="absolute -top-24 -left-24 w-72 h-72 bg-primary/15 blur-[100px] rounded-full"
             />
-            
-            <div className="absolute inset-x-0 top-0 p-8 flex justify-between items-center z-10">
-              <h1 className="text-2xl font-black text-white tracking-tighter">ELITE PROFILE</h1>
-              <div className="flex items-center gap-3">
-                <div className="px-4 py-2 bg-yellow-400 text-stone-900 rounded-2xl flex items-center gap-2 shadow-xl shadow-yellow-400/20">
-                  <span className="text-sm font-black tracking-tighter">{profile.tokens}</span>
-                  <div className="w-5 h-5 bg-stone-900 rounded-full flex items-center justify-center text-[10px] text-yellow-400">
-                    💰
-                  </div>
+            <motion.div
+              animate={{ x: [0, -36, 0], y: [0, -20, 0] }}
+              transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
+              className="absolute -bottom-28 -right-28 w-80 h-80 bg-amber-500/10 blur-[100px] rounded-full"
+            />
+
+            <div className="absolute inset-x-0 top-0 p-5 sm:p-8 flex justify-between items-start z-10">
+              <div>
+                <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.35em] text-primary/90">Elite</p>
+                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight font-heading">Your profile</h1>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="px-3 py-2 sm:px-4 sm:py-2 bg-primary text-primary-foreground rounded-2xl flex items-center gap-2 shadow-lg text-xs sm:text-sm font-black">
+                  <span>{profile.tokens}</span>
+                  <span aria-hidden>💎</span>
                 </div>
                 <Link
                   href="/settings"
-                  className="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 backdrop-blur-2xl text-white border border-white/10 hover:bg-white/10 transition-all"
+                  className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-xl text-white border border-white/15 hover:bg-white/15 transition-colors focus-ring"
                 >
-                  <FaCog className="text-xl" />
+                  <FaCog className="text-lg sm:text-xl" />
                 </Link>
               </div>
             </div>
           </div>
 
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2 z-20">
-            <div className="relative group">
-              <div className="absolute inset-0 rounded-full bg-yellow-400 blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
-              <div className="relative w-40 h-40 rounded-full border-[6px] border-white overflow-hidden bg-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
-                <Image
-                  src={profile.photos[0] || `https://ui-avatars.com/api/?name=${profile.name}`}
-                  alt={profile.name || "Profile"}
-                  fill
-                  className="object-cover"
-                  unoptimized={profile.photos[0]?.startsWith("/")}
-                  priority
-                />
+          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 -mt-16 sm:-mt-20 pb-6">
+            <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-10">
+              <div className="relative group mx-auto md:mx-0 shrink-0">
+                <div className="absolute inset-0 rounded-full bg-primary/25 blur-2xl opacity-40 group-hover:opacity-60 transition-opacity" />
+                <div className="relative w-36 h-36 sm:w-40 sm:h-40 rounded-full border-[5px] border-background overflow-hidden bg-muted shadow-xl">
+                  <Image
+                    src={profile.photos[0] || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || "User")}`}
+                    alt={profile.name || "Profile"}
+                    fill
+                    className="object-cover"
+                    unoptimized={profile.photos[0]?.startsWith("/")}
+                    priority
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.94 }}
+                  type="button"
+                  onClick={() => setShowEditModal(true)}
+                  className="absolute bottom-1 right-1 w-11 h-11 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-lg border-4 border-background z-30 focus-ring"
+                >
+                  <FaPen className="text-sm" />
+                </motion.button>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setShowEditModal(true)}
-                className="absolute bottom-2 right-2 w-11 h-11 bg-yellow-400 text-stone-900 rounded-full flex items-center justify-center shadow-2xl border-4 border-white z-30"
-              >
-                <FaPen className="text-sm" />
-              </motion.button>
+
+              <div className="flex-1 text-center md:text-left space-y-3 pt-2 md:pb-2">
+                <div className="flex flex-col md:flex-row md:items-center md:flex-wrap gap-2 md:gap-3 justify-center md:justify-start">
+                  <div className="flex items-center justify-center md:justify-start gap-2 flex-wrap">
+                    <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight font-heading">
+                      {profile.name || "User"}
+                      {profile.age ? (
+                        <span className="text-muted-foreground font-medium ml-2 text-2xl sm:text-3xl">{profile.age}</span>
+                      ) : null}
+                    </h2>
+                    {isVerified && (
+                      <span className="inline-flex w-8 h-8 bg-blue-600 rounded-full items-center justify-center shadow-md text-white">
+                        <FaCheck className="text-xs" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-center md:justify-start gap-2 text-muted-foreground text-xs sm:text-sm font-bold uppercase tracking-widest">
+                    <FaBriefcase className="text-[10px] shrink-0" />
+                    <span>{profile.occupation || "Elite Member"}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-foreground text-background text-[10px] font-black uppercase tracking-widest shadow-md">
+                    <FaCrown className="text-primary" />
+                    {profile.membership}
+                  </span>
+                  {profile.verificationStatus === "VERIFIED" && (
+                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest">
+                      <FaStar className="text-xs" />
+                      Verified Identity
+                    </span>
+                  )}
+                  {initialProfile.professionalVerified && (
+                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest shadow-md">
+                      <FaBriefcase />
+                      Founder Verified
+                    </span>
+                  )}
+                </div>
+
+                <div className="max-w-xl mx-auto md:mx-0">
+                  {profile.bio ? (
+                    <p className="text-foreground/85 text-sm sm:text-base font-medium leading-relaxed italic border-l-2 border-primary/40 pl-4">
+                      &ldquo;{profile.bio}&rdquo;
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowEditModal(true)}
+                      className="text-muted-foreground text-sm font-bold uppercase tracking-widest border-b border-border pb-1 hover:text-primary transition-colors"
+                    >
+                      Add a bio
+                    </button>
+                  )}
+                </div>
+
+                {profile.networkingGoals && profile.networkingGoals.length > 0 && (
+                  <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-1">
+                    {profile.networkingGoals.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1.5 bg-muted border border-border text-muted-foreground rounded-xl text-[10px] font-black uppercase tracking-widest"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-24 px-6">
-          <div className="text-center space-y-4">
-            <div>
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <h2 className="text-4xl font-black text-stone-900 tracking-tight">
-                  {profile.name || "User"}
-                  {profile.age ? <span className="text-stone-400 font-light ml-2">{profile.age}</span> : ""}
-                </h2>
-                {isVerified && (
-                  <div className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <FaCheck className="text-white text-xs" />
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex items-center justify-center gap-2 text-stone-400 text-sm font-black tracking-widest uppercase">
-                <FaBriefcase className="text-xs" />
-                <span>{profile.occupation || "Elite Member"}</span>
-              </div>
-            </div>
-
-              <div className="flex flex-wrap justify-center gap-2">
-                <div className="px-4 py-2 rounded-2xl bg-stone-900 text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl">
-                  <FaCrown className="text-yellow-400" />
-                  {profile.membership}
-                </div>
-                {profile.verificationStatus === "VERIFIED" && (
-                  <div className="px-4 py-2 rounded-2xl bg-yellow-400 text-stone-950 font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
-                    <FaStar />
-                    Verified Identity
-                  </div>
-                )}
-                {initialProfile.professionalVerified && (
-                  <div className="px-4 py-2 rounded-2xl bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-blue-500/20">
-                    <FaBriefcase />
-                    Founder Verified
-                  </div>
-                )}
-              </div>
-
-            <div className="max-w-xs mx-auto py-2">
-              {profile.bio ? (
-                <p className="text-stone-600 text-base font-medium leading-relaxed italic">
-                  &ldquo;{profile.bio}&rdquo;
-                </p>
-              ) : (
-                <button
-                  onClick={() => setShowEditModal(true)}
-                  className="text-stone-300 text-sm font-bold uppercase tracking-widest border-b border-stone-200 pb-1"
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 xl:gap-10">
+          <div className="xl:col-span-8 space-y-8">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              {[
+                { label: "Connections", value: profile.matchesCount, icon: FaHeart, accent: "text-rose-500" },
+                { label: "Social", value: profile.storiesCount, icon: FaFire, accent: "text-orange-500" },
+                { label: "Content", value: profile.reelsCount, icon: FaVideo, accent: "text-sky-500" },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="surface-card surface-elevated rounded-2xl sm:rounded-3xl p-4 sm:p-5 flex flex-col items-center gap-1 transition-transform active:scale-[0.98]"
                 >
-                  Edit profile to add bio
-                </button>
-              )}
-            </div>
-
-            {profile.networkingGoals && profile.networkingGoals.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-2 pt-2">
-                {profile.networkingGoals.map(tag => (
-                  <span key={tag} className="px-4 py-2 bg-stone-50 border border-stone-100 text-stone-500 rounded-xl text-[10px] font-black uppercase tracking-widest">
-                    {tag}
+                  <stat.icon className={`${stat.accent} text-lg mb-1`} />
+                  <span className="text-xl sm:text-2xl font-black text-foreground tracking-tighter">{stat.value}</span>
+                  <span className="text-[8px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-tighter text-center leading-tight">
+                    {stat.label}
                   </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 mt-10">
-            {[
-              { label: "Connections", value: profile.matchesCount, icon: FaHeart, bg: "bg-stone-50", color: "text-stone-900" },
-              { label: "Social", value: profile.storiesCount, icon: FaFire, bg: "bg-orange-50", color: "text-orange-500" },
-              { label: "Content", value: profile.reelsCount, icon: FaVideo, bg: "bg-blue-50", color: "text-blue-500" },
-            ].map((stat) => (
-              <div key={stat.label} className={`${stat.bg} rounded-3xl p-5 flex flex-col items-center gap-1 border border-stone-100 shadow-sm transition-transform active:scale-95`}>
-                <stat.icon className={`${stat.color} text-lg mb-1`} />
-                <span className="text-2xl font-black text-stone-900 tracking-tighter">{stat.value}</span>
-                <span className="text-[9px] font-black text-stone-400 uppercase tracking-tighter">{stat.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* SFS Token Economy Banner */}
-          <div className="mt-8 p-6 bg-gradient-to-br from-stone-900 to-stone-800 rounded-[2.5rem] relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 p-6 opacity-10">
-              <FaCrown className="text-7xl text-yellow-400" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 bg-yellow-400 rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-yellow-400/20">
-                  ⚡
                 </div>
-                <h3 className="text-white font-black text-lg">SFS Economy</h3>
+              ))}
+            </div>
+
+            <div className="surface-card surface-elevated rounded-[1.75rem] sm:rounded-[2rem] p-6 bg-gradient-to-br from-zinc-900 to-zinc-800 text-white border-zinc-700/50 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-6 opacity-[0.08] pointer-events-none">
+                <FaCrown className="text-7xl text-primary" />
               </div>
-              <p className="text-stone-400 text-xs font-bold uppercase tracking-[0.1em] mb-4">You have {profile.tokens} Tokens Available</p>
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  onClick={handleBoost}
-                  className="bg-white/5 hover:bg-white/10 border border-white/10 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
-                >
-                  Boost Profile
-                </button>
-                <button 
-                  onClick={handleClaimBonus}
-                  className="bg-yellow-400 hover:bg-yellow-300 text-stone-900 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-yellow-400/10"
-                >
-                  Claim Bonus
-                </button>
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center text-lg shadow-lg text-primary-foreground">
+                    ⚡
+                  </div>
+                  <h3 className="font-black text-lg font-heading">SFS Economy</h3>
+                </div>
+                <p className="text-zinc-400 text-xs font-bold uppercase tracking-[0.12em] mb-4">
+                  You have {profile.tokens} tokens available
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleBoost}
+                    className="bg-white/10 hover:bg-white/15 border border-white/15 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors focus-ring"
+                  >
+                    Boost Profile
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClaimBonus}
+                    className="bg-primary hover:opacity-95 text-primary-foreground py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg transition-opacity focus-ring"
+                  >
+                    Claim Bonus
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 mt-8">
-            <button 
+          <aside className="xl:col-span-4 space-y-4">
+            <button
+              type="button"
               onClick={async () => {
                 const newStatus = !profile.incognito;
                 const result = await toggleGhostMode(newStatus);
                 if (result.success) {
-                  setProfile(prev => ({ ...prev, incognito: newStatus }));
+                  setProfile((prev) => ({ ...prev, incognito: newStatus }));
                 } else {
                   showToast("Failed to update Ghost Mode", "error");
                 }
               }}
-              className="group relative p-6 bg-stone-900 rounded-[2.5rem] overflow-hidden flex items-center gap-5 shadow-2xl transition-all hover:scale-[1.02]"
+              className="w-full group relative p-5 sm:p-6 bg-card border border-border rounded-[1.75rem] overflow-hidden flex items-center gap-4 shadow-sm hover:border-primary/30 transition-colors text-left focus-ring"
             >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all ${profile.incognito ? 'bg-yellow-400 text-stone-900' : 'bg-white/5 text-stone-400'}`}>
+              <div
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 ${
+                  profile.incognito ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                }`}
+              >
                 <FaEyeSlash />
               </div>
-              <div className="text-left">
-                <h4 className="text-white font-black text-lg tracking-tighter">Ghost Mode</h4>
-                <p className="text-stone-500 text-[10px] font-bold uppercase tracking-widest">{profile.incognito ? 'Browsing Invisible' : 'Appear in Viewers List'}</p>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-black text-foreground text-base tracking-tight">Ghost Mode</h4>
+                <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest truncate">
+                  {profile.incognito ? "Browsing invisible" : "Visible in viewers"}
+                </p>
               </div>
-              <div className="ml-auto w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/20 group-hover:text-yellow-400 transition-colors">
-                <div className={`w-3 h-3 rounded-full ${profile.incognito ? 'bg-yellow-400 shadow-[0_0_10px_#facc15]' : 'bg-stone-700'}`} />
-              </div>
+              <div
+                className={`w-3 h-3 rounded-full shrink-0 ${profile.incognito ? "bg-primary shadow-[0_0_12px_var(--primary)]" : "bg-muted-foreground/40"}`}
+              />
             </button>
 
-            <Link href="/referrals">
-              <div className="group relative p-6 bg-stone-900 rounded-[2.5rem] overflow-hidden flex items-center gap-5 shadow-2xl transition-all hover:scale-[1.02]">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-yellow-400/20 transition-colors" />
-                <div className="w-14 h-14 rounded-2xl bg-yellow-400 flex items-center justify-center text-2xl shadow-xl shadow-yellow-400/20">
+            <Link href="/referrals" className="block group">
+              <div className="relative p-5 sm:p-6 bg-card border border-border rounded-[1.75rem] overflow-hidden flex items-center gap-4 shadow-sm hover:border-primary/30 transition-colors">
+                <div className="absolute top-0 right-0 w-28 h-28 bg-primary/5 rounded-full -mr-14 -mt-14 blur-2xl group-hover:bg-primary/10" />
+                <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-xl shadow-lg text-primary-foreground shrink-0">
                   🎁
                 </div>
-                <div>
-                  <h3 className="text-white font-black text-lg tracking-tight">Expand Your Circle</h3>
-                  <p className="text-stone-400 text-xs font-bold uppercase tracking-widest">Earn exclusive rewards per referral</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-black text-foreground text-base tracking-tight">Expand your circle</h3>
+                  <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Referral rewards</p>
                 </div>
-                <div className="ml-auto w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white border border-white/10 group-hover:bg-white/10">
-                  <FaArrowRight />
-                </div>
+                <FaArrowRight className="text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
               </div>
             </Link>
 
-            <button 
+            <button
+              type="button"
               onClick={() => setShowEditModal(true)}
-              className="p-5 bg-white border border-stone-200 rounded-[2.5rem] flex items-center gap-4 hover:border-yellow-400 transition-colors"
+              className="w-full p-5 bg-card border border-border rounded-[1.75rem] flex items-center gap-4 hover:border-primary/35 transition-colors text-left focus-ring"
             >
-              <div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center text-stone-400">
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground shrink-0">
                 <FaPen />
               </div>
-              <div className="text-left">
-                <h3 className="font-black text-stone-800 tracking-tight">Update Details</h3>
-                <p className="text-xs text-stone-400 font-bold uppercase tracking-widest">Optimize for matches</p>
+              <div>
+                <h3 className="font-black text-foreground tracking-tight">Edit profile</h3>
+                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Photos & details</p>
               </div>
             </button>
-          </div>
 
-          {!isVerified && (
-            <motion.div
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              className="mt-8 p-4 bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 rounded-2xl shadow-lg shadow-yellow-200/60 flex items-center gap-4 cursor-pointer"
-            >
-              <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center text-xl">
-                <FaCrown className="text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-black text-yellow-950">Upgrade to Elite Concierge</h3>
-                <p className="text-xs text-yellow-800/80 font-medium mt-0.5">Unlock private matchmaking & priority discovery</p>
-              </div>
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white text-sm font-bold">›</div>
-            </motion.div>
-          )}
+            {!isVerified && (
+              <Link href="/verify" className="block">
+                <motion.div
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  className="p-5 bg-gradient-to-r from-primary via-amber-400 to-amber-500 rounded-2xl shadow-lg flex items-center gap-4 cursor-pointer border border-primary/20"
+                >
+                  <div className="w-11 h-11 rounded-xl bg-white/25 flex items-center justify-center text-xl shrink-0">
+                    <FaCrown className="text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-primary-foreground text-sm sm:text-base">Verify your identity</h3>
+                    <p className="text-xs text-primary-foreground/85 font-medium mt-0.5">
+                      Unlock trust & discovery — usually under 2 hours
+                    </p>
+                  </div>
+                  <span className="text-white text-xl font-black shrink-0">›</span>
+                </motion.div>
+              </Link>
+            )}
+          </aside>
         </div>
 
-        <div className="px-5 mt-10">
-          <div className="flex gap-2 mb-4 p-1 bg-white rounded-2xl shadow-sm border border-stone-100">
+        {/* Tabs & content */}
+        <div className="mt-10 space-y-4">
+          <div className="flex gap-2 p-1 bg-muted rounded-2xl border border-border max-w-xl mx-auto xl:mx-0 xl:max-w-none">
             {(["posts", "reels", "friends"] as const).map((tab) => (
               <button
                 key={tab}
+                type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2.5 rounded-xl font-black text-sm transition-all ${activeTab === tab ? "bg-yellow-400 text-yellow-950 shadow-sm" : "text-stone-400 hover:text-stone-600"}`}
+                className={`flex-1 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all focus-ring ${
+                  activeTab === tab ? "bg-card text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"
+                }`}
               >
                 {tab === "posts" ? "📸 Posts" : tab === "reels" ? "🎬 Reels" : "🤝 Friends"}
               </button>
@@ -835,137 +373,170 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
           </div>
 
           <motion.button
-            whileTap={{ scale: 0.97 }}
+            whileTap={{ scale: 0.98 }}
+            type="button"
             onClick={() => setShowPostModal(true)}
-            className="w-full mb-4 py-3 flex items-center justify-center gap-2 bg-stone-900 text-white rounded-2xl font-black text-sm shadow-lg hover:bg-stone-800 transition-colors"
+            className="w-full max-w-xl mx-auto xl:mx-0 xl:max-w-md py-3 flex items-center justify-center gap-2 bg-foreground text-background rounded-2xl font-black text-sm shadow-lg hover:opacity-95 transition-opacity focus-ring"
           >
             <FaCamera />
             New {activeTab === "posts" ? "Post" : "Reel"}
           </motion.button>
 
           {activeTab === "friends" ? (
-            <div className="space-y-4">
-              <h3 className="text-xs font-black text-stone-400 uppercase tracking-widest mb-2">Pending Requests</h3>
-              {pendingRequests.length > 0 ? (
-                pendingRequests.map((req) => (
-                  <div key={req.id} className="p-4 bg-white rounded-2xl border border-stone-100 flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden relative">
-                      <Image 
-                        src={req.senderUser.profile?.photos ? JSON.parse(req.senderUser.profile.photos)[0] : `https://ui-avatars.com/api/?name=${req.senderUser.name || 'User'}`} 
-                        alt={req.senderUser.name || "User"} 
-                        fill 
-                        className="object-cover" 
-                        unoptimized
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-black text-stone-800 text-sm">{req.senderUser.name || "User"}</p>
-                      <p className="text-[10px] text-stone-400 font-bold uppercase">Wants to connect</p>
-                    </div>
-                    <div className="flex gap-2">
-                       <button 
-                        onClick={async () => {
-                          const { acceptFriendRequest } = await import("../friends/actions");
-                          await acceptFriendRequest(req.id);
-                          setPendingRequests(prev => prev.filter(r => r.id !== req.id));
-                        }}
-                        className="px-3 py-1.5 bg-yellow-400 text-yellow-950 font-black text-[10px] rounded-lg shadow-sm"
-                       >
-                         Accept
-                       </button>
-                       <button 
-                        onClick={async () => {
-                          const { rejectFriendRequest } = await import("../friends/actions");
-                          await rejectFriendRequest(req.id);
-                          setPendingRequests(prev => prev.filter(r => r.id !== req.id));
-                        }}
-                        className="px-3 py-1.5 bg-stone-100 text-stone-400 font-black text-[10px] rounded-lg"
-                       >
-                         Ignore
-                       </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center py-5 text-stone-400 font-medium text-sm">No pending requests.</p>
-              )}
-
-              <div className="pt-4">
-                <h3 className="text-xs font-black text-stone-400 uppercase tracking-widest mb-2">My Friends</h3>
-                {friends.length > 0 ? (
-                  <div className="space-y-3">
-                    {friends.map((friend) => (
-                      <Link key={friend.id} href={`/profile/${friend.friendId}`}>
-                        <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100 flex items-center gap-3 transition-colors hover:border-yellow-400">
-                          <div className="w-10 h-10 rounded-full overflow-hidden relative">
-                            <Image 
-                              src={friend.image} 
-                              alt={friend.name || "Friend"} 
-                              fill 
-                              className="object-cover" 
-                              unoptimized={friend.image?.startsWith("https://ui-avatars.com")}
+            <div className="space-y-6 max-w-3xl mx-auto xl:mx-0">
+              <div>
+                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">Pending requests</h3>
+                {pendingRequests.length > 0 ? (
+                  <ul className="space-y-3">
+                    {pendingRequests.map((req) => (
+                      <li
+                        key={req.id}
+                        className="surface-card p-4 flex flex-col sm:flex-row sm:items-center gap-4"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-12 h-12 rounded-full overflow-hidden relative shrink-0 bg-muted">
+                            <Image
+                              src={
+                                req.senderUser.profile?.photos
+                                  ? JSON.parse(req.senderUser.profile.photos)[0]
+                                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(req.senderUser.name || "User")}`
+                              }
+                              alt={req.senderUser.name || "User"}
+                              fill
+                              className="object-cover"
+                              unoptimized
                             />
                           </div>
-                          <div className="flex-1">
-                            <p className="font-black text-stone-800 text-xs">{friend.name}</p>
-                            <p className="text-[9px] text-stone-400 font-bold uppercase">Connected</p>
-                          </div>
-                          <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-stone-300">
-                            <FaArrowRight className="text-[8px]" />
+                          <div className="min-w-0">
+                            <p className="font-black text-foreground text-sm truncate">{req.senderUser.name || "User"}</p>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase">Wants to connect</p>
                           </div>
                         </div>
-                      </Link>
+                        <div className="flex gap-2 shrink-0 justify-end sm:justify-start">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const { acceptFriendRequest } = await import("../friends/actions");
+                              const r = await acceptFriendRequest(req.id);
+                              if (r.success) setPendingRequests((prev) => prev.filter((x) => x.id !== req.id));
+                              else showToast(r.error || "Could not accept", "error");
+                            }}
+                            className="px-4 py-2 bg-primary text-primary-foreground font-black text-xs rounded-xl shadow-sm focus-ring"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const { rejectFriendRequest } = await import("../friends/actions");
+                              await rejectFriendRequest(req.id);
+                              setPendingRequests((prev) => prev.filter((r) => r.id !== req.id));
+                            }}
+                            className="px-4 py-2 bg-muted text-muted-foreground font-black text-xs rounded-xl focus-ring"
+                          >
+                            Ignore
+                          </button>
+                        </div>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 ) : (
-                  <p className="text-center py-8 text-stone-300 font-medium text-sm italic">No friends yet. Start connecting!</p>
+                  <p className="text-center py-8 text-muted-foreground text-sm rounded-2xl border border-dashed border-border bg-muted/30">
+                    No pending requests.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">My friends</h3>
+                {friends.length > 0 ? (
+                  <ul className="space-y-2">
+                    {friends.map((friend) => (
+                      <li key={friend.id}>
+                        <Link href={`/profile/${friend.friendId}`}>
+                          <div className="surface-card p-4 flex items-center gap-3 hover:border-primary/35 transition-colors">
+                            <div className="w-10 h-10 rounded-full overflow-hidden relative shrink-0 bg-muted">
+                              <Image
+                                src={friend.image}
+                                alt={friend.name || "Friend"}
+                                fill
+                                className="object-cover"
+                                unoptimized={friend.image?.startsWith("https://ui-avatars.com")}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-black text-foreground text-sm truncate">{friend.name}</p>
+                              <p className="text-[9px] text-muted-foreground font-bold uppercase">Connected</p>
+                            </div>
+                            <FaArrowRight className="text-muted-foreground text-xs shrink-0" />
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-center py-10 text-muted-foreground text-sm italic rounded-2xl border border-dashed border-border">
+                    No friends yet — start connecting in Discover.
+                  </p>
                 )}
               </div>
             </div>
           ) : activeTab === "posts" || activeTab === "reels" ? (
-            <div className="grid grid-cols-2 gap-3 pb-20">
-              {profile.reels.filter(r => activeTab === "posts" ? !r.videoUrl.match(/\.(mp4|mov|webm)$/i) : r.videoUrl.match(/\.(mp4|mov|webm)$/i)).map((reel, idx) => (
-                <motion.div
-                  key={reel.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="group relative aspect-[3/4] bg-stone-100 rounded-[2rem] overflow-hidden shadow-sm"
-                >
-                  {reel.videoUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                    <Image src={reel.videoUrl} alt={reel.caption || "Post"} fill className="object-cover" unoptimized={reel.videoUrl.startsWith("/")} />
-                  ) : (
-                    <video src={reel.videoUrl} className="w-full h-full object-cover" muted />
-                  )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <div className="flex items-center gap-1 text-white font-bold text-xs">
-                      <FaHeart className="text-white" />
-                      {reel.likesCount}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pb-12">
+              {profile.reels
+                .filter((r) =>
+                  activeTab === "posts" ? !r.videoUrl.match(/\.(mp4|mov|webm)$/i) : r.videoUrl.match(/\.(mp4|mov|webm)$/i)
+                )
+                .map((reel, idx) => (
+                  <motion.div
+                    key={reel.id}
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: idx * 0.04 }}
+                    className="group relative aspect-[3/4] bg-muted rounded-3xl overflow-hidden border border-border shadow-sm"
+                  >
+                    {reel.videoUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                      <Image
+                        src={reel.videoUrl}
+                        alt={reel.caption || "Post"}
+                        fill
+                        className="object-cover"
+                        unoptimized={reel.videoUrl.startsWith("/")}
+                      />
+                    ) : (
+                      <video src={reel.videoUrl} className="w-full h-full object-cover" muted playsInline />
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/45 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <div className="flex items-center gap-1 text-white font-bold text-xs">
+                        <FaHeart /> {reel.likesCount}
+                      </div>
                     </div>
-                  </div>
-                  {!reel.videoUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) && (
-                    <div className="absolute top-2 right-2 bg-black/50 rounded-full p-1">
-                      <FaVideo className="text-white text-[8px]" />
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-              {profile.reels.filter(r => activeTab === "posts" ? !r.videoUrl.match(/\.(mp4|mov|webm)$/i) : r.videoUrl.match(/\.(mp4|mov|webm)$/i)).length === 0 && (
-                <div className="col-span-2 py-16 flex flex-col items-center gap-4 text-center">
-                  <div className="w-20 h-20 rounded-3xl bg-stone-100 flex items-center justify-center text-4xl">
-                    {activeTab === "posts" ? "📸" : "🎬"}
-                  </div>
+                    {!reel.videoUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) && (
+                      <div className="absolute top-2 right-2 bg-black/50 rounded-full p-1">
+                        <FaVideo className="text-white text-[8px]" />
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              {profile.reels.filter((r) =>
+                activeTab === "posts" ? !r.videoUrl.match(/\.(mp4|mov|webm)$/i) : r.videoUrl.match(/\.(mp4|mov|webm)$/i)
+              ).length === 0 && (
+                <div className="col-span-full py-16 flex flex-col items-center gap-4 text-center rounded-3xl border border-dashed border-border bg-muted/20 px-4">
+                  <div className="text-5xl">{activeTab === "posts" ? "📸" : "🎬"}</div>
                   <div>
-                    <p className="font-black text-stone-800 text-lg mb-1">No {activeTab} yet</p>
-                    <p className="text-stone-400 text-sm font-medium">Share your first {activeTab === "posts" ? "photo or video" : "reel"} to stand out</p>
+                    <p className="font-black text-foreground text-lg mb-1">No {activeTab} yet</p>
+                    <p className="text-muted-foreground text-sm">
+                      Share your first {activeTab === "posts" ? "photo or video" : "reel"} to stand out
+                    </p>
                   </div>
                   <motion.button
                     whileTap={{ scale: 0.96 }}
+                    type="button"
                     onClick={() => setShowPostModal(true)}
-                    className="px-6 py-3 bg-yellow-400 text-yellow-950 rounded-2xl font-black text-sm shadow-md shadow-yellow-200"
+                    className="px-6 py-3 bg-primary text-primary-foreground rounded-2xl font-black text-sm shadow-md focus-ring"
                   >
                     <FaCamera className="inline mr-2" />
-                    Create First {activeTab === "posts" ? "Post" : "Reel"}
+                    Create first {activeTab === "posts" ? "post" : "reel"}
                   </motion.button>
                 </div>
               )}
@@ -976,20 +547,13 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
 
       <AnimatePresence>
         {showEditModal && (
-          <EditProfileModal
-            profile={profile}
-            onClose={() => setShowEditModal(false)}
-            onSaved={handleProfileSaved}
-          />
+          <EditProfileModal profile={profile} onClose={() => setShowEditModal(false)} onSaved={handleProfileSaved} />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {showPostModal && (
-          <CreatePostModal
-            onClose={() => setShowPostModal(false)}
-            onPosted={fetchProfile}
-          />
+          <CreatePostModal onClose={() => setShowPostModal(false)} onPosted={fetchProfile} />
         )}
       </AnimatePresence>
     </>

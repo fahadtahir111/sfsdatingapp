@@ -33,14 +33,15 @@ export default function ReferralsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8f7f5] flex items-center justify-center p-6 pb-24">
-        <div className="w-10 h-10 border-4 border-stone-200 border-t-stone-900 rounded-full animate-spin" />
+      <div className="page-shell min-h-screen bg-background flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 border-4 border-muted border-t-foreground rounded-full animate-spin" />
+        <p className="text-sm font-semibold text-muted-foreground">Loading referral dashboard…</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f7f5] p-6 pb-24">
+    <div className="page-shell min-h-screen bg-background py-6 pb-24">
       {/* Header */}
       <header className="mb-8">
         <h1 className="text-3xl font-black text-stone-900 tracking-tight leading-none mb-2">Elite Circle</h1>
@@ -148,7 +149,7 @@ export default function ReferralsPage() {
         </div>
       </section>
 
-      <div className="fixed bottom-24 left-6 right-6 flex gap-3 pointer-events-none">
+      <div className="fixed bottom-24 left-6 right-6 md:left-[max(1.5rem,calc((100vw-var(--page-max))/2+1.5rem))] md:right-[max(1.5rem,calc((100vw-var(--page-max))/2+1.5rem))] flex gap-3 pointer-events-none">
          <button 
            onClick={copyToClipboard}
            className="flex-1 bg-stone-900 text-white h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl flex items-center justify-center gap-3 pointer-events-auto active:scale-95 transition-transform"

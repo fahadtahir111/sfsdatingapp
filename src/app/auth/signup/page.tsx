@@ -100,7 +100,7 @@ function SignupContent() {
                     type="text"
                     required
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus:bg-white/10 focus:border-primary/50 transition-all outline-none text-sm font-medium"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus:bg-white/10 focus:border-primary/50 focus:ring-2 focus:ring-primary/30 transition-all outline-none text-sm font-medium"
                     placeholder="John Doe"
                   />
                 </div>
@@ -111,7 +111,7 @@ function SignupContent() {
                     type="email"
                     required
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus:bg-white/10 focus:border-primary/50 transition-all outline-none text-sm font-medium"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus:bg-white/10 focus:border-primary/50 focus:ring-2 focus:ring-primary/30 transition-all outline-none text-sm font-medium"
                     placeholder="executive@company.com"
                   />
                 </div>
@@ -122,7 +122,7 @@ function SignupContent() {
                     type="password"
                     required
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus:bg-white/10 focus:border-primary/50 transition-all outline-none text-sm font-medium"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus:bg-white/10 focus:border-primary/50 focus:ring-2 focus:ring-primary/30 transition-all outline-none text-sm font-medium"
                     placeholder="••••••••"
                   />
                 </div>

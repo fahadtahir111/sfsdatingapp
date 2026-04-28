@@ -109,6 +109,11 @@ model Profile {
   industry          String?
   boostedUntil      DateTime?
 
+  /// Identity verification wizard: 0 = not started, 1–3 = in progress, 4 = submitted pending review
+  onboardingStep       Int       @default(0)
+  onboardingStartedAt  DateTime?
+  onboardingCompletedAt DateTime?
+
   // Notification Settings
   pushEnabled    Boolean @default(true)
   emailEnabled   Boolean @default(false)

@@ -1,8 +1,8 @@
-
 import { getCurrentUser } from "@/lib/auth";
 import VerifyClient from "./VerifyClient";
 import Link from "next/link";
 import { FaShieldAlt } from "react-icons/fa";
+import { getOnboardingStatus } from "./actions";
 
 export default async function VerifyPage() {
   const user = await getCurrentUser();
@@ -22,5 +22,7 @@ export default async function VerifyPage() {
     );
   }
 
-  return <VerifyClient />;
+  const initialStatus = await getOnboardingStatus();
+
+  return <VerifyClient initialStatus={initialStatus} />;
 }

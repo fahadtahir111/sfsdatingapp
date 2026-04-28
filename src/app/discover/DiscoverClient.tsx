@@ -26,6 +26,7 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({ minAge: 18, maxAge: 50 });
+  const { showToast } = useToast();
 
   const loadMatches = useCallback(async () => {
     try {
@@ -34,12 +35,12 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
       setCards(matches);
     } catch (e) {
       console.error("Failed to fetch matches", e);
+      showToast("Could not refresh people. Try again.", "error");
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, showToast]);
 
-  // Only run if initialCards is empty or filters change
   useEffect(() => {
     if (filters.minAge !== 18 || filters.maxAge !== 50) {
       loadMatches();
@@ -48,17 +49,24 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
 
   if (loading && cards.length === 0) {
     return (
-      <div className="fixed inset-0 bg-secondary/20 flex items-center justify-center">
+      <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center gap-4 z-[15]">
         <LoadingSpinner size="lg" />
+        <p className="text-sm font-semibold text-muted-foreground">Finding people for you…</p>
       </div>
     );
   }
 
   return (
     <div className="absolute inset-0 bg-secondary/20 flex flex-col pt-16 pb-24 px-4 overflow-hidden">
+      {loading && cards.length > 0 && (
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary/15 z-[55] overflow-hidden pointer-events-none">
+          <div className="h-full w-2/5 bg-primary animate-pulse" />
+        </div>
+      )}
       <div className="absolute top-4 right-6 z-50">
         <button 
           onClick={() => setShowFilters(true)}
+          aria-label="Open discover filters"
           className="w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-stone-900 border border-stone-100 active:scale-95 transition-transform"
         >
           <FaSlidersH />
@@ -81,19 +89,26 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
           })}
         </AnimatePresence>
         
-        {cards.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        {cards.length === 0 && !loading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mb-6"
             >
-              <div className="w-16 h-16 bg-primary rounded-full animate-ping opacity-50" />
+              <div className="w-16 h-16 bg-primary rounded-full opacity-40" />
             </motion.div>
-            <h3 className="text-2xl font-black text-foreground mb-2">Looking for more</h3>
-            <p className="text-muted-foreground font-medium max-w-xs mx-auto">
-              We&apos;re expanding your radius to find more elite connections.
+            <h3 className="text-2xl font-black text-foreground mb-2">No one new right now</h3>
+            <p className="text-muted-foreground font-medium max-w-xs mx-auto mb-6">
+              Broaden age filters or check back soon — new members join daily.
             </p>
+            <button
+              type="button"
+              onClick={() => void loadMatches()}
+              className="px-6 py-3 rounded-2xl bg-foreground text-background font-black text-sm shadow-lg active:scale-[0.98] transition-transform focus-ring"
+            >
+              Refresh
+            </button>
           </div>
         )}
       </div>
@@ -122,10 +137,11 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
               <div className="space-y-8">
                 <div>
                   <div className="flex justify-between items-end mb-4">
-                    <label className="text-xs font-black uppercase tracking-widest text-stone-400">Age Range</label>
+                    <label htmlFor="discover-age-range" className="text-xs font-black uppercase tracking-widest text-stone-400">Age Range</label>
                     <span className="text-sm font-black text-stone-900">{filters.minAge} — {filters.maxAge}</span>
                   </div>
                   <input 
+                    id="discover-age-range"
                     type="range" 
                     min="18" 
                     max="80" 
@@ -173,6 +189,7 @@ const SwipeCard = ({
       setCards(cards.filter(c => c.id !== card.id));
     } catch (e) {
       console.error("Swipe failed", e);
+      showToast("Action failed. Please try again.", "error");
     }
   };
 
@@ -284,6 +301,7 @@ const SwipeCard = ({
       <div className="absolute bottom-10 left-0 right-0 z-40 flex justify-center items-center gap-6 px-10 pointer-events-none">
         <button 
           onClick={(e) => { e.stopPropagation(); handleSwipe("PASS"); }}
+          aria-label="Pass profile"
           className="w-14 h-14 bg-stone-900/80 backdrop-blur-xl rounded-full flex items-center justify-center text-white border border-white/10 shadow-2xl hover:scale-110 active:scale-95 transition-all pointer-events-auto"
         >
           <FaTimes className="text-xl" />
@@ -295,12 +313,19 @@ const SwipeCard = ({
             const { sendFriendRequest } = await import("../friends/actions");
             const res = await sendFriendRequest(card.id);
             if (res.success) {
-              showToast("Elite invitation sent!", "success");
+              if ("mutualAccepted" in res && res.mutualAccepted) {
+                showToast("You're connected!", "success");
+              } else if ("alreadySent" in res && res.alreadySent) {
+                showToast("Invitation already sent", "success");
+              } else {
+                showToast("Elite invitation sent!", "success");
+              }
               setCards(cards.filter(c => c.id !== card.id));
             } else {
               showToast(res.error || "Failed to send invitation", "error");
             }
           }}
+          aria-label="Send connection request"
           className="w-20 h-20 bg-yellow-400 rounded-full flex flex-col items-center justify-center text-stone-900 shadow-[0_10px_30px_rgba(250,204,21,0.4)] hover:scale-110 active:scale-95 transition-all pointer-events-auto group"
         >
           <span className="text-3xl mb-0.5 group-hover:scale-125 transition-transform">🤝</span>
@@ -309,6 +334,7 @@ const SwipeCard = ({
 
         <button 
           onClick={(e) => { e.stopPropagation(); handleSwipe("LIKE"); }}
+          aria-label="Like profile"
           className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-stone-900 shadow-2xl hover:scale-110 active:scale-95 transition-all pointer-events-auto"
         >
           <FaHeart className="text-xl text-stone-900" />

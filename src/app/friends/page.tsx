@@ -58,9 +58,9 @@ export default function FriendsHub() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-background pb-24">
       {/* ── Sticky Header ─────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-stone-100 px-6 py-6">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-2xl border-b border-border px-6 py-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-black text-stone-900 tracking-tight">Network</h1>
           <div className="w-12 h-12 rounded-2xl bg-stone-900 flex items-center justify-center text-yellow-400 shadow-xl shadow-stone-200">
@@ -94,7 +94,7 @@ export default function FriendsHub() {
         </div>
       </header>
 
-      <main className="px-6 py-6">
+      <main className="page-shell py-6">
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div 

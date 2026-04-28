@@ -39,8 +39,9 @@ export default function LikesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6 pb-24">
-        <div className="w-10 h-10 border-4 border-stone-200 border-t-stone-900 rounded-full animate-spin" />
+      <div className="page-shell min-h-screen bg-background flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 border-4 border-muted border-t-foreground rounded-full animate-spin" />
+        <p className="text-sm font-semibold text-muted-foreground">Loading interests…</p>
       </div>
     );
   }
@@ -66,7 +67,7 @@ export default function LikesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f7f5] p-6 pb-24">
+    <div className="page-shell min-h-screen bg-background py-6 pb-24">
       <header className="mb-8 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black text-stone-900 tracking-tight mb-1">Interest</h1>

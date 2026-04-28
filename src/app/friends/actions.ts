@@ -26,21 +26,35 @@ export async function sendFriendRequest(receiverId: string) {
     });
     if (existingFriendship) return { success: false, error: "Already friends" };
 
-    // Check if request already exists
     const existingRequest = await prisma.friendRequest.findUnique({
-      where: { senderId_receiverId: { senderId, receiverId } }
+      where: { senderId_receiverId: { senderId, receiverId } },
     });
-    if (existingRequest) return { success: false, error: "Request already sent" };
+    if (existingRequest?.status === "PENDING") {
+      revalidatePath("/profile");
+      return { success: true, alreadySent: true as const };
+    }
+
+    const reversePending = await prisma.friendRequest.findUnique({
+      where: { senderId_receiverId: { senderId: receiverId, receiverId: senderId } },
+    });
+
+    if (reversePending?.status === "PENDING") {
+      const accepted = await acceptFriendRequest(reversePending.id);
+      if (accepted.success) {
+        return { success: true, mutualAccepted: true as const };
+      }
+    }
 
     await prisma.friendRequest.create({
       data: {
         senderId,
         receiverId,
-        status: "PENDING"
-      }
+        status: "PENDING",
+      },
     });
 
     revalidatePath("/profile");
+    revalidatePath("/discover");
     return { success: true };
   } catch (error) {
     console.error("Error sending friend request:", error);

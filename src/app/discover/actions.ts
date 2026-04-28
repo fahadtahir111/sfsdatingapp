@@ -39,25 +39,43 @@ export async function fetchDiscoverFeed(filters?: {
     // Target gender matching (Bidirectional)
     // 1. I am interested in them
     // 2. They are interested in me
-    const myInterestedIn = currentUser.profile?.interestedIn;
-    const myGender = currentUser.profile?.gender;
-    
+    const myInterestedIn = currentUser.profile?.interestedIn?.trim();
+    const myGender = currentUser.profile?.gender?.trim();
+
+    const useBidirectionalPrefs =
+      !!myInterestedIn &&
+      !!myGender &&
+      myInterestedIn.length > 0 &&
+      myGender.length > 0;
+
+    const ageFilter =
+      filters?.minAge != null || filters?.maxAge != null
+        ? {
+            age: {
+              ...(filters?.minAge != null ? { gte: filters.minAge } : {}),
+              ...(filters?.maxAge != null ? { lte: filters.maxAge } : {}),
+            },
+          }
+        : {};
+
     const potentialMatches = await prisma.profile.findMany({
       where: {
         userId: { notIn: excludedIds },
-        gender: myInterestedIn || undefined,
-        interestedIn: myGender || undefined,
         incognitoMode: false,
-        // Advanced Filters
-        age: {
-          gte: filters?.minAge || undefined,
-          lte: filters?.maxAge || undefined
-        },
-        ...(filters?.networkingGoals && filters.networkingGoals.length > 0 ? {
-          networkingGoals: {
-            contains: filters.networkingGoals[0] // Simple check for MVP
-          }
-        } : {})
+        ...(useBidirectionalPrefs
+          ? {
+              gender: myInterestedIn,
+              interestedIn: myGender,
+            }
+          : {}),
+        ...ageFilter,
+        ...(filters?.networkingGoals && filters.networkingGoals.length > 0
+          ? {
+              networkingGoals: {
+                contains: filters.networkingGoals[0],
+              },
+            }
+          : {}),
       },
       include: {
         user: true
@@ -138,28 +156,77 @@ export async function submitSwipe(toUserId: string, action: "LIKE" | "PASS") {
       });
 
       if (reciprocalSwipe) {
-        // We have a match!
-        const match = await prisma.match.create({
-          data: {
-            user1Id: fromUserId,
-            user2Id: toUserId,
-          }
+        const existingMatch = await prisma.match.findFirst({
+          where: {
+            OR: [
+              { user1Id: fromUserId, user2Id: toUserId },
+              { user1Id: toUserId, user2Id: fromUserId },
+            ],
+          },
         });
 
-        // Create a new Conversation immediately upon matching
-        const conversation = await prisma.conversation.create({
-          data: {
-            userLinks: {
-              create: [
-                { userId: fromUserId },
-                { userId: toUserId }
-              ]
-            }
+        let matchId = existingMatch?.id;
+        if (!existingMatch) {
+          try {
+            const created = await prisma.match.create({
+              data: {
+                user1Id: fromUserId,
+                user2Id: toUserId,
+              },
+            });
+            matchId = created.id;
+          } catch {
+            const again = await prisma.match.findFirst({
+              where: {
+                OR: [
+                  { user1Id: fromUserId, user2Id: toUserId },
+                  { user1Id: toUserId, user2Id: fromUserId },
+                ],
+              },
+            });
+            matchId = again?.id;
           }
+        }
+
+        const existingConv = await prisma.conversation.findFirst({
+          where: {
+            AND: [
+              { userLinks: { some: { userId: fromUserId } } },
+              { userLinks: { some: { userId: toUserId } } },
+            ],
+          },
         });
+
+        let conversationId = existingConv?.id;
+        if (!existingConv) {
+          try {
+            const conv = await prisma.conversation.create({
+              data: {
+                userLinks: {
+                  create: [{ userId: fromUserId }, { userId: toUserId }],
+                },
+              },
+            });
+            conversationId = conv.id;
+          } catch {
+            const convAgain = await prisma.conversation.findFirst({
+              where: {
+                AND: [
+                  { userLinks: { some: { userId: fromUserId } } },
+                  { userLinks: { some: { userId: toUserId } } },
+                ],
+              },
+            });
+            conversationId = convAgain?.id;
+          }
+        }
 
         revalidatePath("/chat");
-        return { matched: true, matchId: match.id, conversationId: conversation.id };
+        return {
+          matched: true,
+          matchId,
+          conversationId,
+        };
       }
     }
 

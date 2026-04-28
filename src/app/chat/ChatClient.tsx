@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FaSearch, FaEllipsisH } from "react-icons/fa";
 import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getConversations } from "./actions";
+import { useState } from "react";
 
 interface ConversationData {
   id: string;
@@ -17,6 +18,7 @@ interface ConversationData {
 }
 
 export default function ChatClient({ initialConversations }: { initialConversations: ConversationData[] }) {
+  const [query, setQuery] = useState("");
   const { data: conversations, loading } = useRealTime(
     getConversations, 
     5000, 
@@ -25,28 +27,43 @@ export default function ChatClient({ initialConversations }: { initialConversati
   );
 
   const displayConversations = conversations || initialConversations;
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredConversations = normalizedQuery
+    ? displayConversations.filter((c) => {
+        return (
+          c.name.toLowerCase().includes(normalizedQuery) ||
+          c.lastMessage.toLowerCase().includes(normalizedQuery)
+        );
+      })
+    : displayConversations;
 
   // Filter conversations with no messages for the "New Matches" section
-  const newMatches = displayConversations.filter(c => c.lastMessage === "No messages yet" || c.time === "New Match");
-  const recentConvs = displayConversations.filter(c => c.lastMessage !== "No messages yet" && c.time !== "New Match");
+  const newMatches = filteredConversations.filter(c => c.lastMessage === "No messages yet" || c.time === "New Match");
+  const recentConvs = filteredConversations.filter(c => c.lastMessage !== "No messages yet" && c.time !== "New Match");
 
   return (
-    <div className="min-h-screen bg-white pt-6 pb-24">
+    <div className="page-shell min-h-screen bg-background pt-6 pb-24 section-stack">
       {/* Header */}
-      <div className="px-6 flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center">
         <h1 className="text-2xl font-black text-foreground">Messages</h1>
-        <Link href="/profile" className="w-10 h-10 flex items-center justify-center rounded-full bg-secondary text-foreground hover:bg-secondary/80 transition-colors">
+        <Link
+          href="/profile"
+          aria-label="Open profile"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-secondary text-foreground hover:bg-secondary/80 transition-colors focus-ring"
+        >
           <FaEllipsisH />
         </Link>
       </div>
 
       {/* Search */}
-      <div className="px-6 mb-8">
+      <div>
         <div className="relative">
           <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input 
             type="text" 
             placeholder="Search matches or messages..." 
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-secondary/50 text-foreground py-3 pl-12 pr-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
           />
         </div>
@@ -55,11 +72,11 @@ export default function ChatClient({ initialConversations }: { initialConversati
       {/* New Matches / Stories */}
       {newMatches.length > 0 && (
         <div className="mb-8">
-          <div className="px-6 flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">New Matches</h2>
             <Link href="/discover" className="text-primary text-sm font-bold hover:underline">See all</Link>
           </div>
-          <div className="flex overflow-x-auto px-6 gap-4 no-scrollbar pb-2">
+          <div className="flex overflow-x-auto gap-4 no-scrollbar pb-2">
             {newMatches.map((match, i) => (
               <Link href={`/chat/${match.id}`} key={match.id}>
                 <motion.div 
@@ -88,11 +105,21 @@ export default function ChatClient({ initialConversations }: { initialConversati
       )}
 
       {/* Conversations */}
-      <div className="px-6">
+      <div>
         <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">Conversations</h2>
-        {recentConvs.length === 0 && !loading && (
+        {loading && (
+          <div className="py-8 text-center text-muted-foreground font-medium">
+            Refreshing conversations…
+          </div>
+        )}
+        {recentConvs.length === 0 && !loading && !normalizedQuery && (
           <div className="py-12 text-center text-muted-foreground font-medium">
             No active conversations yet. Start swiping!
+          </div>
+        )}
+        {recentConvs.length === 0 && !loading && normalizedQuery && (
+          <div className="py-12 text-center text-muted-foreground font-medium">
+            No conversations found for &quot;{query}&quot;.
           </div>
         )}
         <div className="flex flex-col gap-5">
