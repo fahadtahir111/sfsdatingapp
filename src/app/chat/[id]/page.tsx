@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { FaChevronLeft, FaVideo, FaPhone, FaPaperPlane, FaPlay, FaMicrophone, FaStop, FaImage, FaSmile } from "react-icons/fa";
+import { FaChevronLeft, FaVideo, FaPhone, FaPaperPlane, FaPlay, FaMicrophone, FaStop, FaImage, FaSmile, FaGift } from "react-icons/fa";
 import { useAuth } from "@/app/providers/AuthProvider";
 
 import { useRealTime } from "@/lib/hooks/useRealTime";
-import { getMessages, sendMessage, getConversation } from "@/app/chat/actions";
+import { getMessages, sendMessage, getConversation, getRoseBalance, sendRose } from "@/app/chat/actions";
 import { useParams } from "next/navigation";
 import EmojiPicker from "../../components/EmojiPicker";
 import { useStreamVideoClient, Call, StreamCall } from "@stream-io/video-react-sdk";
@@ -72,6 +72,8 @@ export default function ChatRoomPage() {
   const [callActive, setCallActive] = useState<"video" | "audio" | null>(null);
   const [conversation, setConversation] = useState<ConversationData | null>(null);
   const [showEmojis, setShowEmojis] = useState(false);
+  const [roseBalance, setRoseBalance] = useState(0);
+  const [sendingRose, setSendingRose] = useState(false);
   const { showToast } = useToast();
   
   const client = useStreamVideoClient();
@@ -86,6 +88,8 @@ export default function ChatRoomPage() {
     async function loadConv() {
       const data = await getConversation(conversationId);
       if (data) setConversation(data as ConversationData);
+      const rose = await getRoseBalance();
+      if (rose.success) setRoseBalance(rose.balance);
     }
     loadConv();
   }, [conversationId, isAuthenticated]);
@@ -164,12 +168,33 @@ export default function ChatRoomPage() {
     }
   };
 
-  const endCall = () => {
+  const endCall = async () => {
     if (streamCall) {
-      streamCall.leave();
+      try {
+        await streamCall.leave();
+      } catch (e) {
+        console.error("Failed to leave call", e);
+      }
       setStreamCall(null);
     }
     setCallActive(null);
+  };
+
+  const handleSendRose = async () => {
+    if (sendingRose) return;
+    setSendingRose(true);
+    try {
+      const res = await sendRose(conversationId, 1);
+      if (!res.success) {
+        showToast(res.error || "Failed to send rose", "error");
+        return;
+      }
+      setRoseBalance((prev) => Math.max(0, prev - 1));
+      showToast("Rose sent", "success");
+      refresh();
+    } finally {
+      setSendingRose(false);
+    }
   };
 
   const startRecording = async () => {
@@ -303,6 +328,9 @@ export default function ChatRoomPage() {
               <p className="text-xs text-green-500 font-semibold animate-pulse">● Online</p>
             </div>
           </div>
+          <div className="px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-widest">
+            🌹 {roseBalance}
+          </div>
         </div>
         <div className="flex items-center gap-5 text-black">
           <button type="button" aria-label="Start audio call" onClick={() => startCall("audio")} className="hover:text-primary transition-colors"><FaPhone className="text-xl" /></button>
@@ -343,6 +371,11 @@ export default function ChatRoomPage() {
                       <FaVideo className={msg.messageType === "audio_call" ? "hidden" : ""} />
                       {isMe ? "Sent call request" : "Incoming call..."}
                     </div>
+                  ) : msg.messageType === "rose" ? (
+                    <div className="flex items-center gap-2 text-xs font-black text-rose-600">
+                      <span className="text-base">🌹</span>
+                      <span>{isMe ? "You sent a rose" : "Sent you a rose"}</span>
+                    </div>
                   ) : (
                     <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
                   )}
@@ -360,6 +393,15 @@ export default function ChatRoomPage() {
       {/* Input Area */}
       <div className="p-4 bg-white border-t border-border pb-safe">
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            aria-label="Send rose gift"
+            disabled={roseBalance < 1 || sendingRose}
+            onClick={handleSendRose}
+            className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0 hover:bg-rose-100 disabled:opacity-50"
+          >
+            <FaGift />
+          </button>
           <button type="button" aria-label="Attach image" className="w-10 h-10 rounded-full bg-secondary text-foreground flex items-center justify-center flex-shrink-0 hover:bg-secondary/80">
             <FaImage />
           </button>

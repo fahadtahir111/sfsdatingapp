@@ -14,6 +14,7 @@ export default function Sidebar() {
   const { logout } = useAuth();
 
   const navItems = [
+    { name: "Admin", href: "/admin", icon: FaCrown },
     { name: "Society Feed", href: "/feed", icon: FaCompass },
     { name: "Search", href: "/search", icon: FaSearch },
     { name: "Discover", href: "/discover", icon: FaCrown },

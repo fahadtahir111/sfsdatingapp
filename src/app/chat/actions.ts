@@ -60,7 +60,15 @@ export async function getConversations() {
         id: conv.id,
         name: otherUser?.name || "Unknown",
         image: photos[0] || `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser?.name || "U")}&background=random&size=100`,
-        lastMessage: lastMsg?.content || "No messages yet",
+        lastMessage:
+          lastMsg?.messageType === "video_call"
+            ? "Incoming Video Call..."
+            : lastMsg?.messageType === "audio_call"
+              ? "Incoming Audio Call..."
+              : lastMsg?.messageType === "rose"
+                ? "Sent you a rose"
+                : lastMsg?.content || "No messages yet",
+        lastMessageType: lastMsg?.messageType || "text",
         lastMessageAt: lastMsg?.createdAt || conv.updatedAt,
         time: lastMsg ? formatRelativeTime(lastMsg.createdAt) : "New Match",
         unread: unreadCount,
@@ -148,6 +156,74 @@ export async function sendMessage(conversationId: string, content: string, type:
     console.error("Error sending message:", error);
     throw new Error("Failed to send message");
   }
+}
+
+export async function getRoseBalance() {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, balance: 0 };
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { roseBalance: true },
+  });
+  return { success: true, balance: dbUser?.roseBalance ?? 0 };
+}
+
+export async function sendRose(conversationId: string, amount = 1) {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: "Unauthorized" };
+  if (amount <= 0) return { success: false, error: "Invalid amount" };
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    include: { userLinks: true },
+  });
+  if (!conversation) return { success: false, error: "Conversation not found" };
+
+  const isMember = conversation.userLinks.some((ul) => ul.userId === user.id);
+  if (!isMember) return { success: false, error: "Forbidden" };
+
+  const receiver = conversation.userLinks.find((ul) => ul.userId !== user.id);
+  if (!receiver) return { success: false, error: "No recipient found" };
+
+  const sender = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { roseBalance: true },
+  });
+  if (!sender || sender.roseBalance < amount) {
+    return { success: false, error: "Insufficient roses" };
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { roseBalance: { decrement: amount } },
+    }),
+    prisma.user.update({
+      where: { id: receiver.userId },
+      data: { roseBalance: { increment: amount } },
+    }),
+    prisma.roseTransaction.create({
+      data: { userId: user.id, amount: -amount, type: "SEND_ROSE" },
+    }),
+    prisma.roseTransaction.create({
+      data: { userId: receiver.userId, amount, type: "RECEIVE_ROSE" },
+    }),
+    prisma.message.create({
+      data: {
+        conversationId,
+        senderId: user.id,
+        content: `sent ${amount} rose${amount > 1 ? "s" : ""}`,
+        messageType: "rose",
+      },
+    }),
+    prisma.conversation.update({
+      where: { id: conversationId },
+      data: { updatedAt: new Date() },
+    }),
+  ]);
+
+  revalidatePath("/chat");
+  return { success: true };
 }
 
 /**

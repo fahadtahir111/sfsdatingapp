@@ -7,10 +7,12 @@ import {
   useCallStateHooks,
 } from "@stream-io/video-react-sdk";
 import LoadingSpinner from "../LoadingSpinner";
+import { FaLock, FaVideo } from "react-icons/fa";
 
 export default function MeetingRoom() {
-  const { useCallCallingState } = useCallStateHooks();
+  const { useCallCallingState, useParticipants } = useCallStateHooks();
   const callingState = useCallCallingState();
+  const participants = useParticipants();
 
   if (callingState !== CallingState.JOINED) {
     return (
@@ -35,6 +37,11 @@ export default function MeetingRoom() {
       <div className="absolute top-8 left-8 flex items-center gap-3">
         <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
         <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Encrypted Session</span>
+      </div>
+      <div className="absolute top-8 right-8 flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-white/80">
+        <FaVideo className="text-[10px]" />
+        <span className="text-[10px] font-black tracking-widest uppercase">{participants.length} in call</span>
+        <FaLock className="text-[10px]" />
       </div>
     </div>
   );

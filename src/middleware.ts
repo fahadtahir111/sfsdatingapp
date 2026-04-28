@@ -12,6 +12,7 @@ export async function middleware(request: NextRequest) {
 
   // Paths that require authentication
   const protectedPaths = [
+    '/admin',
     '/discover',
     '/chat',
     '/profile',
@@ -50,6 +51,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/discover/:path*',
+    '/admin/:path*',
     '/chat/:path*',
     '/profile/:path*',
     '/settings/:path*',

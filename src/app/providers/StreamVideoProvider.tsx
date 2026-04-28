@@ -18,14 +18,24 @@ export default function StreamVideoProvider({
   user: { id: string, name?: string | null, image?: string | null }
 }) {
   const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
+  const [streamReady, setStreamReady] = useState(false);
 
   useEffect(() => {
-    if (!user || !apiKey) return;
+    if (!user || !apiKey) {
+      // Do not block the app when Stream is not configured.
+      setStreamReady(true);
+      return;
+    }
+
+    let mounted = true;
+    let clientRef: StreamVideoClient | null = null;
 
     const init = async () => {
       try {
         const response = await fetch("/api/stream/token");
+        if (!response.ok) throw new Error("Failed to fetch Stream token");
         const { token } = await response.json();
+        if (!token) throw new Error("Missing Stream token");
         
         const streamUser: User = {
           id: user.id,
@@ -39,24 +49,28 @@ export default function StreamVideoProvider({
           token,
         });
 
-        setVideoClient(client);
+        clientRef = client;
+        if (mounted) setVideoClient(client);
       } catch (error) {
         console.error("Stream init error:", error);
+      } finally {
+        if (mounted) setStreamReady(true);
       }
     };
 
     init();
 
     return () => {
-      if (videoClient) {
-        videoClient.disconnectUser();
-        setVideoClient(null);
+      mounted = false;
+      if (clientRef) {
+        clientRef.disconnectUser();
       }
+      setVideoClient(null);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.id]); // Re-init only if user changes
+  }, [user, user.id]); // Re-init if user identity changes
 
-  if (!videoClient) return null; // Or a minimal loading state
+  // Fail-open: never blank the app if video provider is unavailable.
+  if (!apiKey || !streamReady || !videoClient) return <>{children}</>;
 
   return (
     <StreamVideo client={videoClient}>

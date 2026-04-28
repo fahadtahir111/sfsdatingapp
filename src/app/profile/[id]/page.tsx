@@ -51,11 +51,14 @@ export default function PublicProfilePage() {
   const { showToast } = useToast();
 
   useEffect(() => {
-    if (id) {
-      getPublicProfile(id as string).then(data => {
+    const resolvedId = Array.isArray(id) ? id[0] : id;
+    if (resolvedId) {
+      getPublicProfile(decodeURIComponent(resolvedId)).then(data => {
         if (data) setProfile(data as PublicProfileData);
         setLoading(false);
       });
+    } else {
+      setLoading(false);
     }
   }, [id]);
 

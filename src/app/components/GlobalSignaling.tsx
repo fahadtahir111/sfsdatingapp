@@ -21,6 +21,7 @@ interface ConversationSummary {
   name: string;
   image: string;
   lastMessage: string;
+  lastMessageType?: string;
   lastMessageAt: Date | string;
   time: string;
   unread: number;
@@ -77,8 +78,8 @@ export default function GlobalSignaling() {
     if (newEvents.length === 0) return;
 
     // 1. Check for incoming calls in new events
-    const incomingCallMsg = newEvents.find(c => 
-      c.lastMessage === "Incoming Video Call..." || c.lastMessage === "Incoming Audio Call..."
+    const incomingCallMsg = newEvents.find(
+      (c) => c.lastMessageType === "video_call" || c.lastMessageType === "audio_call"
     );
 
     if (incomingCallMsg && !activeCall) {

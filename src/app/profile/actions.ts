@@ -229,6 +229,16 @@ export async function updateNotifications(data: {
 }
 
 export async function getPublicProfile(userId: string) {
+  const parseJsonArray = (raw?: string | null) => {
+    if (!raw) return [] as string[];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -238,23 +248,12 @@ export async function getPublicProfile(userId: string) {
           orderBy: { createdAt: "desc" },
           take: 12,
         },
-        _count: {
-          select: {
-            matches1: true,
-            matches2: true,
-            reels: true,
-            vouchesReceived: true,
-          } as any,
-        },
       },
     });
 
     if (!user) return null;
 
-    let photos: string[] = [];
-    try {
-      photos = JSON.parse(user.profile?.photos || "[]");
-    } catch { }
+    const photos = parseJsonArray(user.profile?.photos);
 
     const subscription = await prisma.subscription.findFirst({
       where: { userId },
@@ -262,6 +261,21 @@ export async function getPublicProfile(userId: string) {
     });
 
     const tier = subscription?.tier || "Free";
+    const reelsCount = user.reels.length;
+
+    // Keep production resilient even if some newer tables are not migrated yet.
+    let matches1Count = 0;
+    let matches2Count = 0;
+    let vouchesCount = 0;
+    try {
+      [matches1Count, matches2Count, vouchesCount] = await Promise.all([
+        prisma.match.count({ where: { user1Id: userId } }),
+        prisma.match.count({ where: { user2Id: userId } }),
+        prisma.vouch.count({ where: { vouchForId: userId } }),
+      ]);
+    } catch (countErr) {
+      console.warn("Public profile count fallback triggered:", countErr);
+    }
 
     return {
       id: user.id,
@@ -275,14 +289,14 @@ export async function getPublicProfile(userId: string) {
           : [
                `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "U")}&background=random&size=400`,
             ],
-      matchesCount: (user._count as { matches1: number; matches2: number }).matches1 + (user._count as { matches1: number; matches2: number }).matches2,
-      reelsCount: user._count.reels,
+      matchesCount: matches1Count + matches2Count,
+      reelsCount,
       reels: user.reels,
       membership: tier === "Elite" ? "Elite Concierge" : tier === "Signature" ? "Signature Member" : "SFS Member",
       tier,
       verificationStatus: user.profile?.verificationStatus || "PENDING",
-      networkingGoals: user.profile?.networkingGoals ? JSON.parse(user.profile.networkingGoals) : [],
-      vouchesCount: user._count.vouchesReceived || 0,
+      networkingGoals: parseJsonArray(user.profile?.networkingGoals),
+      vouchesCount,
       trustScore: user.profile?.trustScore || 50,
       professionalVerified: (user.profile as any)?.professionalVerified || false,
     };
