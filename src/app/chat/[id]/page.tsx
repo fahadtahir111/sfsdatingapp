@@ -11,7 +11,10 @@ import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getMessages, sendMessage, getConversation } from "@/app/chat/actions";
 import { useParams } from "next/navigation";
 import EmojiPicker from "../../components/EmojiPicker";
+import { useStreamVideoClient, Call, StreamCall } from "@stream-io/video-react-sdk";
+import MeetingRoom from "@/app/components/Calls/MeetingRoom";
 import { useCallback, useRef } from "react";
+import { useToast } from "@/app/providers/ToastProvider";
 
 interface ConversationData {
   id: string;
@@ -19,6 +22,46 @@ interface ConversationData {
   image: string;
   userId: string;
 }
+
+const AudioMessagePlayer = ({ url, isMe }: { url: string; isMe: boolean }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio(url);
+    audioRef.current.onended = () => setIsPlaying(false);
+    return () => {
+      audioRef.current?.pause();
+    };
+  }, [url]);
+
+  const togglePlay = () => {
+    if (isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current?.play().catch(e => console.error("Play failed", e));
+      setIsPlaying(true);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3 w-48">
+      <button
+        type="button"
+        aria-label={isPlaying ? "Stop voice message" : "Play voice message"}
+        onClick={togglePlay}
+        className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center ${isMe ? 'bg-black text-primary' : 'bg-primary text-black'}`}
+      >
+        {isPlaying ? <FaStop className="text-[10px]" /> : <FaPlay className="text-[10px] ml-0.5" />}
+      </button>
+      <div className="flex-1 h-1 bg-black/20 rounded-full overflow-hidden relative">
+        <div className={`absolute left-0 top-0 h-full ${isMe ? 'bg-black' : 'bg-primary'} ${isPlaying ? 'w-full transition-all duration-[3000ms] ease-linear' : 'w-0'}`}></div>
+      </div>
+      <span className="text-[10px] font-black tracking-wider uppercase opacity-80">Voice</span>
+    </div>
+  );
+};
 
 export default function ChatRoomPage() {
   const { id: conversationId } = useParams() as { id: string };
@@ -29,6 +72,13 @@ export default function ChatRoomPage() {
   const [callActive, setCallActive] = useState<"video" | "audio" | null>(null);
   const [conversation, setConversation] = useState<ConversationData | null>(null);
   const [showEmojis, setShowEmojis] = useState(false);
+  const { showToast } = useToast();
+  
+  const client = useStreamVideoClient();
+  const [streamCall, setStreamCall] = useState<Call | null>(null);
+  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Fetch conversation details once
   useEffect(() => {
@@ -93,21 +143,90 @@ export default function ChatRoomPage() {
     setCallActive(type);
     try {
       await sendMessage(conversationId, `Calling...`, type === "video" ? "video_call" : "audio_call");
+      if (client) {
+        const call = client.call("default", conversationId);
+        await call.join({ create: true });
+        // Enable or disable camera based on type
+        if (type === "audio") await call.camera.disable();
+        setStreamCall(call);
+      }
     } catch (e) {
       console.error("Failed to start call", e);
     }
   };
 
-  const toggleRecording = async () => {
-    if (isRecording) {
-      setIsRecording(false);
-      try {
-        await sendMessage(conversationId, "Audio Note (0:04)", "audio");
-      } catch (e) {
-        console.error("Failed to send audio", e);
-      }
-    } else {
+  const answerCall = async () => {
+    if (client) {
+      const call = client.call("default", conversationId);
+      await call.join({ create: true });
+      if (callActive === "audio") await call.camera.disable();
+      setStreamCall(call);
+    }
+  };
+
+  const endCall = () => {
+    if (streamCall) {
+      streamCall.leave();
+      setStreamCall(null);
+    }
+    setCallActive(null);
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append("file", audioBlob, "audio.webm");
+
+        try {
+          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          const data = await res.json();
+          if (data.success) {
+            const newMsg = await sendMessage(conversationId, data.url, "audio");
+            setMessages((prev) => [...(prev ?? []), newMsg]);
+            refresh();
+          } else {
+            console.error("Audio upload failed:", data.error);
+          }
+        } catch (error) {
+          console.error("Audio upload failed", error);
+        }
+
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
       setIsRecording(true);
+    } catch (e) {
+      console.error("Microphone access denied", e);
+      showToast("Microphone access is required to record audio.", "error");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
     }
   };
 
@@ -117,7 +236,23 @@ export default function ChatRoomPage() {
     <div className="absolute inset-0 bg-white flex flex-col z-[60]">
       {/* Call Overlay (Signaling Logic) */}
       <AnimatePresence>
-        {callActive && (
+        {streamCall ? (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute inset-0 z-[100] bg-black text-white flex flex-col"
+          >
+            <div className="absolute top-8 left-4 z-50">
+               <button type="button" aria-label="End call" onClick={endCall} className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white">
+                 <FaChevronLeft />
+               </button>
+            </div>
+            <StreamCall call={streamCall}>
+              <MeetingRoom />
+            </StreamCall>
+          </motion.div>
+        ) : callActive ? (
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -128,7 +263,7 @@ export default function ChatRoomPage() {
               {callActive === "video" ? (
                 <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
                   <div className="w-16 h-16 border-4 border-t-primary rounded-full animate-spin"></div>
-                  <p className="absolute mt-24 text-white/70 font-semibold tracking-wider animate-pulse">Connecting Video...</p>
+                  <p className="absolute mt-24 text-white/70 font-semibold tracking-wider animate-pulse">Incoming Video...</p>
                 </div>
               ) : (
                 <div className="text-center">
@@ -142,18 +277,15 @@ export default function ChatRoomPage() {
             </div>
             
             <div className="p-8 pb-16 flex justify-center gap-8 bg-gradient-to-t from-black to-transparent">
-              <button className="w-16 h-16 rounded-full bg-white/20 backdrop-blur text-white flex items-center justify-center text-xl">
-                <FaMicrophone />
-              </button>
-              <button onClick={() => setCallActive(null)} className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-red-500/50">
+              <button type="button" aria-label="Decline call" onClick={endCall} className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-red-500/50">
                 <FaPhone className="rotate-[135deg]" />
               </button>
-              <button className="w-16 h-16 rounded-full bg-white/20 backdrop-blur text-white flex items-center justify-center text-xl">
-                <FaVideo />
+              <button type="button" aria-label="Answer call" onClick={answerCall} className="w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center text-xl shadow-lg shadow-green-500/50">
+                {callActive === "video" ? <FaVideo /> : <FaPhone />}
               </button>
             </div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
 
       {/* Header */}
@@ -173,8 +305,8 @@ export default function ChatRoomPage() {
           </div>
         </div>
         <div className="flex items-center gap-5 text-black">
-          <button onClick={() => startCall("audio")} className="hover:text-primary transition-colors"><FaPhone className="text-xl" /></button>
-          <button onClick={() => startCall("video")} className="hover:text-primary transition-colors"><FaVideo className="text-xl" /></button>
+          <button type="button" aria-label="Start audio call" onClick={() => startCall("audio")} className="hover:text-primary transition-colors"><FaPhone className="text-xl" /></button>
+          <button type="button" aria-label="Start video call" onClick={() => startCall("video")} className="hover:text-primary transition-colors"><FaVideo className="text-xl" /></button>
         </div>
       </div>
 
@@ -204,15 +336,7 @@ export default function ChatRoomPage() {
                     : 'bg-white text-foreground rounded-bl-sm border border-border'
                 }`}>
                   {msg.messageType === "audio" ? (
-                    <div className="flex items-center gap-3 w-48">
-                      <button className={`w-8 h-8 rounded-full flex items-center justify-center ${isMe ? 'bg-black text-primary' : 'bg-primary text-black'}`}>
-                        <FaPlay className="text-[10px] ml-0.5" />
-                      </button>
-                      <div className="flex-1 h-1 bg-black/20 rounded-full overflow-hidden">
-                        <div className="w-1/3 h-full bg-black"></div>
-                      </div>
-                      <span className="text-xs font-bold">0:04</span>
-                    </div>
+                    <AudioMessagePlayer url={msg.content} isMe={isMe} />
                   ) : msg.messageType === "video_call" || msg.messageType === "audio_call" ? (
                     <div className="flex items-center gap-2 italic text-xs font-black">
                       <FaPhone className={msg.messageType === "video_call" ? "hidden" : ""} />
@@ -236,7 +360,7 @@ export default function ChatRoomPage() {
       {/* Input Area */}
       <div className="p-4 bg-white border-t border-border pb-safe">
         <div className="flex items-center gap-3">
-          <button className="w-10 h-10 rounded-full bg-secondary text-foreground flex items-center justify-center flex-shrink-0 hover:bg-secondary/80">
+          <button type="button" aria-label="Attach image" className="w-10 h-10 rounded-full bg-secondary text-foreground flex items-center justify-center flex-shrink-0 hover:bg-secondary/80">
             <FaImage />
           </button>
           <div className="flex-1 relative">
@@ -251,6 +375,8 @@ export default function ChatRoomPage() {
             />
             {!isRecording && (
               <button 
+                type="button"
+                aria-label="Open emoji picker"
                 onClick={() => setShowEmojis(!showEmojis)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-yellow-500 transition-colors"
               >
@@ -269,6 +395,8 @@ export default function ChatRoomPage() {
           </div>
 
           <button 
+            type="button"
+            aria-label={inputText.trim() ? "Send message" : isRecording ? "Stop recording" : "Start voice recording"}
             onClick={inputText.trim() ? handleSend : toggleRecording}
             className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all shadow-md ${
               inputText.trim() 

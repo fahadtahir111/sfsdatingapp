@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -62,7 +63,7 @@ export async function getProfile() {
         photos.length > 0
           ? photos
           : [
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(dbUser.name || "U")}&background=random&size=400`,
+               `https://ui-avatars.com/api/?name=${encodeURIComponent(dbUser.name || "U")}&background=random&size=400`,
             ],
       matchesCount:
         ((dbUser._count as unknown) as { matches1: number; matches2: number }).matches1 + ((dbUser._count as unknown) as { matches1: number; matches2: number }).matches2,
@@ -70,7 +71,7 @@ export async function getProfile() {
       storiesCount: dbUser._count.stories,
       reels: dbUser.reels,
       stories: dbUser.stories,
-      membership: tier === "Elite" ? "Elite Concierge" : tier === "Signature" ? "Signature Member" : "Apply for Elite",
+      membership: tier === "Elite" ? "Elite Concierge" : tier === "Signature" ? "Signature Member" : "SFS Member",
       tier,
       verificationStatus: dbUser.profile?.verificationStatus || "PENDING",
       incognito: dbUser.profile?.incognitoMode || false,
@@ -78,6 +79,8 @@ export async function getProfile() {
       emailEnabled: dbUser.profile?.emailEnabled ?? false,
       matchesEnabled: dbUser.profile?.matchesEnabled ?? true,
       networkingGoals: dbUser.profile?.networkingGoals ? JSON.parse(dbUser.profile.networkingGoals) : [],
+      tokens: dbUser.roseBalance || 0,
+      professionalVerified: (dbUser.profile as any)?.professionalVerified || false,
     };
   } catch (error) {
     console.error("Error fetching profile:", error);
@@ -85,9 +88,6 @@ export async function getProfile() {
   }
 }
 
-/**
- * Update user profile details including bio and photos.
- */
 export async function updateProfile(data: {
   name?: string;
   age?: number | null;
@@ -100,9 +100,6 @@ export async function updateProfile(data: {
     const user = await getCurrentUser();
     const userId = user?.id;
     if (!userId) throw new Error("Unauthorized");
-
-    const updateData: Record<string, string | number | null> = {};
-    if (data.name !== undefined) updateData.name = data.name;
 
     const profileData: Record<string, string | number | null | boolean> = {};
     if (data.age !== undefined) profileData.age = data.age;
@@ -151,9 +148,6 @@ export async function updateProfile(data: {
   }
 }
 
-/**
- * Update user account details.
- */
 export async function updateAccount(data: {
   name: string;
   age?: number;
@@ -185,8 +179,6 @@ export async function updateAccount(data: {
     });
 
     revalidatePath("/profile");
-    revalidatePath("/discover");
-    revalidatePath("/feed");
     return { success: true };
   } catch (error) {
     console.error("Error updating account:", error);
@@ -194,9 +186,6 @@ export async function updateAccount(data: {
   }
 }
 
-/**
- * Update privacy settings (Incognito/Ghost mode).
- */
 export async function updatePrivacy(incognito: boolean) {
   try {
     const user = await getCurrentUser();
@@ -215,9 +204,6 @@ export async function updatePrivacy(incognito: boolean) {
   }
 }
 
-/**
- * Update notification settings.
- */
 export async function updateNotifications(data: {
   pushEnabled?: boolean;
   emailEnabled?: boolean;
@@ -242,8 +228,6 @@ export async function updateNotifications(data: {
   }
 }
 
-
-
 export async function getPublicProfile(userId: string) {
   try {
     const user = await prisma.user.findUnique({
@@ -259,7 +243,8 @@ export async function getPublicProfile(userId: string) {
             matches1: true,
             matches2: true,
             reels: true,
-          },
+            vouchesReceived: true,
+          } as any,
         },
       },
     });
@@ -297,9 +282,30 @@ export async function getPublicProfile(userId: string) {
       tier,
       verificationStatus: user.profile?.verificationStatus || "PENDING",
       networkingGoals: user.profile?.networkingGoals ? JSON.parse(user.profile.networkingGoals) : [],
+      vouchesCount: user._count.vouchesReceived || 0,
+      trustScore: user.profile?.trustScore || 50,
+      professionalVerified: (user.profile as any)?.professionalVerified || false,
     };
   } catch (error) {
     console.error("Error fetching public profile:", error);
     return null;
+  }
+}
+
+export async function toggleGhostMode(status: boolean) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    await (prisma as any).profile.update({
+      where: { userId: user.id },
+      data: { incognitoMode: status }
+    });
+
+    revalidatePath("/profile");
+    return { success: true };
+  } catch (error) {
+    console.error("Ghost mode error:", error);
+    return { success: false, error: "Failed to update status" };
   }
 }

@@ -7,6 +7,7 @@ import { useRealTime } from "@/lib/hooks/useRealTime";
 import Image from "next/image";
 import Link from "next/link";
 import { FaCalendarAlt, FaMapMarkerAlt, FaCrown, FaUserFriends } from "react-icons/fa";
+import { useToast } from "@/app/providers/ToastProvider";
 
 interface UserProfileData {
   id: string;
@@ -37,6 +38,7 @@ export default function EventsClient({ initialEvents }: { initialEvents: EventDa
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
   const [attendees, setAttendees] = useState<Record<string, AttendeeData[]>>({});
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     getProfile().then(setUserProfile);
@@ -61,7 +63,7 @@ export default function EventsClient({ initialEvents }: { initialEvents: EventDa
     
     const result = await rsvpToEvent(eventId);
     if (!result.success) {
-      alert(result.error);
+      showToast(result.error || "Failed to update RSVP", "error");
     } else {
       if (displayEvents) {
         setEvents(displayEvents.map(e => {

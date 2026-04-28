@@ -4,38 +4,84 @@ import { revalidatePath } from "next/cache";
 /**
  * Grant a daily bonus to the user if they haven't claimed it yet today.
  */
-export async function claimDailyBonus(userId: string) {
+/**
+ * Grant tokens to the user for various activities.
+ */
+export async function grantTokens(userId: string, amount: number, type: string) {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const lastTransaction = await prisma.roseTransaction.findFirst({
-      where: {
-        userId,
-        type: "DAILY_BONUS",
-        createdAt: { gte: today }
-      }
-    });
-
-    if (lastTransaction) {
-      return { success: false, message: "Already claimed today" };
-    }
-
-    // Logic neutralized: Roses and their transactions are completely purged.
-    // We only track the claim in localStorage on the client for UX.
+    await prisma.$transaction([
+      prisma.roseTransaction.create({
+        data: {
+          userId,
+          amount,
+          type,
+        }
+      }),
+      prisma.user.update({
+        where: { id: userId },
+        data: {
+          roseBalance: { increment: amount }
+        }
+      })
+    ]);
 
     revalidatePath("/profile");
-    return { success: true, amount: 0 };
+    return { success: true, amount };
   } catch (error) {
-    console.error("Daily bonus error:", error);
-    return { success: false, error: "Failed to claim bonus" };
+    console.error("Grant tokens error:", error);
+    return { success: false, error: "Failed to grant tokens" };
   }
 }
 
 /**
- * Deduct Roses - Neutralized
+ * Spend tokens for premium features.
  */
-export async function spendRoses(userId: string, amount: number, reason: string) { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // Logic neutralized: Roses are gone
-  return;
+export async function spendTokens(userId: string, amount: number, reason: string) {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.roseBalance < amount) {
+      return { success: false, error: "Insufficient balance" };
+    }
+
+    await prisma.$transaction([
+      prisma.roseTransaction.create({
+        data: {
+          userId,
+          amount: -amount,
+          type: `SPEND_${reason.toUpperCase()}`,
+        }
+      }),
+      prisma.user.update({
+        where: { id: userId },
+        data: {
+          roseBalance: { decrement: amount }
+        }
+      })
+    ]);
+
+    revalidatePath("/profile");
+    return { success: true };
+  } catch (error) {
+    console.error("Spend tokens error:", error);
+    return { success: false, error: "Failed to spend tokens" };
+  }
+}
+
+export async function claimDailyBonus(userId: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const lastTransaction = await prisma.roseTransaction.findFirst({
+    where: {
+      userId,
+      type: "DAILY_BONUS",
+      createdAt: { gte: today }
+    }
+  });
+
+  if (lastTransaction) {
+    return { success: false, message: "Already claimed today" };
+  }
+
+  return await grantTokens(userId, 50, "DAILY_BONUS");
 }

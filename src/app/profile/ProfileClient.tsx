@@ -20,9 +20,13 @@ import {
   FaCamera,
   FaTimes,
   FaImage,
-  FaSmile
+  FaSmile,
+  FaEyeSlash
 } from "react-icons/fa";
 import EmojiPicker from "@/app/components/EmojiPicker";
+import { claimDailyBonus, boostProfile } from "./economy-actions";
+import { toggleGhostMode } from "./actions";
+import { useToast } from "@/app/providers/ToastProvider";
 
 export interface ProfileData {
   id: string;
@@ -39,6 +43,9 @@ export interface ProfileData {
   membership: string;
   verificationStatus: string;
   networkingGoals: string[];
+  tokens: number;
+  professionalVerified: boolean;
+  incognito: boolean;
 }
 
 export interface FriendData {
@@ -67,6 +74,7 @@ function EditProfileModal({
   onClose: () => void;
   onSaved: (updated: Partial<ProfileData>) => void;
 }) {
+  const { showToast } = useToast();
   const [name, setName] = useState(profile.name || "");
   const [age, setAge] = useState<string>(profile.age ? String(profile.age) : "");
   const [occupation, setOccupation] = useState(profile.occupation || "");
@@ -95,7 +103,7 @@ function EditProfileModal({
     if (!file) return;
 
     if (file.size > 20 * 1024 * 1024) {
-      alert("Image too large. Max 20MB allowed.");
+      showToast("Image too large. Max 20MB allowed.", "error");
       return;
     }
 
@@ -128,7 +136,7 @@ function EditProfileModal({
 
     } catch (err) {
       console.error("Upload failed", err);
-      alert("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
+      showToast("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"), "error");
     } finally {
       setTimeout(() => {
         setUploading(false);
@@ -321,6 +329,7 @@ function CreatePostModal({
   onClose: () => void;
   onPosted: () => void;
 }) {
+  const { showToast } = useToast();
   const [caption, setCaption] = useState("");
   const [mediaUrl, setMediaUrl] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -335,7 +344,7 @@ function CreatePostModal({
 
     // Client-side validations
     if (file.size > 20 * 1024 * 1024) {
-      alert("File too large. Max 20MB allowed.");
+      showToast("File too large. Max 20MB allowed.", "error");
       return;
     }
 
@@ -345,7 +354,7 @@ function CreatePostModal({
       video.onloadedmetadata = () => {
         window.URL.revokeObjectURL(video.src);
         if (video.duration > 60) {
-          alert("Video too long. Max 1 minute allowed.");
+          showToast("Video too long. Max 1 minute allowed.", "error");
           return;
         }
         performPostUpload(file);
@@ -378,11 +387,11 @@ function CreatePostModal({
       if (res.ok) {
         setMediaUrl(data.secure_url);
       } else {
-        alert(data.error?.message || "Upload failed");
+        showToast(data.error?.message || "Upload failed", "error");
       }
     } catch (err) {
       console.error("Upload failed", err);
-      alert("Upload failed");
+      showToast("Upload failed", "error");
     } finally {
       setUploading(false);
     }
@@ -523,6 +532,7 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
   initialPendingRequests: PendingRequestData[];
   initialFriends: FriendData[];
 }) {
+  const { showToast } = useToast();
   const [profile, setProfile] = useState<ProfileData>(initialProfile);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
@@ -538,6 +548,31 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
 
   const handleProfileSaved = (updated: Partial<ProfileData>) => {
     setProfile((prev) => ({ ...prev, ...updated }));
+  };
+
+  const handleClaimBonus = async () => {
+    const result = await claimDailyBonus();
+    if (result.success && 'amount' in result) {
+      setProfile(prev => ({ ...prev, tokens: prev.tokens + (result.amount || 0) }));
+      showToast(`Claimed ${result.amount} tokens!`, "success");
+    } else {
+      const errorMsg = ('message' in result ? result.message : 'error' in result ? result.error : "Failed to claim bonus");
+      showToast(errorMsg || "Failed to claim bonus", "error");
+    }
+  };
+
+  const handleBoost = async () => {
+    if (profile.tokens < 300) {
+      showToast("Insufficient tokens. Post more content or refer friends!", "error");
+      return;
+    }
+    const result = await boostProfile();
+    if (result.success) {
+      setProfile(prev => ({ ...prev, tokens: prev.tokens - 300 }));
+      showToast("Profile boosted for 24 hours!", "success");
+    } else {
+      showToast(result.error || "Failed to boost profile", "error");
+    }
   };
 
   const isVerified = profile.verificationStatus === "VERIFIED";
@@ -561,12 +596,20 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
             
             <div className="absolute inset-x-0 top-0 p-8 flex justify-between items-center z-10">
               <h1 className="text-2xl font-black text-white tracking-tighter">ELITE PROFILE</h1>
-              <Link
-                href="/settings"
-                className="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 backdrop-blur-2xl text-white border border-white/10 hover:bg-white/10 transition-all"
-              >
-                <FaCog className="text-xl" />
-              </Link>
+              <div className="flex items-center gap-3">
+                <div className="px-4 py-2 bg-yellow-400 text-stone-900 rounded-2xl flex items-center gap-2 shadow-xl shadow-yellow-400/20">
+                  <span className="text-sm font-black tracking-tighter">{profile.tokens}</span>
+                  <div className="w-5 h-5 bg-stone-900 rounded-full flex items-center justify-center text-[10px] text-yellow-400">
+                    💰
+                  </div>
+                </div>
+                <Link
+                  href="/settings"
+                  className="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 backdrop-blur-2xl text-white border border-white/10 hover:bg-white/10 transition-all"
+                >
+                  <FaCog className="text-xl" />
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -616,16 +659,24 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-2">
-              <div className="px-4 py-2 rounded-2xl bg-stone-900 text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl">
-                <FaCrown className="text-yellow-400" />
-                {profile.membership}
+              <div className="flex flex-wrap justify-center gap-2">
+                <div className="px-4 py-2 rounded-2xl bg-stone-900 text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl">
+                  <FaCrown className="text-yellow-400" />
+                  {profile.membership}
+                </div>
+                {profile.verificationStatus === "VERIFIED" && (
+                  <div className="px-4 py-2 rounded-2xl bg-yellow-400 text-stone-950 font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+                    <FaStar />
+                    Verified Identity
+                  </div>
+                )}
+                {initialProfile.professionalVerified && (
+                  <div className="px-4 py-2 rounded-2xl bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                    <FaBriefcase />
+                    Founder Verified
+                  </div>
+                )}
               </div>
-              <div className="px-4 py-2 rounded-2xl bg-yellow-400 text-stone-950 font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
-                <FaStar />
-                Verified Identity
-              </div>
-            </div>
 
             <div className="max-w-xs mx-auto py-2">
               {profile.bio ? (
@@ -667,7 +718,61 @@ export default function ProfileClient({ initialProfile, initialPendingRequests, 
             ))}
           </div>
 
+          {/* SFS Token Economy Banner */}
+          <div className="mt-8 p-6 bg-gradient-to-br from-stone-900 to-stone-800 rounded-[2.5rem] relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 p-6 opacity-10">
+              <FaCrown className="text-7xl text-yellow-400" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-yellow-400 rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-yellow-400/20">
+                  ⚡
+                </div>
+                <h3 className="text-white font-black text-lg">SFS Economy</h3>
+              </div>
+              <p className="text-stone-400 text-xs font-bold uppercase tracking-[0.1em] mb-4">You have {profile.tokens} Tokens Available</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={handleBoost}
+                  className="bg-white/5 hover:bg-white/10 border border-white/10 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                >
+                  Boost Profile
+                </button>
+                <button 
+                  onClick={handleClaimBonus}
+                  className="bg-yellow-400 hover:bg-yellow-300 text-stone-900 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-yellow-400/10"
+                >
+                  Claim Bonus
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 mt-8">
+            <button 
+              onClick={async () => {
+                const newStatus = !profile.incognito;
+                const result = await toggleGhostMode(newStatus);
+                if (result.success) {
+                  setProfile(prev => ({ ...prev, incognito: newStatus }));
+                } else {
+                  showToast("Failed to update Ghost Mode", "error");
+                }
+              }}
+              className="group relative p-6 bg-stone-900 rounded-[2.5rem] overflow-hidden flex items-center gap-5 shadow-2xl transition-all hover:scale-[1.02]"
+            >
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all ${profile.incognito ? 'bg-yellow-400 text-stone-900' : 'bg-white/5 text-stone-400'}`}>
+                <FaEyeSlash />
+              </div>
+              <div className="text-left">
+                <h4 className="text-white font-black text-lg tracking-tighter">Ghost Mode</h4>
+                <p className="text-stone-500 text-[10px] font-bold uppercase tracking-widest">{profile.incognito ? 'Browsing Invisible' : 'Appear in Viewers List'}</p>
+              </div>
+              <div className="ml-auto w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/20 group-hover:text-yellow-400 transition-colors">
+                <div className={`w-3 h-3 rounded-full ${profile.incognito ? 'bg-yellow-400 shadow-[0_0_10px_#facc15]' : 'bg-stone-700'}`} />
+              </div>
+            </button>
+
             <Link href="/referrals">
               <div className="group relative p-6 bg-stone-900 rounded-[2.5rem] overflow-hidden flex items-center gap-5 shadow-2xl transition-all hover:scale-[1.02]">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-yellow-400/20 transition-colors" />

@@ -4,7 +4,6 @@ import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 config.autoAddCss = false
 import "./globals.css";
-import AuthProvider from "./providers/AuthProvider";
 import BottomNav from "./components/Navigation/BottomNav";
 import GlobalSignaling from "./components/GlobalSignaling";
 
@@ -32,19 +31,23 @@ export const metadata: Metadata = {
 };
 
 import Sidebar from "./components/Navigation/Sidebar";
+import AppWrapper from "./providers/AppWrapper";
+import { getCurrentUser } from "@/lib/auth";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUser();
+
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${outfit.variable}`}>
       <body
         suppressHydrationWarning
         className="antialiased bg-[#f8f7f5] text-stone-900 font-sans min-h-screen"
       >
-        <AuthProvider>
+        <AppWrapper initialUser={user ? { id: user.id, name: user.name } : null}>
           <GlobalSignaling />
           <div className="flex flex-col md:flex-row min-h-screen bg-[#f8f7f5] overflow-x-hidden">
             <Sidebar />
@@ -57,7 +60,7 @@ export default function RootLayout({
           <div className="md:hidden">
             <BottomNav />
           </div>
-        </AuthProvider>
+        </AppWrapper>
       </body>
     </html>
   );

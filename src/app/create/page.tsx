@@ -15,9 +15,11 @@ import {
   FaMusic
 } from "react-icons/fa";
 import { createReel } from "./actions";
+import { useToast } from "@/app/providers/ToastProvider";
 
 export default function CreateReelPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [step, setStep] = useState<"select" | "record" | "preview" | "uploading">("select");
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export default function CreateReelPage() {
       setStep("record");
     } catch (err) {
       console.error("Camera error:", err);
-      alert("Please grant camera/microphone permissions to continue.");
+      showToast("Please grant camera/microphone permissions to continue.", "error");
     }
   };
 
@@ -115,7 +117,7 @@ export default function CreateReelPage() {
       video.onloadedmetadata = () => {
         window.URL.revokeObjectURL(video.src);
         if (video.duration > 60) {
-          alert("Video too long. Max 1 minute allowed for reels.");
+          showToast("Video too long. Max 1 minute allowed for reels.", "error");
           return;
         }
         setVideoBlob(file);
@@ -161,14 +163,15 @@ export default function CreateReelPage() {
 
       if (res.success) {
         setUploadProgress(100);
+        showToast("Reel published successfully", "success");
         setTimeout(() => router.push("/reels"), 500);
       } else {
-        alert(res.error);
+        showToast(res.error || "Failed to publish reel", "error");
         setStep("preview");
       }
     } catch (err) {
       console.error("Posting error:", err);
-      alert("Failed to post reel: " + (err instanceof Error ? err.message : "Unknown error"));
+      showToast("Failed to post reel: " + (err instanceof Error ? err.message : "Unknown error"), "error");
       setStep("preview");
     }
   };

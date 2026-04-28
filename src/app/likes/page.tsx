@@ -8,6 +8,7 @@ import { submitSwipe } from "../discover/actions";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useToast } from "@/app/providers/ToastProvider";
 
 interface LikeData {
   id: string;
@@ -23,6 +24,7 @@ export default function LikesPage() {
   const [isLocked, setIsLocked] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const router = useRouter();
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchWhoLikedMe().then(res => {
@@ -122,7 +124,7 @@ export default function LikesPage() {
                       setLikes(prev => prev.filter(l => l.id !== like.id));
                     }
                   } catch {
-                    alert("Failed to match");
+                    showToast("Failed to match", "error");
                   } finally {
                     setActionLoading(null);
                   }

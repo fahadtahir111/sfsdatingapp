@@ -21,12 +21,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
 
-    // Determine if it's a video or image
+    // Determine if it's a video, image, or audio
     const isVideo = file.type.startsWith("video");
     const isImage = file.type.startsWith("image");
+    const isAudio = file.type.startsWith("audio");
 
-    if (!isVideo && !isImage) {
-      return NextResponse.json({ success: false, error: "Only images and videos are allowed" }, { status: 415 });
+    if (!isVideo && !isImage && !isAudio) {
+      return NextResponse.json({ success: false, error: "Only images, videos, and audio are allowed" }, { status: 415 });
     }
 
     // Size validation
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
     const result = await new Promise<CloudinaryUploadResult>((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          resource_type: isVideo ? "video" : "image",
+          resource_type: "auto", // Automatically detects if it's image, video, or raw (audio)
           folder: "sfs_dating",
         },
         (error, result) => {

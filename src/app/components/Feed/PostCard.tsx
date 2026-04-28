@@ -5,6 +5,7 @@ import { FaCrown, FaHeart, FaComment, FaShare } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 import { CldImage } from 'next-cloudinary';
+import { useToast } from "@/app/providers/ToastProvider";
 
 import { formatRelativeTime } from "@/lib/utils/format";
 
@@ -27,10 +28,13 @@ interface PostCardProps {
     isLiked: boolean;
   };
   onLike: (id: string, type: string) => void;
+  onDelete?: (id: string, type: string) => void;
+  canDelete?: boolean;
   index?: number;
 }
 
-export default function PostCard({ post, onLike, index = 0 }: PostCardProps) {
+export default function PostCard({ post, onLike, onDelete, canDelete = false, index = 0 }: PostCardProps) {
+  const { showToast } = useToast();
   // If the URL is a Cloudinary URL, ensure it uses auto quality and format
   const optimizedVideoUrl = post.mediaType === "VIDEO" && post.mediaUrl?.includes('cloudinary.com') 
     ? post.mediaUrl.replace('/upload/', '/upload/f_auto,q_auto/') 
@@ -46,14 +50,14 @@ export default function PostCard({ post, onLike, index = 0 }: PostCardProps) {
     >
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-stone-100 overflow-hidden border border-stone-100 relative">
+          <Link href={`/profile/${post.user.id}`} className="w-10 h-10 rounded-full bg-stone-100 overflow-hidden border border-stone-100 relative block flex-shrink-0">
             <Image 
               src={post.user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.user.name || 'User')}`} 
               alt={post.user.name || "User"} 
               fill
               className="object-cover"
             />
-          </div>
+          </Link>
           <div>
             <div className="flex items-center gap-1.5">
               <Link href={`/profile/${post.user.id}`} className="hover:underline">
@@ -68,7 +72,17 @@ export default function PostCard({ post, onLike, index = 0 }: PostCardProps) {
             </p>
           </div>
         </div>
-        <button className="text-stone-300">•••</button>
+        {canDelete ? (
+          <button
+            type="button"
+            onClick={() => onDelete?.(post.id, post.type)}
+            className="text-xs font-black uppercase tracking-wider text-red-500 hover:text-red-600"
+          >
+            Delete
+          </button>
+        ) : (
+          <button type="button" className="text-stone-300" aria-label="Post menu">•••</button>
+        )}
       </div>
 
       <div className="px-6 pb-4">
@@ -136,7 +150,7 @@ export default function PostCard({ post, onLike, index = 0 }: PostCardProps) {
               navigator.share(shareData).catch(console.error);
             } else {
               navigator.clipboard.writeText(shareData.url);
-              alert("Link copied to clipboard!");
+              showToast("Link copied to clipboard", "success");
             }
           }}
           className="flex items-center gap-2 text-xs font-black text-stone-400 hover:text-stone-900 transition-colors ml-auto"

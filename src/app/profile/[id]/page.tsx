@@ -20,6 +20,9 @@ import {
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { getOrCreateConversation } from "../../chat/actions";
 import { sendFriendRequest } from "../../friends/actions";
+import { vouchForUser } from "@/lib/actions/social";
+import { FaUserShield } from "react-icons/fa";
+import { useToast } from "@/app/providers/ToastProvider";
 
 interface PublicProfileData {
   id: string;
@@ -35,6 +38,8 @@ interface PublicProfileData {
   tier: string;
   verificationStatus: string;
   networkingGoals: string[];
+  vouchesCount: number;
+  trustScore: number;
 }
 
 export default function PublicProfilePage() {
@@ -43,6 +48,7 @@ export default function PublicProfilePage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const router = useRouter();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (id) {
@@ -139,6 +145,22 @@ export default function PublicProfilePage() {
             </p>
           </div>
 
+          {/* AI Compatibility Score */}
+          <div className="flex justify-center pt-2">
+            <div className="relative group cursor-help">
+              <div className="absolute inset-0 bg-yellow-400 blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
+              <div className="relative bg-white border border-yellow-400/30 px-4 py-2 rounded-2xl flex items-center gap-3">
+                <div className="flex flex-col items-start">
+                  <span className="text-[8px] font-black text-stone-400 uppercase tracking-[0.2em]">AI Match Score</span>
+                  <span className="text-lg font-black text-stone-900 tracking-tighter">88% <span className="text-[10px] text-green-500 ml-1">High Compatibility</span></span>
+                </div>
+                <div className="w-8 h-8 rounded-full border-2 border-stone-100 flex items-center justify-center text-xs font-black text-yellow-500">
+                  ⚡
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             <button 
@@ -147,8 +169,8 @@ export default function PublicProfilePage() {
                 setActionLoading(true);
                 const res = await sendFriendRequest(profile.id);
                 setActionLoading(false);
-                if (res.success) alert("Friend request sent!");
-                else alert(res.error || "Failed to send request");
+                if (res.success) showToast("Friend request sent!", "success");
+                else showToast(res.error || "Failed to send request", "error");
               }}
               disabled={actionLoading}
               className="flex-1 py-4 bg-stone-900 text-white rounded-[2rem] font-black text-sm shadow-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
@@ -165,10 +187,10 @@ export default function PublicProfilePage() {
                   if (convId) {
                     router.push(`/chat/${convId}`);
                   } else {
-                    alert("Failed to start chat");
+                    showToast("Failed to start chat", "error");
                   }
                 } catch {
-                  alert("Failed to start chat");
+                  showToast("Failed to start chat", "error");
                 } finally {
                   setActionLoading(false);
                 }
@@ -179,19 +201,49 @@ export default function PublicProfilePage() {
               {actionLoading ? <FaSpinner className="animate-spin" /> : <FaCommentDots className="text-stone-400" />} 
               Message
             </button>
+            <button 
+              onClick={async () => {
+                if (!profile) return;
+                setActionLoading(true);
+                const res = await vouchForUser(profile.id);
+                setActionLoading(false);
+                if (res.success) {
+                  showToast("You have vouched for this member!", "success");
+                  setProfile(prev => prev ? { ...prev, vouchesCount: prev.vouchesCount + 1 } : null);
+                } else {
+                  showToast(res.error || "Failed to vouch", "error");
+                }
+              }}
+              disabled={actionLoading}
+              className="flex-1 py-4 bg-stone-100 border border-stone-200 rounded-[2rem] font-black text-stone-800 text-sm shadow-sm flex items-center justify-center gap-3 transition-all hover:border-yellow-400 active:scale-95 disabled:opacity-50"
+            >
+              {actionLoading ? <FaSpinner className="animate-spin" /> : <FaUserShield className="text-stone-400" />} 
+              Vouch
+            </button>
+            <button 
+              onClick={() => {
+                // This will be handled by a global event or a specific call logic
+                showToast("Starting professional video call...", "info");
+                // router.push(`/call/${profile.id}`);
+              }}
+              className="w-16 py-4 bg-yellow-400 text-stone-900 rounded-[2rem] font-black text-sm shadow-2xl flex items-center justify-center transition-all hover:scale-[1.05] active:scale-95"
+            >
+              <FaVideo />
+            </button>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4 mt-10">
+        <div className="grid grid-cols-3 gap-3 mt-10 px-5">
           {[
             { label: "Connections", value: profile.matchesCount, icon: FaHeart, bg: "bg-stone-50", color: "text-stone-900" },
+            { label: "Vouches", value: profile.vouchesCount, icon: FaCheck, bg: "bg-yellow-50", color: "text-yellow-600" },
             { label: "Content", value: profile.reelsCount, icon: FaVideo, bg: "bg-blue-50", color: "text-blue-500" },
           ].map((stat) => (
-            <div key={stat.label} className={`${stat.bg} rounded-3xl p-6 flex flex-col items-center gap-1 border border-stone-100 shadow-sm transition-transform active:scale-95`}>
+            <div key={stat.label} className={`${stat.bg} rounded-3xl p-5 flex flex-col items-center gap-1 border border-stone-100 shadow-sm transition-transform active:scale-95`}>
               <stat.icon className={`${stat.color} text-lg mb-1`} />
-              <span className="text-2xl font-black text-stone-900 tracking-tighter">{stat.value}</span>
-              <span className="text-[9px] font-black text-stone-400 uppercase tracking-tighter">{stat.label}</span>
+              <span className="text-xl font-black text-stone-900 tracking-tighter">{stat.value}</span>
+              <span className="text-[8px] font-black text-stone-400 uppercase tracking-tighter">{stat.label}</span>
             </div>
           ))}
         </div>

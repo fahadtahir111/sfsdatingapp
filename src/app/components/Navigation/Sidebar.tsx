@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 // motion removed
-import { FaCompass, FaCommentDots, FaUser, FaVideo, FaCrown, FaSignOutAlt } from "react-icons/fa";
+import { FaCompass, FaCommentDots, FaUser, FaVideo, FaCrown, FaSignOutAlt, FaMicrophone, FaSearch } from "react-icons/fa";
 import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getPendingRequestsCount } from "@/app/friends/actions";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -15,9 +15,11 @@ export default function Sidebar() {
 
   const navItems = [
     { name: "Society Feed", href: "/feed", icon: FaCompass },
+    { name: "Search", href: "/search", icon: FaSearch },
     { name: "Discover", href: "/discover", icon: FaCrown },
     { name: "Reels", href: "/reels", icon: FaVideo },
     { name: "Messages", href: "/chat", icon: FaCommentDots },
+    { name: "Boardroom", href: "/boardroom", icon: FaMicrophone },
     { name: "My Profile", href: "/profile", icon: FaUser, hasBadge: true },
   ];
 

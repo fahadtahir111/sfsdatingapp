@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "framer-motion";
 import { FaHeart, FaTimes, FaCheckCircle, FaBriefcase, FaSlidersH } from "react-icons/fa";
 import Image from "next/image";
+import Link from "next/link";
 import { fetchDiscoverFeed, submitSwipe } from "./actions";
 
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useToast } from "@/app/providers/ToastProvider";
 
 interface CardData {
   id: string;
@@ -159,6 +161,7 @@ const SwipeCard = ({
   setCards: React.Dispatch<React.SetStateAction<CardData[]>>,
   cards: CardData[]
 }) => {
+  const { showToast } = useToast();
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-10, 10]);
   const opacityLike = useTransform(x, [0, 100], [0, 1]);
@@ -243,15 +246,15 @@ const SwipeCard = ({
             {/* Ambient Background Glow */}
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-400/20 blur-[50px] rounded-full" />
             
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-3xl font-black text-white tracking-tight">{card.name}, {card.age}</h2>
+            <div className="relative z-10 pointer-events-auto">
+              <Link href={`/profile/${card.id}`} className="flex items-center gap-3 mb-2 group transition-opacity hover:opacity-80">
+                <h2 className="text-3xl font-black text-white tracking-tight group-hover:underline">{card.name}, {card.age}</h2>
                 {card.isVerified && (
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30">
                     <FaCheckCircle className="text-white text-[10px]" />
                   </div>
                 )}
-              </div>
+              </Link>
               
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border border-white/10">
@@ -292,10 +295,10 @@ const SwipeCard = ({
             const { sendFriendRequest } = await import("../friends/actions");
             const res = await sendFriendRequest(card.id);
             if (res.success) {
-              alert("Elite invitation sent!");
+              showToast("Elite invitation sent!", "success");
               setCards(cards.filter(c => c.id !== card.id));
             } else {
-              alert(res.error);
+              showToast(res.error || "Failed to send invitation", "error");
             }
           }}
           className="w-20 h-20 bg-yellow-400 rounded-full flex flex-col items-center justify-center text-stone-900 shadow-[0_10px_30px_rgba(250,204,21,0.4)] hover:scale-110 active:scale-95 transition-all pointer-events-auto group"

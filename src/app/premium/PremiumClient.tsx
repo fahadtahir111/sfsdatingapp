@@ -4,19 +4,21 @@ import { useState } from "react";
 import { FaCrown, FaCheck } from "react-icons/fa";
 import { upgradeSubscription } from "./actions";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/app/providers/ToastProvider";
 
 export default function PremiumClient() {
   const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
+  const { showToast } = useToast();
 
   const handleUpgrade = async (tier: "Signature" | "Elite") => {
     setLoading(tier);
     const result = await upgradeSubscription(tier);
     if (result.success) {
-      alert(`Welcome to ${tier} Level! Your access has been elevated.`);
+      showToast(`Welcome to ${tier} Level! Your access has been elevated.`, "success");
       router.push("/profile");
     } else {
-      alert(result.error);
+      showToast(result.error || "Upgrade failed", "error");
     }
     setLoading(null);
   };

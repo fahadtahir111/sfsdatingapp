@@ -35,9 +35,9 @@ export default function ChatClient({ initialConversations }: { initialConversati
       {/* Header */}
       <div className="px-6 flex justify-between items-center mb-6">
         <h1 className="text-2xl font-black text-foreground">Messages</h1>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-secondary text-foreground">
+        <Link href="/profile" className="w-10 h-10 flex items-center justify-center rounded-full bg-secondary text-foreground hover:bg-secondary/80 transition-colors">
           <FaEllipsisH />
-        </button>
+        </Link>
       </div>
 
       {/* Search */}
@@ -57,7 +57,7 @@ export default function ChatClient({ initialConversations }: { initialConversati
         <div className="mb-8">
           <div className="px-6 flex justify-between items-center mb-4">
             <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">New Matches</h2>
-            <span className="text-primary text-sm font-bold">See all</span>
+            <Link href="/discover" className="text-primary text-sm font-bold hover:underline">See all</Link>
           </div>
           <div className="flex overflow-x-auto px-6 gap-4 no-scrollbar pb-2">
             {newMatches.map((match, i) => (

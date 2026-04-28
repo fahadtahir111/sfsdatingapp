@@ -70,6 +70,13 @@ model User {
   referredById     String?
   referredBy       User?           @relation("Referrals", fields: [referredById], references: [id])
   referrals        User[]          @relation("Referrals")
+  
+  // Boardrooms
+  hostedBoardrooms Boardroom[] @relation("HostingBoardroom")
+
+  // Vouches
+  vouchesGiven    Vouch[]     @relation("VouchesGiven")
+  vouchesReceived Vouch[]     @relation("VouchesReceived")
 }
 
 model Profile {
@@ -91,6 +98,16 @@ model Profile {
   trustScore    Int     @default(50)
   verificationStatus String @default("PENDING") // "PENDING", "VERIFIED", "REJECTED"
   networkingGoals    String? // JSON stringified array of tags
+  
+  // Professional Elite Features
+  isNetworkingMode  Boolean @default(false)
+  professionalVerified Boolean @default(false)
+  linkedinUrl       String?
+  twitterUrl        String?
+  portfolioUrl      String?
+  company           String?
+  industry          String?
+  boostedUntil      DateTime?
 
   // Notification Settings
   pushEnabled    Boolean @default(true)
@@ -368,3 +385,24 @@ model Friendship {
   @@unique([user1Id, user2Id])
 }
 
+model Boardroom {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  hostId      String
+  host        User     @relation("HostingBoardroom", fields: [hostId], references: [id], onDelete: Cascade)
+  isLive      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Vouch {
+  id          String   @id @default(cuid())
+  vouchById   String
+  vouchForId  String
+  vouchBy     User     @relation("VouchesGiven", fields: [vouchById], references: [id], onDelete: Cascade)
+  vouchFor    User     @relation("VouchesReceived", fields: [vouchForId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([vouchById, vouchForId])
+}

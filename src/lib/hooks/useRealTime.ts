@@ -21,6 +21,8 @@ export function useRealTime<T>(
 
   const fetchData = useCallback(async () => {
     if (!enabled) return;
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+    if (typeof navigator !== "undefined" && !navigator.onLine) return;
     try {
       const result = await action();
       if (isMounted.current) {
@@ -39,10 +41,26 @@ export function useRealTime<T>(
     fetchData();
 
     const timer = setInterval(fetchData, interval);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchData();
+    };
+    const onOnline = () => fetchData();
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", onVisible);
+    }
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", onOnline);
+    }
 
     return () => {
       isMounted.current = false;
       clearInterval(timer);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", onVisible);
+      }
+      if (typeof window !== "undefined") {
+        window.removeEventListener("online", onOnline);
+      }
     };
   }, [fetchData, interval, ...dependencies]); // eslint-disable-line react-hooks/exhaustive-deps
 

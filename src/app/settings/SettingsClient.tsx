@@ -1,12 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { FaUser, FaBell, FaCreditCard, FaLock, FaSignOutAlt, FaChevronRight } from "react-icons/fa";
+import { FaUser, FaBell, FaCreditCard, FaLock, FaSignOutAlt, FaChevronRight, FaBriefcase } from "react-icons/fa";
+import { useAuth } from "@/app/providers/AuthProvider";
 
 export default function SettingsClient() {
+  const { logout } = useAuth();
+
   const settingsLinks = [
     { name: "Account Details", href: "/settings/account", icon: <FaUser /> },
     { name: "Notifications", href: "/settings/notifications", icon: <FaBell /> },
+    { name: "Professional Elite", href: "/settings/professional", icon: <FaBriefcase /> },
     { name: "Billing & Subscriptions", href: "/settings/billing", icon: <FaCreditCard /> },
     { name: "Privacy & Ghost Mode", href: "/settings/privacy", icon: <FaLock /> },
   ];
@@ -31,14 +35,16 @@ export default function SettingsClient() {
         ))}
 
         <div className="mt-8">
-          <Link href="/api/auth/signout">
-            <div className="bg-white p-5 rounded-2xl flex items-center gap-4 text-red-500 font-bold border border-red-500/20 shadow-sm active:scale-95 transition-all">
-              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-                <FaSignOutAlt />
-              </div>
-              Sign Out
+          <button
+            type="button"
+            onClick={logout}
+            className="w-full bg-white p-5 rounded-2xl flex items-center gap-4 text-red-500 font-bold border border-red-500/20 shadow-sm active:scale-95 transition-all text-left"
+          >
+            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+              <FaSignOutAlt />
             </div>
-          </Link>
+            Sign Out
+          </button>
         </div>
 
         <div className="mt-auto pt-10 pb-4 flex flex-col items-center gap-2 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-default">

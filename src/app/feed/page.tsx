@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { FaCamera, FaTimes, FaSmile } from "react-icons/fa";
+import Link from "next/link";
+import { FaCamera, FaTimes, FaSmile, FaSearch } from "react-icons/fa";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { fetchFeedPosts } from "./actions";
 import { getStories, createStory } from "./storyActions";
@@ -12,6 +13,8 @@ import StoryTray from "../components/Feed/StoryTray";
 import PostCard from "../components/Feed/PostCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmojiPicker from "../components/EmojiPicker";
+import { useToast } from "@/app/providers/ToastProvider";
+import { deleteOwnContent } from "@/lib/actions/social";
 
 interface FeedPost {
   id: string;
@@ -45,6 +48,7 @@ interface FeedStory {
 
 export default function FeedPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [stories, setStories] = useState<FeedStory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,13 +83,14 @@ export default function FeedPage() {
         setNewPostContent("");
         setMediaUrl("");
         setMediaType(null);
+        showToast("Shared successfully", "success");
         loadFeed();
       } else {
-        alert("Failed to share: " + (res.error || "Unknown error"));
+        showToast("Failed to share: " + (res.error || "Unknown error"), "error");
       }
     } catch (err) {
       console.error("Post creation error:", err);
-      alert("An unexpected error occurred while sharing.");
+      showToast("An unexpected error occurred while sharing.", "error");
     } finally {
       setIsPosting(false);
     }
@@ -102,7 +107,7 @@ export default function FeedPage() {
       
       // Client-side validations
       if (file.size > 20 * 1024 * 1024) {
-        alert("File too large. Max 20MB allowed.");
+        showToast("File too large. Max 20MB allowed.", "error");
         return;
       }
 
@@ -113,7 +118,7 @@ export default function FeedPage() {
         video.onloadedmetadata = async () => {
           window.URL.revokeObjectURL(video.src);
           if (video.duration > 60) {
-            alert("Video too long. Max 1 minute allowed.");
+            showToast("Video too long. Max 1 minute allowed.", "error");
             setUploadingMedia(false);
             return;
           }
@@ -154,10 +159,11 @@ export default function FeedPage() {
 
       const type = file.type.startsWith("video") ? "VIDEO" : "IMAGE";
       await createStory(data.secure_url, type);
+      showToast("Story uploaded", "success");
       loadFeed();
     } catch (err) {
       console.error("Story upload failed", err);
-      alert("Story upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
+      showToast("Story upload failed: " + (err instanceof Error ? err.message : "Unknown error"), "error");
     } finally {
       setUploadingMedia(false);
     }
@@ -180,6 +186,18 @@ export default function FeedPage() {
     await toggleLike(id, type);
   };
 
+  const handleDelete = async (id: string, type: string) => {
+    const ok = window.confirm("Delete this content?");
+    if (!ok) return;
+    const res = await deleteOwnContent(id, type as "POST" | "REEL");
+    if (res.success) {
+      setPosts((prev) => prev.filter((p) => p.id !== id));
+      showToast("Content deleted", "success");
+    } else {
+      showToast(res.error || "Failed to delete content", "error");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-6 pb-24">
@@ -192,8 +210,12 @@ export default function FeedPage() {
     <div className="min-h-screen bg-[#f8f7f5] pb-24">
       {/* Top Header */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-stone-100 px-4 py-4">
-        <div className="max-w-xl mx-auto flex items-center justify-center">
+        <div className="max-w-xl mx-auto flex items-center justify-between">
+          <div className="w-8" /> {/* Spacer */}
           <h1 className="text-xl font-black text-stone-900 tracking-tight">Society Feed</h1>
+          <Link href="/search" className="w-8 h-8 flex items-center justify-center text-stone-600 hover:text-stone-900 bg-stone-50 rounded-full hover:bg-stone-100 transition-colors">
+            <FaSearch className="text-sm" />
+          </Link>
         </div>
       </header>
 
@@ -275,7 +297,7 @@ export default function FeedPage() {
                          
                          // Client-side validations
                          if (file.size > 20 * 1024 * 1024) {
-                           alert("File too large. Max 20MB allowed.");
+                           showToast("File too large. Max 20MB allowed.", "error");
                            return;
                          }
 
@@ -304,7 +326,7 @@ export default function FeedPage() {
                            setMediaType(file.type.startsWith("video") ? "VIDEO" : "IMAGE");
                          } catch (err) {
                            console.error("Upload failed", err);
-                           alert("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"));
+                           showToast("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"), "error");
                          } finally {
                            setUploadingMedia(false);
                          }
@@ -343,7 +365,14 @@ export default function FeedPage() {
           </div>
         ) : (
           posts.map((post, i) => (
-            <PostCard key={post.id} post={post} onLike={handleLike} index={i} />
+            <PostCard
+              key={post.id}
+              post={post}
+              onLike={handleLike}
+              onDelete={handleDelete}
+              canDelete={user?.id === post.user.id}
+              index={i}
+            />
           ))
         )}
       </div>
