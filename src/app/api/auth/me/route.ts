@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthToken, verifyJWT } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
+import { getAdminRoleFromEmail } from '@/lib/admin';
 
 export async function GET() {
   const token = await getAuthToken();
@@ -42,6 +43,7 @@ export async function GET() {
   return NextResponse.json({
     ...user,
     image: image || `https://ui-avatars.com/api/?name=${user.name}`,
+    adminRole: getAdminRoleFromEmail(user.email),
     profile: undefined // Hide raw profile if desired, or keep it
   });
 }

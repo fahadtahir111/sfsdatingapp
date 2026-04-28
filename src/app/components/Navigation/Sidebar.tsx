@@ -11,10 +11,11 @@ import CreateReelCTA from "../Feed/CreateReelCTA";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const isAdmin = !!user?.adminRole;
 
   const navItems = [
-    { name: "Admin", href: "/admin", icon: FaCrown },
+    ...(isAdmin ? [{ name: "Admin", href: "/admin", icon: FaCrown }] : []),
     { name: "Society Feed", href: "/feed", icon: FaCompass },
     { name: "Search", href: "/search", icon: FaSearch },
     { name: "Discover", href: "/discover", icon: FaCrown },

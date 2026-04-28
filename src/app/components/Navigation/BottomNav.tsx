@@ -6,11 +6,15 @@ import { motion } from "framer-motion";
 import { FaCommentDots, FaUser, FaVideo, FaCamera, FaCrown, FaMicrophone } from "react-icons/fa";
 import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getPendingRequestsCount } from "@/app/friends/actions";
+import { useAuth } from "@/app/providers/AuthProvider";
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const isAdmin = !!user?.adminRole;
 
   const navItems = [
+    ...(isAdmin ? [{ name: "Admin", href: "/admin", icon: FaCrown }] : []),
     { name: "Boardroom", href: "/boardroom", icon: FaMicrophone },
     { name: "Discover", href: "/discover", icon: FaCrown },
     { name: "Reels", href: "/reels", icon: FaVideo },

@@ -187,13 +187,17 @@ export default function FeedPage() {
   };
 
   const handleDelete = async (id: string, type: string) => {
-    const ok = window.confirm("Delete this content?");
-    if (!ok) return;
+    let snapshot: FeedPost[] = [];
+    setPosts((prev) => {
+      snapshot = prev;
+      return prev.filter((p) => p.id !== id);
+    });
+
     const res = await deleteOwnContent(id, type as "POST" | "REEL");
     if (res.success) {
-      setPosts((prev) => prev.filter((p) => p.id !== id));
       showToast("Content deleted", "success");
     } else {
+      setPosts(snapshot);
       showToast(res.error || "Failed to delete content", "error");
     }
   };

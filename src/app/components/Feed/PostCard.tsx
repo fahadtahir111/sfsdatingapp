@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FaCrown, FaHeart, FaComment, FaShare } from "react-icons/fa";
 import Link from "next/link";
@@ -35,10 +36,20 @@ interface PostCardProps {
 
 export default function PostCard({ post, onLike, onDelete, canDelete = false, index = 0 }: PostCardProps) {
   const { showToast } = useToast();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const deleteConfirmTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   // If the URL is a Cloudinary URL, ensure it uses auto quality and format
   const optimizedVideoUrl = post.mediaType === "VIDEO" && post.mediaUrl?.includes('cloudinary.com') 
     ? post.mediaUrl.replace('/upload/', '/upload/f_auto,q_auto/') 
     : post.mediaUrl;
+
+  useEffect(() => {
+    return () => {
+      if (deleteConfirmTimeout.current) {
+        clearTimeout(deleteConfirmTimeout.current);
+      }
+    };
+  }, []);
 
   return (
     <motion.div 
@@ -75,10 +86,22 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
         {canDelete ? (
           <button
             type="button"
-            onClick={() => onDelete?.(post.id, post.type)}
-            className="text-xs font-black uppercase tracking-wider text-red-500 hover:text-red-600"
+            onClick={() => {
+              if (!confirmingDelete) {
+                setConfirmingDelete(true);
+                if (deleteConfirmTimeout.current) clearTimeout(deleteConfirmTimeout.current);
+                deleteConfirmTimeout.current = setTimeout(() => setConfirmingDelete(false), 2200);
+                return;
+              }
+              setConfirmingDelete(false);
+              if (deleteConfirmTimeout.current) clearTimeout(deleteConfirmTimeout.current);
+              onDelete?.(post.id, post.type);
+            }}
+            className={`text-xs font-black uppercase tracking-wider transition-colors ${
+              confirmingDelete ? "text-red-700" : "text-red-500 hover:text-red-600"
+            }`}
           >
-            Delete
+            {confirmingDelete ? "Confirm?" : "Delete"}
           </button>
         ) : (
           <button type="button" className="text-stone-300" aria-label="Post menu">•••</button>

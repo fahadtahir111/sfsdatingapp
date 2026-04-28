@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { FaCrown, FaArrowRight } from "react-icons/fa";
@@ -12,7 +12,6 @@ function SignupContent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const referralCode = searchParams.get("ref");
 
@@ -35,8 +34,9 @@ function SignupContent() {
       });
 
       if (res.ok) {
-        router.push("/discover");
-        router.refresh();
+        // Force navigation in production to avoid rare client-router stalls.
+        window.location.assign("/discover");
+        return;
       } else {
         const { message } = await res.json();
         setError(message || "An error occurred during registration.");
