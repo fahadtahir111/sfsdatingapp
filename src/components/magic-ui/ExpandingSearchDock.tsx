@@ -20,7 +20,7 @@ export function ExpandingSearchDock({ className }: { className?: string }) {
         inputRef.current?.focus()
       }}
     >
-      <Search className="h-5 w-5 shrink-0 text-yellow-400" />
+      <Search className="h-5 w-5 shrink-0 text-primary" />
       <input
         ref={inputRef}
         placeholder="Search the Elite Network..."
@@ -33,3 +33,4 @@ export function ExpandingSearchDock({ className }: { className?: string }) {
     </div>
   )
 }
+

@@ -68,7 +68,7 @@ export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
         <div className="flex flex-col items-center gap-2 flex-shrink-0">
           <button 
             onClick={onAddStory}
-            className="relative w-16 h-16 rounded-full border-2 border-stone-200 p-1 flex items-center justify-center hover:border-yellow-400 transition-colors"
+            className="relative w-16 h-16 rounded-full border-2 border-stone-200 p-1 flex items-center justify-center hover:border-primary transition-colors"
           >
             <div className="w-full h-full rounded-full bg-stone-100 overflow-hidden relative">
               <img 
@@ -77,8 +77,8 @@ export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
                 className="w-full h-full object-cover opacity-60"
               />
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-                  <FaCamera className="text-[10px] text-yellow-950" />
+                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                  <FaCamera className="text-[10px] text-pink-950" />
                 </div>
               </div>
             </div>
@@ -91,7 +91,7 @@ export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
           <div key={group.userId} className="flex flex-col items-center gap-2 flex-shrink-0">
             <button 
               onClick={() => openStories(group)}
-              className="w-16 h-16 rounded-full border-2 border-yellow-400 p-1 flex items-center justify-center active:scale-95 transition-transform"
+              className="w-16 h-16 rounded-full border-2 border-primary p-1 flex items-center justify-center active:scale-95 transition-transform"
             >
               <div className="w-full h-full rounded-full overflow-hidden border border-white">
                 {group.userImage.includes('cloudinary') ? (
@@ -212,3 +212,4 @@ export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
     </div>
   );
 }
+

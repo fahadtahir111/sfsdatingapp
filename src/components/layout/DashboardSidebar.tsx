@@ -47,11 +47,11 @@ export function DashboardSidebar({
       {/* Brand */}
       <div className="p-6 mb-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-yellow-400 rounded-xl flex items-center justify-center text-black shrink-0 shadow-lg shadow-yellow-400/20">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-black shrink-0 shadow-lg shadow-primary/20">
             S
           </div>
           {!isCollapsed && (
-            <span className="font-black text-xl tracking-tighter text-white">SFS <span className="text-yellow-400">ELITE</span></span>
+            <span className="font-black text-xl tracking-tighter text-white">SFS <span className="text-primary">ELITE</span></span>
           )}
         </Link>
       </div>
@@ -67,7 +67,7 @@ export function DashboardSidebar({
               className={cn(
                 "group flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-200 relative",
                 isActive 
-                  ? "bg-yellow-400 text-black shadow-xl shadow-yellow-400/20" 
+                  ? "bg-primary text-black shadow-xl shadow-primary/20" 
                   : "text-stone-500 hover:bg-white/5 hover:text-white"
               )}
             >
@@ -88,7 +88,7 @@ export function DashboardSidebar({
       {/* Upgrade Card (Magic UI Style) */}
       {!isCollapsed && (
         <div className="px-6 py-8">
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-[2rem] p-6 relative overflow-hidden group">
+          <div className="bg-gradient-to-br from-primary to-primary/80 rounded-[2rem] p-6 relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none group-hover:rotate-12 transition-transform">
               <Sparkles className="w-20 h-20 text-black" />
             </div>
@@ -122,10 +122,11 @@ export function DashboardSidebar({
       {/* Collapse Toggle */}
       <button 
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-24 w-6 h-6 bg-stone-900 border border-white/10 rounded-full shadow-md flex items-center justify-center text-stone-500 hover:text-yellow-400 transition-colors"
+        className="absolute -right-3 top-24 w-6 h-6 bg-stone-900 border border-white/10 rounded-full shadow-md flex items-center justify-center text-stone-500 hover:text-primary transition-colors"
       >
         <ChevronRight className={cn("w-3 h-3 transition-transform duration-300", isCollapsed ? "" : "rotate-180")} />
       </button>
     </aside>
   );
 }
+

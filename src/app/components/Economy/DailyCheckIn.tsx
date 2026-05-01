@@ -67,7 +67,7 @@ export default function DailyCheckIn({ userId }: { userId: string }) {
               >
                 {loading ? "Processing..." : (
                   <>
-                    <FaFire className="text-yellow-400" /> Activate Boost
+                    <FaFire className="text-primary" /> Activate Boost
                   </>
                 )}
               </button>
@@ -89,3 +89,4 @@ export default function DailyCheckIn({ userId }: { userId: string }) {
     </AnimatePresence>
   );
 }
+

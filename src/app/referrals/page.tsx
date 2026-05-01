@@ -54,9 +54,9 @@ export default function ReferralsPage() {
         animate={{ y: 0, opacity: 1 }}
         className="bg-stone-900 rounded-[2rem] p-8 text-white mb-8 relative overflow-hidden shadow-2xl shadow-stone-200"
       >
-        <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full -mr-16 -mt-16 blur-3xl" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-3xl" />
         <div className="relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 bg-yellow-400/20 text-yellow-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6 border border-yellow-400/30">
+          <div className="inline-flex items-center gap-2 bg-primary/20 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6 border border-primary/30">
             <FaAward /> Referral Engine
           </div>
           
@@ -76,7 +76,7 @@ export default function ReferralsPage() {
             </div>
             <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
               <p className="text-[10px] text-stone-400 font-black uppercase tracking-widest mb-1">Circle Status</p>
-              <p className="text-2xl font-black text-yellow-400">Level {Math.floor((data?.referrals?.length || 0) / 3) + 1}</p>
+              <p className="text-2xl font-black text-primary">Level {Math.floor((data?.referrals?.length || 0) / 3) + 1}</p>
             </div>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function ReferralsPage() {
 
           <div className="bg-white p-4 rounded-2xl flex items-center justify-between border border-stone-100 border-l-4 border-l-yellow-400">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600 border border-yellow-100">
+              <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-primary/80 border border-yellow-100">
                 💎
               </div>
               <div>
@@ -109,7 +109,7 @@ export default function ReferralsPage() {
                 <p className="text-[10px] text-stone-400 font-bold">Unlocks premium group access</p>
               </div>
             </div>
-            <div className="bg-yellow-400 text-stone-900 px-3 py-1 rounded-full text-[10px] font-black">Verified</div>
+            <div className="bg-primary text-stone-900 px-3 py-1 rounded-full text-[10px] font-black">Verified</div>
           </div>
         </div>
       </section>
@@ -139,8 +139,8 @@ export default function ReferralsPage() {
                     <p className="text-[9px] text-stone-400 font-bold uppercase tracking-tighter">{new Date(ref.date).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] font-black text-yellow-600">
-                  <FaAward className="text-[10px] text-yellow-400" />
+                <div className="flex items-center gap-1.5 text-[10px] font-black text-primary/80">
+                  <FaAward className="text-[10px] text-primary" />
                   EXPANDED
                 </div>
               </div>
@@ -173,3 +173,4 @@ export default function ReferralsPage() {
     </div>
   );
 }
+

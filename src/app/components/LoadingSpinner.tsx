@@ -18,7 +18,7 @@ export default function LoadingSpinner({
   };
 
   const colorClasses = {
-    primary: "border-yellow-400 border-t-transparent",
+    primary: "border-primary border-t-transparent",
     stone: "border-stone-200 border-t-stone-900"
   };
 
@@ -36,3 +36,4 @@ export default function LoadingSpinner({
 
   return spinner;
 }
+

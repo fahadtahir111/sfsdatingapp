@@ -11,8 +11,8 @@
     --popover: #0a0a0a;
     --popover-foreground: #f5f2ed;
 
-    --primary: #fbbf24; /* yellow-400 */
-    --primary-foreground: #000000;
+    --primary: #FF1493; /* deep pink */
+    --primary-foreground: #ffffff;
 
     --secondary: #1a1a1a;
     --secondary-foreground: #d6d0c8;
@@ -20,15 +20,15 @@
     --muted: #141414;
     --muted-foreground: #8a847c;
 
-    --accent: #221f18;
-    --accent-foreground: #fbbf24;
+    --accent: #1f0512;
+    --accent-foreground: #FF1493;
 
     --destructive: #b91c1c;
     --destructive-foreground: #fef2f2;
 
     --border: #1a1a1a;
     --input: #1a1a1a;
-    --ring: #fbbf24;
+    --ring: #FF1493;
 
     --radius-sm: 0.5rem;
     --radius-md: 0.75rem;
@@ -146,15 +146,15 @@ body {
   .bg-luxury-mesh {
     background-color: #0a0a0a;
     background-image:
-      radial-gradient(at 0% 0%, rgba(201, 162, 39, 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(201, 162, 39, 0.05) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(255, 20, 147, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(255, 20, 147, 0.1) 0px, transparent 50%);
   }
 
-  .text-gold {
-    @apply bg-gradient-to-b from-[#f0e6d4] via-[#c9a227] to-[#8b7355] bg-clip-text text-transparent;
+  .text-gradient-primary {
+    @apply bg-gradient-to-b from-[#ff85c2] via-[#FF1493] to-[#990c58] bg-clip-text text-transparent;
   }
 
-  .border-gold {
+  .border-primary-gradient {
     @apply border border-primary/25 hover:border-primary/45 transition-colors;
   }
 
@@ -163,7 +163,7 @@ body {
   }
 
   .text-glow {
-    text-shadow: 0 0 18px rgba(201, 162, 39, 0.35);
+    text-shadow: 0 0 18px rgba(255, 20, 147, 0.45);
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -174,3 +174,4 @@ body {
     scrollbar-width: none;
   }
 }
+

@@ -247,7 +247,7 @@ export default function FeedPage() {
                    />
                    <button 
                      onClick={() => setShowEmojis(!showEmojis)}
-                     className="absolute bottom-2 right-0 text-stone-300 hover:text-yellow-500 transition-colors"
+                     className="absolute bottom-2 right-0 text-stone-300 hover:text-primary/90 transition-colors"
                    >
                      <FaSmile className="text-lg" />
                    </button>
@@ -379,3 +379,4 @@ export default function FeedPage() {
     </DashboardLayout>
   );
 }
+

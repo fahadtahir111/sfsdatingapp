@@ -345,3 +345,4 @@ export default function VerifyClient({ initialStatus }: { initialStatus?: Initia
     </div>
   );
 }
+

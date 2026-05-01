@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FaHeart, FaComment, FaShare, FaMusic } from "react-icons/fa";
+import { FaHeart, FaComment, FaShare, FaMusic, FaVolumeMute, FaVolumeUp } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getReels, postReelComment, getReelComments, deleteReel, deleteReelComment } from "./actions";
@@ -73,7 +73,7 @@ export default function ReelsClient({ initialReels }: { initialReels: ReelData[]
             onClick={() => setFeedMode("discover")}
             className={`text-lg uppercase pb-1 drop-shadow-lg transition-colors ${
               feedMode === "discover"
-                ? "text-white font-black tracking-widest border-b-2 border-yellow-400"
+                ? "text-white font-black tracking-widest border-b-2 border-primary"
                 : "text-white/50 font-bold tracking-widest hover:text-white"
             }`}
           >
@@ -84,7 +84,7 @@ export default function ReelsClient({ initialReels }: { initialReels: ReelData[]
             onClick={() => setFeedMode("following")}
             className={`text-lg uppercase pb-1 drop-shadow-lg transition-colors ${
               feedMode === "following"
-                ? "text-white font-black tracking-widest border-b-2 border-yellow-400"
+                ? "text-white font-black tracking-widest border-b-2 border-primary"
                 : "text-white/50 font-bold tracking-widest hover:text-white"
             }`}
           >
@@ -242,21 +242,51 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
   return (
     <div className="relative w-full h-[100dvh] snap-center bg-black flex items-center justify-center overflow-hidden group">
 
-      <video
-        ref={videoRef}
-        src={optimizedUrl}
-        className="w-full h-full object-contain"
-        loop
-        playsInline
-        muted={isMuted}
-        onClick={togglePlay}
-      />
+      {/* Blurred Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <video
+          src={optimizedUrl}
+          className="w-full h-full object-cover blur-3xl opacity-30 scale-110"
+          loop
+          playsInline
+          muted
+          autoPlay
+        />
+        <div className="absolute inset-0 bg-black/20" />
+      </div>
+
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.7}
+        onDragEnd={(e, info) => {
+          if (info.offset.x > 100) {
+            // Swiped right - trigger match
+            showToast(`Swiped Right on ${reel.user}! ✨`, "success");
+            if (!isLiked) handleLike();
+          } else if (info.offset.x < -100) {
+            // Swiped left - pass
+            showToast(`Passed on ${reel.user}`, "info");
+          }
+        }}
+        className="absolute inset-0 z-10"
+      >
+        <video
+          ref={videoRef}
+          src={optimizedUrl}
+          className="w-full h-full object-contain pointer-events-auto"
+          loop
+          playsInline
+          muted={isMuted}
+          onClick={togglePlay}
+        />
+      </motion.div>
 
       {!isPlaying && (
         <motion.div 
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+          className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
         >
           <div className="w-16 h-16 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
             <div className="w-0 h-0 border-t-8 border-t-transparent border-l-[14px] border-l-white border-b-8 border-b-transparent ml-1" />
@@ -273,55 +303,91 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
             exit={{ scale: 2, opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
           >
-            <FaHeart className="text-yellow-400 text-8xl drop-shadow-[0_0_20px_rgba(255,215,0,0.5)]" />
+            <FaHeart className="text-primary text-8xl drop-shadow-[0_0_20px_rgba(255,20,147,0.5)]" />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none flex flex-col justify-end p-4 pb-20 z-20">
+      <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none flex flex-col justify-end p-4 pb-20 z-30">
         <div className="flex justify-between items-end">
-          <div className="flex-1 max-w-[80%] text-white pointer-events-auto drop-shadow-md">
+          {/* Bottom Left: Info */}
+          <div className="flex-1 max-w-[75%] text-white pointer-events-auto drop-shadow-md">
             <Link href={`/profile/${reel.userId}`} onClick={(e) => e.stopPropagation()}>
-              <h3 className="font-black text-lg mb-1 tracking-tight hover:underline cursor-pointer inline-block">{reel.user}</h3>
+              <h3 className="font-black text-lg mb-1 tracking-tight hover:underline cursor-pointer inline-block drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{reel.user}</h3>
             </Link>
-            <p className="text-sm mb-4 opacity-90 line-clamp-2">{reel.caption}</p>
-            <div className="flex items-center gap-2 text-[10px] bg-white/10 rounded-full py-1.5 px-4 w-fit backdrop-blur-md border border-white/10 font-black uppercase tracking-widest">
-              <FaMusic className="animate-spin-slow text-yellow-400" />
-              <div className="w-24 overflow-hidden whitespace-nowrap">
+            <p className="text-sm mb-4 text-white/90 line-clamp-3 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] leading-snug">{reel.caption}</p>
+            <div className="flex items-center gap-2 text-[10px] bg-black/30 rounded-full py-1.5 px-4 w-fit backdrop-blur-md border border-white/10 font-black uppercase tracking-widest shadow-lg">
+              <FaMusic className="animate-spin-slow text-primary" />
+              <div className="w-32 overflow-hidden whitespace-nowrap">
                 <span className="inline-block animate-marquee">{reel.song}</span>
               </div>
             </div>
+            
+            {/* Swipe hint */}
+            <div className="mt-4 flex items-center gap-2 text-white/80 text-xs font-bold animate-pulse drop-shadow-md bg-black/20 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm">
+              <span>👉 Swipe right to Match</span>
+            </div>
           </div>
 
-          <div className="flex flex-col items-center gap-6 text-white pb-2 pointer-events-auto">
+          {/* Bottom Right: Action Bar */}
+          <div className="flex flex-col items-center gap-5 text-white pb-2 pointer-events-auto">
+            {/* Avatar with Match Button */}
+            <div className="relative group mb-2">
+              <Link href={`/profile/${reel.userId}`}>
+                <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-stone-800 shadow-lg">
+                  <Image 
+                    src={reel.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reel.user)}`}
+                    alt={reel.user}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
+                </div>
+              </Link>
+              <button 
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-7 h-7 bg-gradient-to-r from-[#FF6B6B] to-[#FF1493] text-white rounded-full flex items-center justify-center border-[2.5px] border-black hover:scale-110 transition-transform shadow-lg"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showToast("Matched! ✨", "success");
+                  if (!isLiked) handleLike();
+                }}
+              >
+                <FaHeart className="text-[12px]" />
+              </button>
+            </div>
+
+            <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors drop-shadow-lg ${isLiked ? 'text-[#FF1493]' : 'text-white hover:text-white/80'}`}>
+                <FaHeart className="text-[32px]" />
+              </div>
+              <span className="text-xs font-bold drop-shadow-md">{likesCount >= 1000 ? (likesCount/1000).toFixed(1)+'K' : likesCount}</span>
+            </button>
+
+            <button onClick={() => setShowComments(true)} className="flex flex-col items-center gap-1 group">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:text-white/80 transition-colors drop-shadow-lg">
+                <FaComment className="text-[32px]" />
+              </div>
+              <span className="text-xs font-bold drop-shadow-md">{reel.comments}</span>
+            </button>
+
+            <button onClick={handleShare} className="flex flex-col items-center gap-1 group">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:text-white/80 transition-colors drop-shadow-lg">
+                <FaShare className="text-[28px]" />
+              </div>
+              <span className="text-xs font-bold drop-shadow-md">Share</span>
+            </button>
+
+            <button onClick={(e) => { e.stopPropagation(); onToggleMute(); }} className="flex flex-col items-center gap-1 group">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:text-white/80 transition-colors drop-shadow-lg">
+                {isMuted ? <FaVolumeMute className="text-[24px]" /> : <FaVolumeUp className="text-[24px]" />}
+              </div>
+            </button>
+
             {reel.canDelete && (
-              <button onClick={handleDeleteReel} className="text-[10px] font-black uppercase tracking-widest text-red-300 hover:text-red-200">
+              <button onClick={handleDeleteReel} className="text-[10px] mt-2 font-black uppercase tracking-widest text-red-400 hover:text-red-300 drop-shadow-md">
                 Delete
               </button>
             )}
-            <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
-              <div className={`w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors ${isLiked ? 'bg-primary text-black' : 'bg-black/20 group-hover:bg-primary/20'}`}>
-                <FaHeart className="text-2xl" />
-              </div>
-              <span className="text-xs font-semibold">{likesCount >= 1000 ? (likesCount/1000).toFixed(1)+'K' : likesCount}</span>
-            </button>
-            <button onClick={() => setShowComments(true)} className="flex flex-col items-center gap-1 group">
-              <div className="w-12 h-12 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <FaComment className="text-2xl" />
-              </div>
-              <span className="text-xs font-semibold">{reel.comments}</span>
-            </button>
-            <button onClick={handleShare} className="flex flex-col items-center gap-1 group">
-              <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center group-hover:bg-yellow-400/20 transition-all border border-white/10">
-                <FaShare className="text-xl" />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-tighter">Share</span>
-            </button>
-            <button onClick={onToggleMute} className="flex flex-col items-center gap-1 group pointer-events-auto">
-              <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center group-hover:bg-primary/20 transition-colors border border-white/20">
-                {isMuted ? <span className="text-lg">🔇</span> : <span className="text-lg animate-pulse">🔊</span>}
-              </div>
-            </button>
           </div>
         </div>
       </div>
@@ -393,3 +459,4 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
     </div>
   );
 };
+

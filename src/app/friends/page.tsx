@@ -63,7 +63,7 @@ export default function FriendsHub() {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-2xl border-b border-border px-6 py-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-black text-stone-900 tracking-tight">Network</h1>
-          <div className="w-12 h-12 rounded-2xl bg-stone-900 flex items-center justify-center text-yellow-400 shadow-xl shadow-stone-200">
+          <div className="w-12 h-12 rounded-2xl bg-stone-900 flex items-center justify-center text-primary shadow-xl shadow-stone-200">
              <FaUserFriends className="text-xl" />
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function FriendsHub() {
           >
             Requests
             {requests.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 text-stone-950 text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+              <span className="absolute -top-1 -right-1 w-6 h-6 bg-primary text-stone-950 text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg">
                 {requests.length}
               </span>
             )}
@@ -204,3 +204,4 @@ export default function FriendsHub() {
     </div>
   );
 }
+

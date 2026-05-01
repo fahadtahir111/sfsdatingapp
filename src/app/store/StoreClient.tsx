@@ -23,7 +23,7 @@ export default function StoreClient() {
           whileHover={{ scale: 1.02 }}
           className="p-8 bg-stone-900 rounded-[3rem] text-white relative overflow-hidden shadow-2xl"
         >
-          <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-400/10 rounded-full -mr-20 -mt-20 blur-3xl" />
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full -mr-20 -mt-20 blur-3xl" />
           
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-black shadow-lg shadow-primary/20">
@@ -35,7 +35,7 @@ export default function StoreClient() {
           <ul className="space-y-4 mb-8">
             {["Priority Placement", "Exclusive Networking", "Ghost Browsing", "Unlimited Elite Connections"].map((f) => (
               <li key={f} className="flex items-center gap-3 text-stone-300 text-sm font-medium">
-                <FaCheck className="text-yellow-400 text-xs" />
+                <FaCheck className="text-primary text-xs" />
                 {f}
               </li>
             ))}
@@ -61,3 +61,4 @@ export default function StoreClient() {
     </div>
   );
 }
+

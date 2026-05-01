@@ -171,19 +171,19 @@ export default function GlobalSignaling() {
             initial={{ x: 300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 300, opacity: 0 }}
-            className="mt-4 max-w-sm ml-auto bg-stone-900 text-white border border-yellow-400/30 p-4 rounded-3xl shadow-xl flex items-center gap-4 pointer-events-auto"
+            className="mt-4 max-w-sm ml-auto bg-stone-900 text-white border border-primary/30 p-4 rounded-3xl shadow-xl flex items-center gap-4 pointer-events-auto"
           >
-            <div className="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-yellow-950 text-xl font-bold">
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-pink-950 text-xl font-bold">
               🤝
             </div>
             <div className="flex-1">
-              <h3 className="font-black text-xs text-yellow-400 uppercase tracking-wider">New Connection!</h3>
+              <h3 className="font-black text-xs text-primary uppercase tracking-wider">New Connection!</h3>
               <p className="text-sm font-medium opacity-90">Someone wants to be your friend.</p>
             </div>
             <Link 
               href="/profile?tab=friends"
               onClick={() => setNewRequest(false)}
-              className="px-4 py-2 bg-yellow-400 text-yellow-950 rounded-xl text-xs font-black uppercase tracking-widest"
+              className="px-4 py-2 bg-primary text-pink-950 rounded-xl text-xs font-black uppercase tracking-widest"
             >
               View
             </Link>
@@ -193,3 +193,4 @@ export default function GlobalSignaling() {
     </div>
   );
 }
+

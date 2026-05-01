@@ -53,7 +53,7 @@ export default function Sidebar() {
               <div className="relative">
                 <Icon className="text-xl" />
                 {item.hasBadge && requestCount && requestCount > 0 ? (
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full border-2 border-white" />
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border-2 border-white" />
                 ) : null}
               </div>
               <span className="font-bold text-sm tracking-tight">{item.name}</span>
@@ -75,3 +75,4 @@ export default function Sidebar() {
     </div>
   );
 }
+

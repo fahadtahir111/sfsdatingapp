@@ -36,9 +36,9 @@ export function SwipeableCardStack({
 
   if (currentIndex >= cards.length) {
     return (
-      <div className="h-[600px] w-full max-w-md mx-auto bg-white rounded-[3rem] border-2 border-dashed border-stone-100 flex flex-col items-center justify-center p-12 text-center">
-        <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mb-6">
-          <Star className="w-10 h-10 text-stone-200" />
+      <div className="h-[600px] w-full max-w-md mx-auto bg-card rounded-[3rem] border-2 border-dashed border-white/10 flex flex-col items-center justify-center p-12 text-center text-white shadow-2xl">
+        <div className="w-20 h-20 bg-stone-900 rounded-full flex items-center justify-center mb-6">
+          <Star className="w-10 h-10 text-stone-600" />
         </div>
         <h4 className="text-xl font-black mb-2">That&apos;s everyone!</h4>
         <p className="text-stone-400 font-medium">Check back later or expand your filters to meet more elite members.</p>
@@ -92,7 +92,7 @@ function ProfileCard({
       dragConstraints={{ left: 0, right: 0 }}
       onDragEnd={handleDragEnd}
       className={cn(
-        "absolute inset-0 bg-white rounded-[2.5rem] shadow-2xl overflow-hidden cursor-grab active:cursor-grabbing border border-stone-100",
+        "absolute inset-0 bg-stone-950 rounded-[2.5rem] shadow-2xl overflow-hidden cursor-grab active:cursor-grabbing border border-white/10",
         !isTop && "scale-95 translate-y-4 opacity-50 pointer-events-none"
       )}
       initial={{ scale: 0.9, opacity: 0 }}
@@ -115,11 +115,11 @@ function ProfileCard({
         {/* Swipe Indicators */}
         {isTop && (
           <>
-            <motion.div style={{ opacity: likeOpacity }} className="absolute top-10 left-10 border-4 border-green-500 rounded-xl px-4 py-2 rotate-[-15deg]">
-              <span className="text-4xl font-black text-green-500 uppercase">LIKE</span>
+            <motion.div style={{ opacity: likeOpacity }} className="absolute top-10 left-10 border-4 border-primary rounded-xl px-4 py-2 rotate-[-15deg]">
+              <span className="text-4xl font-black text-primary uppercase">LIKE</span>
             </motion.div>
-            <motion.div style={{ opacity: nopeOpacity }} className="absolute top-10 right-10 border-4 border-red-500 rounded-xl px-4 py-2 rotate-[15deg]">
-              <span className="text-4xl font-black text-red-500 uppercase">NOPE</span>
+            <motion.div style={{ opacity: nopeOpacity }} className="absolute top-10 right-10 border-4 border-stone-500 rounded-xl px-4 py-2 rotate-[15deg]">
+              <span className="text-4xl font-black text-stone-500 uppercase">NOPE</span>
             </motion.div>
           </>
         )}
@@ -148,10 +148,10 @@ function ProfileCard({
 
           <div className="flex items-center justify-between pt-4 border-t border-white/10">
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-stone-500">Trust Score</span>
-              <span className="text-xl font-black text-yellow-400">{card.trustScore}%</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Trust Score</span>
+              <span className="text-xl font-black text-primary">{card.trustScore}%</span>
             </div>
-            <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-stone-900 shadow-xl hover:scale-110 transition-transform">
+            <button className="w-12 h-12 bg-black/50 border border-white/20 rounded-full flex items-center justify-center text-primary shadow-xl hover:scale-110 transition-transform">
               <Heart className="w-6 h-6 fill-current" />
             </button>
           </div>
@@ -160,3 +160,4 @@ function ProfileCard({
     </motion.div>
   );
 }
+

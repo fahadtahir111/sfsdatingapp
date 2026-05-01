@@ -75,7 +75,7 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
                 <p className="text-sm font-black text-foreground">{post.user.name || "Anonymous"}</p>
               </Link>
               {post.user.tier === "Elite" && (
-                <FaCrown className="text-[10px] text-yellow-500" />
+                <FaCrown className="text-[10px] text-primary/90" />
               )}
             </div>
             <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter">
@@ -184,3 +184,4 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
     </motion.div>
   );
 }
+

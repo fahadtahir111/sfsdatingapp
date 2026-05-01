@@ -194,12 +194,12 @@ export default function CreateReelPage() {
             className="flex-1 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden max-w-[450px] mx-auto w-full border-x border-white/5"
           >
             {/* Background Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-yellow-400/5 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
             
             <motion.div 
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
-              className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl shadow-yellow-500/20 rotate-12"
+              className="w-24 h-24 bg-gradient-to-br from-primary to-amber-600 rounded-3xl flex items-center justify-center mb-8 shadow-2xl shadow-yellow-500/20 rotate-12"
             >
               <FaVideo className="text-4xl text-black" />
             </motion.div>
@@ -214,7 +214,7 @@ export default function CreateReelPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={startCamera}
-                className="w-full py-5 bg-yellow-400 text-black font-black uppercase tracking-widest rounded-2xl flex items-center justify-center gap-4 shadow-xl shadow-yellow-400/10"
+                className="w-full py-5 bg-primary text-black font-black uppercase tracking-widest rounded-2xl flex items-center justify-center gap-4 shadow-xl shadow-primary/10"
               >
                 <div className="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center">
                   <FaCamera className="text-sm" />
@@ -284,9 +284,9 @@ export default function CreateReelPage() {
                   onTouchEnd={stopRecording}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`relative w-24 h-24 rounded-full border-4 ${recording ? 'border-white' : 'border-yellow-400'} flex items-center justify-center transition-all p-1`}
+                  className={`relative w-24 h-24 rounded-full border-4 ${recording ? 'border-white' : 'border-primary'} flex items-center justify-center transition-all p-1`}
                 >
-                  <div className={`rounded-full bg-yellow-400 transition-all duration-300 ${recording ? 'w-10 h-10 rounded-xl bg-white' : 'w-20 h-20 shadow-2xl shadow-yellow-400/40'}`} />
+                  <div className={`rounded-full bg-primary transition-all duration-300 ${recording ? 'w-10 h-10 rounded-xl bg-white' : 'w-20 h-20 shadow-2xl shadow-primary/40'}`} />
                   {recording && (
                     <motion.div 
                       initial={{ scale: 1 }}
@@ -340,7 +340,7 @@ export default function CreateReelPage() {
             <div className="flex-1 p-8 flex flex-col gap-6 overflow-y-auto no-scrollbar">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-400">Add Caption</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Add Caption</label>
                   <span className="text-[10px] text-stone-500 font-bold">{caption.length}/280</span>
                 </div>
                 <textarea 
@@ -348,7 +348,7 @@ export default function CreateReelPage() {
                   onChange={(e) => setCaption(e.target.value)}
                   placeholder="Share the story behind this moment..."
                   maxLength={280}
-                  className="w-full h-24 bg-white/5 border border-white/10 rounded-2xl p-5 text-white placeholder:text-stone-600 focus:border-yellow-400/50 focus:bg-white/[0.07] outline-none resize-none transition-all font-medium leading-relaxed text-sm"
+                  className="w-full h-24 bg-white/5 border border-white/10 rounded-2xl p-5 text-white placeholder:text-stone-600 focus:border-primary/50 focus:bg-white/[0.07] outline-none resize-none transition-all font-medium leading-relaxed text-sm"
                 />
               </div>
 
@@ -357,7 +357,7 @@ export default function CreateReelPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handlePost}
-                  className="w-full py-5 bg-yellow-400 text-black font-black uppercase tracking-widest rounded-2xl flex items-center justify-center gap-4 shadow-2xl shadow-yellow-400/20 active:bg-yellow-500"
+                  className="w-full py-5 bg-primary text-black font-black uppercase tracking-widest rounded-2xl flex items-center justify-center gap-4 shadow-2xl shadow-primary/20 active:bg-primary/90"
                 >
                   <FaCheck className="text-sm" />
                   Publish to Elite Society
@@ -394,11 +394,11 @@ export default function CreateReelPage() {
                   fill="transparent"
                   strokeDasharray="377"
                   animate={{ strokeDashoffset: 377 - (377 * uploadProgress) / 100 }}
-                  className="text-yellow-400"
+                  className="text-primary"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <FaUpload className="text-3xl text-yellow-400 animate-bounce" />
+                <FaUpload className="text-3xl text-primary animate-bounce" />
               </div>
             </div>
             
@@ -409,7 +409,7 @@ export default function CreateReelPage() {
             
             <div className="mt-8 w-full max-w-[200px] h-1.5 bg-white/5 rounded-full overflow-hidden mx-auto">
               <motion.div 
-                className="h-full bg-yellow-400"
+                className="h-full bg-primary"
                 animate={{ width: `${uploadProgress}%` }}
               />
             </div>
@@ -419,3 +419,4 @@ export default function CreateReelPage() {
     </div>
   );
 }
+

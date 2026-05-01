@@ -207,7 +207,13 @@ export default function ChatRoomPage() {
       );
       const call = client.call("default", conversationId);
       await call.join({ create: true });
-      if (type === "audio") await call.camera.disable();
+      if (type === "audio") {
+        await call.camera.disable();
+        try { await call.microphone.enable(); } catch {}
+      } else {
+        try { await call.camera.enable(); } catch {}
+        try { await call.microphone.enable(); } catch {}
+      }
       setStreamCall(call);
       setCallPhase("connected");
     } catch (e) {
@@ -223,7 +229,13 @@ export default function ChatRoomPage() {
     try {
       const call = client.call("default", conversationId);
       await call.join({ create: true });
-      if (callType === "audio") await call.camera.disable();
+      if (callType === "audio") {
+        await call.camera.disable();
+        try { await call.microphone.enable(); } catch {}
+      } else {
+        try { await call.camera.enable(); } catch {}
+        try { await call.microphone.enable(); } catch {}
+      }
       setStreamCall(call);
       setCallPhase("connected");
     } catch (e) {
@@ -237,9 +249,11 @@ export default function ChatRoomPage() {
   const endCall = async () => {
     try {
       await streamCall?.leave();
+      await sendMessage(conversationId, "Call ended", "info");
     } catch {}
     setStreamCall(null);
     setCallPhase("idle");
+    setHandledMsgId(null);
   };
 
   // ── Rose gift ─────────────────────────────────────────────────────────
@@ -330,7 +344,7 @@ export default function ChatRoomPage() {
               <FaChevronLeft />
             </button>
             <StreamCall call={streamCall}>
-              <MeetingRoom />
+              <MeetingRoom onLeaveCall={endCall} />
             </StreamCall>
           </motion.div>
         )}
@@ -362,7 +376,7 @@ export default function ChatRoomPage() {
                 {callType === "video" ? "Video calling…" : "Audio calling…"}
               </p>
             </div>
-            <FaSpinner className="text-yellow-400 text-2xl animate-spin opacity-60" />
+            <FaSpinner className="text-primary text-2xl animate-spin opacity-60" />
             <button
               type="button"
               aria-label="Cancel call"

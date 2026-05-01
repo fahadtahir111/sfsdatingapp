@@ -29,20 +29,20 @@ export default function DashboardLayout({
         isCollapsed ? "md:ml-20" : "md:ml-72"
       )}>
         {/* Decorative Glows */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
         
         {/* Header - Desktop Only */}
         <header className="hidden md:flex h-20 bg-black/40 backdrop-blur-2xl border-b border-white/5 items-center justify-between px-8 sticky top-0 z-40">
           <ExpandingSearchDock className="w-96 bg-white/5 border-white/10" />
           
           <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-stone-400 hover:text-yellow-400 transition-colors shadow-sm">
+            <button className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-stone-400 hover:text-primary transition-colors shadow-sm">
               <Bell className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-3 pl-4 border-l border-white/10">
               <div className="text-right hidden sm:block">
                 <p className="text-xs font-black text-white">{user?.name || "Member"}</p>
-                <p className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest">
+                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
                   {user?.tier || "Elite Member"}
                 </p>
               </div>
@@ -50,7 +50,7 @@ export default function DashboardLayout({
                 {user?.image ? (
                   <Image src={user.image} alt={user.name || "User"} fill className="object-cover" unoptimized />
                 ) : (
-                  <div className="w-full h-full bg-yellow-400 flex items-center justify-center text-black font-black text-xs uppercase">
+                  <div className="w-full h-full bg-primary flex items-center justify-center text-black font-black text-xs uppercase">
                     {(user?.name || "M").substring(0, 2)}
                   </div>
                 )}
@@ -61,8 +61,8 @@ export default function DashboardLayout({
 
         {/* Mobile Header */}
         <header className="md:hidden h-16 bg-black border-b border-white/5 flex items-center justify-between px-6 sticky top-0 z-40">
-          <span className="font-black text-lg tracking-tighter">SFS <span className="text-yellow-400">ELITE</span></span>
-          <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-black font-black text-[10px]">
+          <span className="font-black text-lg tracking-tighter">SFS <span className="text-primary">ELITE</span></span>
+          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black font-black text-[10px]">
             {(user?.name || "M").substring(0, 1)}
           </div>
         </header>
@@ -82,3 +82,4 @@ export default function DashboardLayout({
     </div>
   );
 }
+

@@ -74,7 +74,7 @@ export default function SearchPage() {
               value={query}
               onChange={handleChange}
               placeholder="Search by name, occupation, or expertise..."
-              className="w-full bg-white border border-stone-100 rounded-full py-5 pl-14 pr-8 text-sm font-medium focus:ring-2 focus:ring-yellow-400/20 focus:border-yellow-400 transition-all shadow-sm"
+              className="w-full bg-white border border-stone-100 rounded-full py-5 pl-14 pr-8 text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             />
           </form>
         </div>
@@ -159,7 +159,7 @@ export default function SearchPage() {
                         {user.name || "Anonymous"}
                       </p>
                       {user.tier === "Elite" && (
-                        <FaCrown className="text-yellow-500 text-[10px] flex-shrink-0" />
+                        <FaCrown className="text-primary/90 text-[10px] flex-shrink-0" />
                       )}
                       {user.tier === "Signature" && (
                         <FaStar className="text-amber-400 text-[10px] flex-shrink-0" />
@@ -196,3 +196,4 @@ export default function SearchPage() {
     </DashboardLayout>
   );
 }
+

@@ -23,7 +23,7 @@ export default function Error({
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md bg-white rounded-[3.5rem] p-12 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.1)] border border-stone-100"
       >
-        <div className="w-24 h-24 bg-yellow-400/10 text-yellow-500 rounded-[2rem] flex items-center justify-center mx-auto mb-10 border border-yellow-400/20">
+        <div className="w-24 h-24 bg-primary/10 text-primary/90 rounded-[2rem] flex items-center justify-center mx-auto mb-10 border border-primary/20">
            <FaExclamationTriangle className="text-4xl" />
         </div>
 
@@ -57,3 +57,4 @@ export default function Error({
     </div>
   );
 }
+

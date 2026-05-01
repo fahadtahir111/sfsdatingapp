@@ -82,7 +82,7 @@ export default function PublicProfilePage() {
           <motion.div 
             animate={{ x: [0, 50, 0], y: [0, 30, 0] }}
             transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-            className="absolute -top-20 -left-20 w-80 h-80 bg-yellow-400/20 blur-[100px] rounded-full" 
+            className="absolute -top-20 -left-20 w-80 h-80 bg-primary/20 blur-[100px] rounded-full" 
           />
           <div className="absolute inset-x-0 top-0 p-8 flex justify-between items-center z-10">
             <button onClick={() => router.back()} className="w-12 h-12 flex items-center justify-center rounded-full bg-white/5 backdrop-blur-2xl text-white border border-white/10 hover:bg-white/10 transition-all">
@@ -94,7 +94,7 @@ export default function PublicProfilePage() {
         {/* Avatar */}
         <div className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2 z-20">
           <div className="relative group">
-            <div className="absolute inset-0 rounded-full bg-yellow-400 blur-xl opacity-20" />
+            <div className="absolute inset-0 rounded-full bg-primary blur-xl opacity-20" />
             <div className="relative w-40 h-40 rounded-full border-[6px] border-white overflow-hidden bg-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
               <Image
                 src={profile.photos[0] || `https://ui-avatars.com/api/?name=${profile.name}`}
@@ -133,10 +133,10 @@ export default function PublicProfilePage() {
 
           <div className="flex flex-wrap justify-center gap-2">
             <div className="px-4 py-2 rounded-2xl bg-stone-900 text-white font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-xl">
-              <FaCrown className="text-yellow-400" />
+              <FaCrown className="text-primary" />
               {profile.membership}
             </div>
-            <div className="px-4 py-2 rounded-2xl bg-yellow-400 text-stone-950 font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+            <div className="px-4 py-2 rounded-2xl bg-primary text-stone-950 font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
               <FaStar />
               Verified Identity
             </div>
@@ -151,13 +151,13 @@ export default function PublicProfilePage() {
           {/* AI Compatibility Score */}
           <div className="flex justify-center pt-2">
             <div className="relative group cursor-help">
-              <div className="absolute inset-0 bg-yellow-400 blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
-              <div className="relative bg-white border border-yellow-400/30 px-4 py-2 rounded-2xl flex items-center gap-3">
+              <div className="absolute inset-0 bg-primary blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
+              <div className="relative bg-white border border-primary/30 px-4 py-2 rounded-2xl flex items-center gap-3">
                 <div className="flex flex-col items-start">
                   <span className="text-[8px] font-black text-stone-400 uppercase tracking-[0.2em]">AI Match Score</span>
                   <span className="text-lg font-black text-stone-900 tracking-tighter">88% <span className="text-[10px] text-green-500 ml-1">High Compatibility</span></span>
                 </div>
-                <div className="w-8 h-8 rounded-full border-2 border-stone-100 flex items-center justify-center text-xs font-black text-yellow-500">
+                <div className="w-8 h-8 rounded-full border-2 border-stone-100 flex items-center justify-center text-xs font-black text-primary/90">
                   ⚡
                 </div>
               </div>
@@ -178,7 +178,7 @@ export default function PublicProfilePage() {
               disabled={actionLoading}
               className="flex-1 py-4 bg-stone-900 text-white rounded-[2rem] font-black text-sm shadow-2xl flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
             >
-              {actionLoading ? <FaSpinner className="animate-spin" /> : <FaUserPlus className="text-yellow-400" />} 
+              {actionLoading ? <FaSpinner className="animate-spin" /> : <FaUserPlus className="text-primary" />} 
               Connect
             </button>
             <button 
@@ -199,7 +199,7 @@ export default function PublicProfilePage() {
                 }
               }}
               disabled={actionLoading}
-              className="flex-1 py-4 bg-white border border-stone-200 rounded-[2rem] font-black text-stone-800 text-sm shadow-sm flex items-center justify-center gap-3 transition-all hover:border-yellow-400 active:scale-95 disabled:opacity-50"
+              className="flex-1 py-4 bg-white border border-stone-200 rounded-[2rem] font-black text-stone-800 text-sm shadow-sm flex items-center justify-center gap-3 transition-all hover:border-primary active:scale-95 disabled:opacity-50"
             >
               {actionLoading ? <FaSpinner className="animate-spin" /> : <FaCommentDots className="text-stone-400" />} 
               Message
@@ -218,7 +218,7 @@ export default function PublicProfilePage() {
                 }
               }}
               disabled={actionLoading}
-              className="flex-1 py-4 bg-stone-100 border border-stone-200 rounded-[2rem] font-black text-stone-800 text-sm shadow-sm flex items-center justify-center gap-3 transition-all hover:border-yellow-400 active:scale-95 disabled:opacity-50"
+              className="flex-1 py-4 bg-stone-100 border border-stone-200 rounded-[2rem] font-black text-stone-800 text-sm shadow-sm flex items-center justify-center gap-3 transition-all hover:border-primary active:scale-95 disabled:opacity-50"
             >
               {actionLoading ? <FaSpinner className="animate-spin" /> : <FaUserShield className="text-stone-400" />} 
               Vouch
@@ -229,7 +229,7 @@ export default function PublicProfilePage() {
                 showToast("Starting professional video call...", "info");
                 // router.push(`/call/${profile.id}`);
               }}
-              className="w-16 py-4 bg-yellow-400 text-stone-900 rounded-[2rem] font-black text-sm shadow-2xl flex items-center justify-center transition-all hover:scale-[1.05] active:scale-95"
+              className="w-16 py-4 bg-primary text-stone-900 rounded-[2rem] font-black text-sm shadow-2xl flex items-center justify-center transition-all hover:scale-[1.05] active:scale-95"
             >
               <FaVideo />
             </button>
@@ -240,7 +240,7 @@ export default function PublicProfilePage() {
         <div className="grid grid-cols-3 gap-3 mt-10 px-5">
           {[
             { label: "Connections", value: profile.matchesCount, icon: FaHeart, bg: "bg-stone-50", color: "text-stone-900" },
-            { label: "Vouches", value: profile.vouchesCount, icon: FaCheck, bg: "bg-yellow-50", color: "text-yellow-600" },
+            { label: "Vouches", value: profile.vouchesCount, icon: FaCheck, bg: "bg-yellow-50", color: "text-primary/80" },
             { label: "Content", value: profile.reelsCount, icon: FaVideo, bg: "bg-blue-50", color: "text-blue-500" },
           ].map((stat) => (
             <div key={stat.label} className={`${stat.bg} rounded-3xl p-5 flex flex-col items-center gap-1 border border-stone-100 shadow-sm transition-transform active:scale-95`}>

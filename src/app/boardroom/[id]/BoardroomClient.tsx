@@ -57,6 +57,12 @@ export default function BoardroomClient({
         await myCall.join({ create: true });
         // Ensure camera is disabled for audio rooms
         await myCall.camera.disable();
+        // Force explicitly enable microphone
+        try {
+          await myCall.microphone.enable();
+        } catch (e) {
+          console.error("Microphone enable failed:", e);
+        }
         if (active) setCall(myCall);
       } catch (err) {
         console.error("Failed to join boardroom:", err);
@@ -94,7 +100,7 @@ export default function BoardroomClient({
   if (joining) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-stone-950 gap-4">
-        <FaSpinner className="text-yellow-400 text-3xl animate-spin" />
+        <FaSpinner className="text-primary text-3xl animate-spin" />
         <p className="text-stone-400 text-xs font-black uppercase tracking-[0.25em]">
           Entering Boardroom…
         </p>
@@ -109,7 +115,7 @@ export default function BoardroomClient({
         <p className="text-stone-400 text-sm font-semibold max-w-xs">{joinError}</p>
         <button
           onClick={() => router.push("/boardroom")}
-          className="px-6 py-3 bg-yellow-400 text-stone-900 rounded-xl font-black text-sm uppercase tracking-widest"
+          className="px-6 py-3 bg-primary text-stone-900 rounded-xl font-black text-sm uppercase tracking-widest"
         >
           Go Back
         </button>
@@ -150,7 +156,7 @@ function BoardroomUI({
   if (callingState !== CallingState.JOINED) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-stone-950 gap-3">
-        <FaSpinner className="text-yellow-400 text-3xl animate-spin" />
+        <FaSpinner className="text-primary text-3xl animate-spin" />
         <p className="text-stone-400 text-xs font-black uppercase tracking-widest">
           Syncing…
         </p>
@@ -163,7 +169,7 @@ function BoardroomUI({
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-5 pt-safe pt-5 pb-4 border-b border-white/5">
         <div>
-          <p className="text-[10px] font-black text-yellow-400 uppercase tracking-[0.25em] mb-0.5">
+          <p className="text-[10px] font-black text-primary uppercase tracking-[0.25em] mb-0.5">
             The Boardroom
           </p>
           <h1 className="text-base font-black text-white line-clamp-1">
@@ -185,9 +191,9 @@ function BoardroomUI({
         {/* Host avatar */}
         <div className="relative">
           <div
-            className={`w-36 h-36 rounded-[2.5rem] bg-gradient-to-br from-yellow-400 to-yellow-600 p-[3px] ${
+            className={`w-36 h-36 rounded-[2.5rem] bg-gradient-to-br from-primary to-primary/80 p-[3px] ${
               hostParticipant?.isSpeaking
-                ? "shadow-2xl shadow-yellow-400/30 ring-4 ring-yellow-400/30"
+                ? "shadow-2xl shadow-primary/30 ring-4 ring-primary/30"
                 : "shadow-xl"
             } transition-all`}
           >
@@ -208,9 +214,9 @@ function BoardroomUI({
             </div>
           </div>
           {/* Host badge */}
-          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-stone-900 border border-yellow-400/50 px-3 py-0.5 rounded-full flex items-center gap-1.5 shadow-xl whitespace-nowrap">
-            <FaCrown className="text-yellow-400 text-[9px]" />
-            <span className="text-[9px] font-black uppercase tracking-tight text-yellow-400">
+          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-stone-900 border border-primary/50 px-3 py-0.5 rounded-full flex items-center gap-1.5 shadow-xl whitespace-nowrap">
+            <FaCrown className="text-primary text-[9px]" />
+            <span className="text-[9px] font-black uppercase tracking-tight text-primary">
               Host
             </span>
           </div>
@@ -239,7 +245,7 @@ function BoardroomUI({
                 <div key={p.sessionId} className="flex flex-col items-center gap-1.5">
                   <div
                     className={`w-12 h-12 rounded-2xl bg-stone-800 border overflow-hidden relative flex items-center justify-center transition-all ${
-                      p.isSpeaking ? "border-yellow-400/40 shadow-lg shadow-yellow-400/10" : "border-white/5"
+                      p.isSpeaking ? "border-primary/40 shadow-lg shadow-primary/10" : "border-white/5"
                     }`}
                   >
                     {p.image ? (
@@ -283,7 +289,7 @@ function BoardroomUI({
           className={`w-16 h-16 rounded-3xl flex items-center justify-center text-2xl transition-all shadow-lg active:scale-90 ${
             isMute
               ? "bg-stone-800 text-stone-400"
-              : "bg-yellow-400 text-stone-900 shadow-yellow-400/20"
+              : "bg-primary text-stone-900 shadow-primary/20"
           }`}
         >
           {isMute ? <FaMicrophoneSlash /> : <FaMicrophone />}

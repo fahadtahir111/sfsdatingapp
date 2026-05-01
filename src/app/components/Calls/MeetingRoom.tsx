@@ -6,13 +6,20 @@ import {
   SpeakerLayout,
   useCallStateHooks,
 } from "@stream-io/video-react-sdk";
+import { useEffect } from "react";
 import LoadingSpinner from "../LoadingSpinner";
 import { FaLock, FaVideo } from "react-icons/fa";
 
-export default function MeetingRoom() {
+export default function MeetingRoom({ onLeaveCall }: { onLeaveCall?: () => void }) {
   const { useCallCallingState, useParticipants } = useCallStateHooks();
   const callingState = useCallCallingState();
   const participants = useParticipants();
+
+  useEffect(() => {
+    if (callingState === CallingState.LEFT && onLeaveCall) {
+      onLeaveCall();
+    }
+  }, [callingState, onLeaveCall]);
 
   if (callingState !== CallingState.JOINED) {
     return (
@@ -29,7 +36,9 @@ export default function MeetingRoom() {
       
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-50">
         <div className="bg-white/10 backdrop-blur-3xl p-4 rounded-[3rem] border border-white/10 shadow-2xl">
-          <CallControls />
+          <CallControls onLeave={() => {
+            if (onLeaveCall) onLeaveCall();
+          }} />
         </div>
       </div>
 
