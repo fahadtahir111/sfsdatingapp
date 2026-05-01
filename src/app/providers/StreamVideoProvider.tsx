@@ -19,6 +19,8 @@ export default function StreamVideoProvider({
   useEffect(() => {
     // If Stream is not configured, skip — children still render normally
     if (!apiKey || !user?.id) {
+      if (!apiKey) console.error("[StreamVideoProvider] Missing NEXT_PUBLIC_STREAM_API_KEY. Did you restart the dev server?");
+      if (!user?.id) console.error("[StreamVideoProvider] Missing user ID.");
       setReady(true);
       return;
     }
