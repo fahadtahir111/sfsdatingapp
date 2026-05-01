@@ -1,24 +1,22 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { getCurrentUser } from "@/lib/auth";
 import { fetchDiscoverFeed } from "./actions";
 import DiscoverClient from "./DiscoverClient";
-import AuthGateCard from "../components/AuthGateCard";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 export default async function DiscoverPage() {
-  const user = await getCurrentUser();
+  const initialCards = await fetchDiscoverFeed({ minAge: 18, maxAge: 50 });
 
-  if (!user) {
-    return (
-      <AuthGateCard
-        emoji="🔒"
-        title="Exclusive Access Only"
-        description="Please sign in to explore the SFS Elite network."
-      />
-    );
-  }
-
-  const initialCards = await fetchDiscoverFeed();
-
-  return <DiscoverClient initialCards={initialCards} />;
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight">Discover</h1>
+          <p className="text-stone-500 font-medium">Meet the most ambitious individuals in your network.</p>
+        </div>
+        
+        <DiscoverClient initialCards={initialCards} />
+      </div>
+    </DashboardLayout>
+  );
 }

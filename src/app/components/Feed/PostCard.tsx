@@ -57,7 +57,7 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-stone-100"
+      className="bg-card rounded-[2.5rem] overflow-hidden shadow-xl border border-border"
     >
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -72,7 +72,7 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
           <div>
             <div className="flex items-center gap-1.5">
               <Link href={`/profile/${post.user.id}`} className="hover:underline">
-                <p className="text-sm font-black text-stone-900">{post.user.name || "Anonymous"}</p>
+                <p className="text-sm font-black text-foreground">{post.user.name || "Anonymous"}</p>
               </Link>
               {post.user.tier === "Elite" && (
                 <FaCrown className="text-[10px] text-yellow-500" />
@@ -109,7 +109,7 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
       </div>
 
       <div className="px-6 pb-4">
-        <p className="text-sm text-stone-800 leading-relaxed font-medium whitespace-pre-wrap">
+        <p className="text-sm text-stone-300 leading-relaxed font-medium whitespace-pre-wrap">
           {post.content}
         </p>
       </div>
@@ -150,15 +150,15 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
         </div>
       )}
 
-      <div className="px-6 py-4 flex items-center gap-6 border-t border-stone-50">
+      <div className="px-6 py-4 flex items-center gap-6 border-t border-border">
         <button 
           onClick={() => onLike(post.id, post.type)}
-          className={`flex items-center gap-2 text-xs font-black transition-colors ${post.isLiked ? 'text-primary' : 'text-stone-400 hover:text-stone-900'}`}
+          className={`flex items-center gap-2 text-xs font-black transition-colors ${post.isLiked ? 'text-primary' : 'text-stone-500 hover:text-foreground'}`}
         >
           <FaHeart className={post.isLiked ? "scale-110" : ""} />
           {post.likesCount}
         </button>
-        <button className="flex items-center gap-2 text-xs font-black text-stone-400 hover:text-stone-900 transition-colors">
+        <button className="flex items-center gap-2 text-xs font-black text-stone-500 hover:text-foreground transition-colors">
           <FaComment />
           {post.commentsCount}
         </button>

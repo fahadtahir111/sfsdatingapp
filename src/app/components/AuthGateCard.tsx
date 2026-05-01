@@ -23,7 +23,7 @@ export default function AuthGateCard({
         <p className="text-muted-foreground text-sm max-w-xs mx-auto">{description}</p>
       </div>
       <Link
-        href="/auth/login"
+        href="/login"
         className="px-10 py-4 bg-foreground text-background font-black rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-xs focus-ring"
       >
         {ctaLabel}

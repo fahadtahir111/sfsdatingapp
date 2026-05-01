@@ -3,8 +3,8 @@
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { FaLock, FaChevronRight } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
+import { FaLock, FaChevronRight, FaEnvelope, FaFingerprint } from "react-icons/fa";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -29,7 +29,6 @@ function LoginForm() {
       const data = await res.json();
 
       if (res.ok) {
-        // Force navigation in production to avoid rare client-router stalls.
         window.location.assign(callbackUrl);
         return;
       } else {
@@ -44,113 +43,130 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0a0a0a] text-white selection:bg-primary/30">
-      {/* Background Effects */}
-      <div className="fixed inset-0 bg-luxury-mesh z-0 opacity-50"></div>
-      <div className="fixed top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 blur-[120px] rounded-full z-0"></div>
-      <div className="fixed bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/3 blur-[120px] rounded-full z-0"></div>
+    <div className="flex flex-col min-h-screen bg-[#050505] text-white selection:bg-yellow-400/30 overflow-hidden font-sans">
+      {/* Dynamic Luxury Background */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-yellow-400/5 blur-[140px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-yellow-400/5 blur-[140px] rounded-full" />
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] mix-blend-overlay" />
+      </div>
 
       <div className="relative z-10 flex flex-col items-center justify-center flex-1 p-6">
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full max-w-[420px]"
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[440px]"
         >
-          {/* Logo/Header Area */}
-          <div className="text-center mb-12">
+          {/* Brand Header */}
+          <div className="text-center mb-10">
             <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center justify-center w-20 h-20 bg-stone-900 border border-primary/20 rounded-2xl mb-6 shadow-2xl relative group"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-stone-900 to-black border border-white/10 rounded-3xl mb-8 shadow-2xl relative group"
             >
-              <div className="absolute inset-0 bg-primary/10 rounded-2xl blur-xl group-hover:bg-primary/20 transition-all"></div>
-              <FaLock className="text-3xl text-primary relative z-10" />
+              <div className="absolute inset-0 bg-yellow-400/10 rounded-3xl blur-2xl group-hover:bg-yellow-400/20 transition-all duration-500"></div>
+              <FaFingerprint className="text-4xl text-yellow-400 relative z-10" />
             </motion.div>
-            <h1 className="text-5xl font-black tracking-tighter mb-2">
-              <span className="text-white">SFS</span>
-              <span className="text-primary italic">.</span>
-              <span className="text-gold">ELITE</span>
+            
+            <h1 className="text-5xl font-black tracking-tighter mb-3 leading-none">
+              SFS <span className="text-yellow-400">ELITE</span>
             </h1>
-            <p className="text-stone-400 font-medium tracking-[0.2em] uppercase text-[10px]">Private Membership Entrance</p>
+            <div className="flex items-center justify-center gap-2">
+              <div className="h-px w-8 bg-gradient-to-r from-transparent to-stone-700" />
+              <p className="text-stone-500 font-bold tracking-[0.3em] uppercase text-[9px]">Private Sanctuary</p>
+              <div className="h-px w-8 bg-gradient-to-l from-transparent to-stone-700" />
+            </div>
           </div>
 
           {/* Login Card */}
-          <div className="bg-stone-900/40 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+          <div className="bg-stone-900/30 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 shadow-2xl relative">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent rounded-full" />
             
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest ml-1">Verified Email</label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-[10px] font-black text-stone-500 uppercase tracking-widest ml-2">
+                  <FaEnvelope className="text-yellow-400/50" />
+                  Credentials
+                </label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:bg-white/10 focus:border-primary/50 focus:ring-2 focus:ring-primary/30 transition-all outline-none text-sm font-medium"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4.5 focus:bg-white/10 focus:border-yellow-400/50 transition-all outline-none text-sm font-medium placeholder-stone-600"
                   placeholder="executive@sfs.elite"
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest">Security Code</label>
-                </div>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-[10px] font-black text-stone-500 uppercase tracking-widest ml-2">
+                  <FaLock className="text-yellow-400/50" />
+                  Security Key
+                </label>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:bg-white/10 focus:border-primary/50 focus:ring-2 focus:ring-primary/30 transition-all outline-none text-sm font-medium"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4.5 focus:bg-white/10 focus:border-yellow-400/50 transition-all outline-none text-sm font-medium placeholder-stone-600"
                   placeholder="••••••••"
                 />
               </div>
 
-              {error && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-red-500/10 border border-red-500/20 py-3 rounded-xl"
-                >
-                  <p className="text-[10px] font-black text-red-400 text-center uppercase tracking-wider">
-                    {error}
-                  </p>
-                </motion.div>
-              )}
+              <AnimatePresence mode="wait">
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="bg-red-500/10 border border-red-500/20 py-3 rounded-xl px-4">
+                      <p className="text-[10px] font-black text-red-400 text-center uppercase tracking-wider">
+                        {error}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-primary text-black h-16 rounded-2xl font-black uppercase tracking-[0.15em] text-xs shadow-[0_0_30px_rgba(250,204,21,0.2)] hover:shadow-[0_0_40px_rgba(250,204,21,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 group disabled:opacity-50 disabled:grayscale"
+                className="w-full bg-yellow-400 text-black h-16 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-[0_10px_30px_rgba(250,204,21,0.2)] hover:shadow-[0_15px_40px_rgba(250,204,21,0.3)] transition-all flex items-center justify-center gap-3 group disabled:opacity-50 disabled:grayscale"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                    <span className="animate-pulse">Authorizing...</span>
+                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                    <span className="animate-pulse">Verifying...</span>
                   </div>
                 ) : (
                   <>
-                    Enter Club
+                    Request Access
                     <FaChevronRight className="text-[10px] group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
-              </button>
+              </motion.button>
             </form>
 
             <div className="mt-10 pt-8 border-t border-white/5 text-center">
-              <p className="text-stone-500 text-[11px] font-medium tracking-wide">
+              <p className="text-stone-500 text-[11px] font-bold tracking-wide">
                 Seeking Membership?{" "}
-                <Link href="/auth/signup" className="text-primary font-black uppercase tracking-widest ml-1 hover:text-white transition-colors underline-offset-4 underline decoration-primary/30">
-                  Apply Now
+                <Link href="/auth/signup" className="text-yellow-400 font-black uppercase tracking-widest ml-2 hover:text-white transition-colors underline decoration-yellow-400/20 underline-offset-8">
+                  Apply for Invite
                 </Link>
               </p>
             </div>
           </div>
 
-          <p className="mt-8 text-center text-stone-600 text-[10px] font-medium uppercase tracking-[0.25em]">
-            © 2026 SFS Elite Society
-          </p>
+          <div className="mt-12 text-center">
+            <p className="text-stone-700 text-[9px] font-black uppercase tracking-[0.4em]">
+              SFS ELITE • EST. 2026 • GLOBAL SOCIETY
+            </p>
+          </div>
         </motion.div>
       </div>
     </div>
@@ -159,7 +175,7 @@ function LoginForm() {
 
 export default function Login() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#050505]" />}>
       <LoginForm />
     </Suspense>
   );

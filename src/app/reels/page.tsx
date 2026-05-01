@@ -1,9 +1,11 @@
+export const dynamic = "force-dynamic";
 
 import { getCurrentUser } from "@/lib/auth";
 import { getReels } from "./actions";
 import ReelsClient from "./ReelsClient";
 import Link from "next/link";
 import { FaMusic } from "react-icons/fa";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 export default async function ReelsPage() {
   const user = await getCurrentUser();
@@ -16,7 +18,7 @@ export default async function ReelsPage() {
           <h2 className="text-3xl font-black mb-2">Elite Content</h2>
           <p className="text-white/60 text-sm max-w-xs mx-auto">Sign in to watch exclusive reels and join the community.</p>
         </div>
-        <Link href="/auth/login" className="px-10 py-4 bg-primary text-black font-black rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-xs">
+        <Link href="/login" className="px-10 py-4 bg-primary text-black font-black rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-xs">
           Sign In
         </Link>
       </div>
@@ -25,5 +27,9 @@ export default async function ReelsPage() {
 
   const reels = await getReels();
 
-  return <ReelsClient initialReels={reels} />;
+  return (
+    <DashboardLayout fullWidth>
+      <ReelsClient initialReels={reels} />
+    </DashboardLayout>
+  );
 }

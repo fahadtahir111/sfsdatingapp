@@ -26,6 +26,12 @@ export async function GET() {
         select: {
           photos: true
         }
+      },
+      subscriptions: {
+        orderBy: {
+          createdAt: 'desc'
+        },
+        take: 1
       }
     },
   });
@@ -44,6 +50,8 @@ export async function GET() {
     ...user,
     image: image || `https://ui-avatars.com/api/?name=${user.name}`,
     adminRole: getAdminRoleFromEmail(user.email),
-    profile: undefined // Hide raw profile if desired, or keep it
+    tier: (user as { subscriptions?: { tier: string }[] }).subscriptions?.[0]?.tier || "Elite Member",
+    profile: undefined,
+    subscriptions: undefined
   });
 }

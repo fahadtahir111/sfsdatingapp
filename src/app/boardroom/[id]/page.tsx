@@ -4,7 +4,11 @@ import { getCurrentUser } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import BoardroomClient from "./BoardroomClient";
 
-export default async function BoardroomPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function BoardroomRoomPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const resolvedParams = await params;
   const user = await getCurrentUser();
   if (!user) redirect("/auth/login");
@@ -13,20 +17,25 @@ export default async function BoardroomPage({ params }: { params: Promise<{ id: 
     where: { id: resolvedParams.id },
     include: {
       host: {
-        include: {
-          profile: true
-        }
-      }
-    }
+        include: { profile: true },
+      },
+    },
   });
 
   if (!boardroom || !boardroom.isLive) {
     notFound();
   }
 
-  return (
-    <div className="min-h-screen bg-stone-950">
-      <BoardroomClient boardroom={boardroom} />
-    </div>
-  );
+  // Serialize only what the client needs
+  const boardroomData = {
+    id: boardroom.id,
+    title: boardroom.title,
+    description: boardroom.description ?? null,
+    hostId: boardroom.hostId,
+    host: {
+      name: boardroom.host.name ?? null,
+    },
+  };
+
+  return <BoardroomClient boardroom={boardroomData} />;
 }

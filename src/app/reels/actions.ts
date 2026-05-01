@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 import { getCurrentUser } from "@/lib/auth";
 
@@ -14,7 +15,7 @@ export async function getReels(mode: "discover" | "following" = "discover") {
     const user = await getCurrentUser();
     const userId = user?.id;
 
-    let whereClause = {};
+    let whereClause: Prisma.ReelWhereInput = {};
     if (mode === "following" && userId) {
       const friendships = await prisma.friendship.findMany({
         where: {
@@ -28,6 +29,9 @@ export async function getReels(mode: "discover" | "following" = "discover") {
       const friendIds = friendships.map((f) => (f.user1Id === userId ? f.user2Id : f.user1Id));
       const targetIds = [...new Set([userId, ...friendIds])];
       whereClause = { userId: { in: targetIds } };
+    } else {
+      // In discover mode, we want to ensure we aren't accidentally filtering by the current user
+      whereClause = {};
     }
 
     const reels = await prisma.reel.findMany({

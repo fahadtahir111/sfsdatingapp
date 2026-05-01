@@ -97,7 +97,7 @@ const Footer = () => {
           {[
             {
               title: "Discover",
-              items: ["Stories", "Reels", "Matchmaking", "Verified Users"],
+              items: ["Stories", "Reels", "Elite Connections", "Verified Users"],
             },
             {
               title: "Support",
@@ -157,7 +157,7 @@ const Footer = () => {
           transition={{ duration: 0.5, delay: 0.6 }}
           className="text-center mt-16 pt-8 border-t border-border text-muted-foreground font-medium text-sm"
         >
-          <p>&copy; {new Date().getFullYear()} SFS Dating App MVP. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} SFS Elite Network. All rights reserved.</p>
         </motion.div>
       </div>
     </motion.footer>
@@ -169,13 +169,13 @@ const PricingSection = () => {
     {
       plan: "Guest Level",
       price: "Complimentary",
-      features: ["5 matches daily", "View public stories", "Standard verification required", "Browse discover feed"],
+      features: ["5 elite connections daily", "View public stories", "Standard verification required", "Browse discover feed"],
     },
     {
       plan: "Signature Level",
       price: "$49/month",
       highlight: true,
-      features: ["Unlimited matches", "Priority discovery ranking", "Real-time read receipts", "Post exclusive Reels", "Dedicated profile review"],
+      features: ["Unlimited elite connections", "Priority discovery ranking", "Real-time read receipts", "Post exclusive Reels", "Dedicated profile review"],
     },
     {
       plan: "Elite Concierge",
@@ -204,14 +204,7 @@ const PricingSection = () => {
           >
             Join the Network
           </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="text-xl text-muted-foreground font-medium max-w-2xl mx-auto"
-          >
-            SFS is an exclusive community. Choose the membership level that suits your dating approach.
-          </motion.p>
+            SFS is an exclusive community. Choose the membership level that suits your networking approach.
         </div>
         
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">

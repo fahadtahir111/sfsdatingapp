@@ -4,8 +4,8 @@ import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FaSearch, FaArrowLeft, FaShieldAlt, FaCrown, FaStar } from "react-icons/fa";
+import { FaSearch, FaShieldAlt, FaCrown, FaStar } from "react-icons/fa";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 interface UserResult {
   id: string;
@@ -23,7 +23,6 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const router = useRouter();
 
   const doSearch = useCallback(async (q: string) => {
     if (!q.trim()) {
@@ -58,32 +57,29 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f7f5] pb-28">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-stone-100 px-4 py-4">
-        <div className="max-w-xl mx-auto flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 hover:bg-stone-200 transition-colors"
-          >
-            <FaArrowLeft className="text-sm" />
-          </button>
-          <form onSubmit={handleSubmit} className="flex-1 relative">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-sm" />
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight">Discover Members</h1>
+          <p className="text-stone-500 font-medium">Connect with high-performers in the network.</p>
+        </div>
+
+        <div className="space-y-3">
+          <form onSubmit={handleSubmit} className="relative">
+            <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+              <FaSearch className="text-stone-400" />
+            </div>
             <input
-              id="search-users-input"
               type="text"
-              autoFocus
               value={query}
               onChange={handleChange}
-              placeholder="Search members by name…"
-              className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-2xl text-sm font-medium text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-all"
+              placeholder="Search by name, occupation, or expertise..."
+              className="w-full bg-white border border-stone-100 rounded-full py-5 pl-14 pr-8 text-sm font-medium focus:ring-2 focus:ring-yellow-400/20 focus:border-yellow-400 transition-all shadow-sm"
             />
           </form>
         </div>
-      </header>
 
-      <div className="max-w-xl mx-auto p-4 space-y-3">
+        <div className="space-y-3 pt-4">
         {/* Loading */}
         {loading && (
           <div className="flex justify-center py-16">
@@ -195,7 +191,8 @@ export default function SearchPage() {
               </motion.div>
             ))}
         </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

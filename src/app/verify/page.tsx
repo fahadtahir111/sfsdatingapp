@@ -15,7 +15,7 @@ export default async function VerifyPage() {
           <h2 className="text-3xl font-black mb-2">Member Verification</h2>
           <p className="text-muted-foreground text-sm max-w-xs mx-auto">Sign in to complete your identity verification and join the elite network.</p>
         </div>
-        <Link href="/auth/login" className="px-10 py-4 bg-stone-900 text-white font-black rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-xs">
+        <Link href="/login" className="px-10 py-4 bg-stone-900 text-white font-black rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-xs">
           Sign In
         </Link>
       </div>

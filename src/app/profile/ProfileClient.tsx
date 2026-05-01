@@ -205,7 +205,7 @@ export default function ProfileClient({
                     {profile.networkingGoals.map((tag) => (
                       <span
                         key={tag}
-                        className="px-3 py-1.5 bg-muted border border-border text-muted-foreground rounded-xl text-[10px] font-black uppercase tracking-widest"
+                        className="px-3 py-1.5 bg-secondary border border-white/5 text-stone-400 rounded-xl text-[10px] font-black uppercase tracking-widest"
                       >
                         {tag}
                       </span>
@@ -288,7 +288,7 @@ export default function ProfileClient({
             >
               <div
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shrink-0 ${
-                  profile.incognito ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  profile.incognito ? "bg-primary text-primary-foreground" : "bg-secondary text-stone-500"
                 }`}
               >
                 <FaEyeSlash />
@@ -321,9 +321,9 @@ export default function ProfileClient({
             <button
               type="button"
               onClick={() => setShowEditModal(true)}
-              className="w-full p-5 bg-card border border-border rounded-[1.75rem] flex items-center gap-4 hover:border-primary/35 transition-colors text-left focus-ring"
+              className="w-full p-5 bg-card border border-white/5 rounded-[1.75rem] flex items-center gap-4 hover:border-primary/35 transition-colors text-left focus-ring"
             >
-              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-stone-500 shrink-0">
                 <FaPen />
               </div>
               <div>
@@ -364,7 +364,7 @@ export default function ProfileClient({
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all focus-ring ${
-                  activeTab === tab ? "bg-card text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"
+                  activeTab === tab ? "bg-primary text-black shadow-sm" : "text-stone-500 hover:text-white"
                 }`}
               >
                 {tab === "posts" ? "📸 Posts" : tab === "reels" ? "🎬 Reels" : "🤝 Friends"}

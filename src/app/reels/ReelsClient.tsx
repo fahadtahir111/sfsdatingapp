@@ -329,13 +329,13 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
       {showComments && (
         <div className="absolute inset-0 z-50 flex flex-col justify-end pointer-events-auto">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowComments(false)} />
-          <div className="bg-white w-full h-[60vh] rounded-t-3xl flex flex-col relative z-10 animate-slide-up">
+          <div className="bg-[#0a0a0a] border-t border-white/10 w-full h-[60vh] rounded-t-[2.5rem] flex flex-col relative z-10 animate-slide-up shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
             </div>
-            <div className="px-4 py-3 border-b border-border text-center font-bold text-foreground relative">
+            <div className="px-4 py-4 border-b border-white/10 text-center font-black uppercase tracking-widest text-xs text-white relative">
               Comments
-              <button onClick={() => setShowComments(false)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground p-2">✕</button>
+              <button onClick={() => setShowComments(false)} className="absolute right-6 top-1/2 -translate-y-1/2 text-stone-500 hover:text-white transition-colors">✕</button>
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
@@ -351,8 +351,8 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
                     />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-foreground">{c.user} <span className="text-muted-foreground font-medium ml-1">{c.time}</span></p>
-                    <p className="text-sm text-foreground mt-0.5">{c.text}</p>
+                    <p className="text-xs font-black text-white">{c.user} <span className="text-stone-500 font-bold ml-1">{c.time}</span></p>
+                    <p className="text-sm text-stone-300 mt-1 font-medium">{c.text}</p>
                   </div>
                   {c.canDelete && (
                     <button
@@ -376,8 +376,8 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handlePostComment()}
-                placeholder="Add a comment..."
-                className="flex-1 bg-secondary px-4 py-2.5 rounded-full text-sm outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Add an elite comment..."
+                className="flex-1 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl text-sm text-white outline-none focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-stone-600"
               />
               <button 
                 onClick={handlePostComment}

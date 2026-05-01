@@ -37,56 +37,56 @@ export default function ChatClient({ initialConversations }: { initialConversati
       })
     : displayConversations;
 
-  // Filter conversations with no messages for the "New Matches" section
-  const newMatches = filteredConversations.filter(c => c.lastMessage === "No messages yet" || c.time === "New Match");
+  // Filter conversations with no messages for the "New Connections" section
+  const newConnections = filteredConversations.filter(c => c.lastMessage === "No messages yet" || c.time === "New Match");
   const recentConvs = filteredConversations.filter(c => c.lastMessage !== "No messages yet" && c.time !== "New Match");
 
   return (
-    <div className="page-shell min-h-screen bg-background pt-6 pb-24 section-stack">
+    <div className="page-shell min-h-screen bg-background pt-6 pb-24 section-stack px-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-black text-foreground">Messages</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Messages</h1>
         <Link
           href="/profile"
           aria-label="Open profile"
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-secondary text-foreground hover:bg-secondary/80 transition-colors focus-ring"
+          className="w-12 h-12 flex items-center justify-center rounded-[1rem] bg-card text-stone-400 hover:text-primary transition-all border border-white/5 shadow-2xl"
         >
           <FaEllipsisH />
         </Link>
       </div>
 
       {/* Search */}
-      <div>
-        <div className="relative">
-          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <div className="mb-10">
+        <div className="relative group">
+          <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-600 transition-colors group-focus-within:text-primary" />
           <input 
             type="text" 
-            placeholder="Search matches or messages..." 
+            placeholder="Search connections or messages..." 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-secondary/50 text-foreground py-3 pl-12 pr-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+            className="w-full bg-card text-white py-4 pl-14 pr-6 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-black text-[10px] uppercase tracking-widest border border-white/5 shadow-inner"
           />
         </div>
       </div>
 
-      {/* New Matches / Stories */}
-      {newMatches.length > 0 && (
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">New Matches</h2>
-            <Link href="/discover" className="text-primary text-sm font-bold hover:underline">See all</Link>
+      {/* New Connections / Stories */}
+      {newConnections.length > 0 && (
+        <div className="mb-12">
+          <div className="flex justify-between items-center mb-6 px-2">
+            <h2 className="text-[10px] font-black text-stone-500 uppercase tracking-[0.3em]">New Connections</h2>
+            <Link href="/discover" className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline">See all</Link>
           </div>
-          <div className="flex overflow-x-auto gap-4 no-scrollbar pb-2">
-            {newMatches.map((match, i) => (
+          <div className="flex overflow-x-auto gap-5 no-scrollbar pb-4">
+            {newConnections.map((match, i) => (
               <Link href={`/chat/${match.id}`} key={match.id}>
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.1 }}
-                  className="flex flex-col items-center gap-2 cursor-pointer"
+                  className="flex flex-col items-center gap-3 cursor-pointer group"
                 >
-                  <div className="p-[3px] rounded-full bg-gradient-to-tr from-primary to-accent">
-                    <div className="w-16 h-16 rounded-full overflow-hidden relative border-2 border-white shadow-sm">
+                  <div className="p-[2px] rounded-[1.8rem] bg-gradient-to-tr from-primary to-primary/20 shadow-2xl group-hover:scale-105 transition-transform">
+                    <div className="w-16 h-16 rounded-[1.7rem] overflow-hidden relative border-2 border-background">
                       <Image 
                         src={match.image} 
                         alt={match.name} 
@@ -96,7 +96,7 @@ export default function ChatClient({ initialConversations }: { initialConversati
                       />
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-foreground">{match.name}</span>
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest">{match.name.split(' ')[0]}</span>
                 </motion.div>
               </Link>
             ))}
@@ -106,32 +106,28 @@ export default function ChatClient({ initialConversations }: { initialConversati
 
       {/* Conversations */}
       <div>
-        <h2 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">Conversations</h2>
+        <h2 className="text-[10px] font-black text-stone-500 uppercase tracking-[0.3em] mb-8 px-2">Active Networking</h2>
         {loading && (
-          <div className="py-8 text-center text-muted-foreground font-medium">
-            Refreshing conversations…
+          <div className="py-12 text-center text-stone-500 font-black uppercase tracking-widest text-[10px]">
+            Refreshing secure channel…
           </div>
         )}
-        {recentConvs.length === 0 && !loading && !normalizedQuery && (
-          <div className="py-12 text-center text-muted-foreground font-medium">
-            No active conversations yet. Start swiping!
+        {!loading && recentConvs.length === 0 && (
+          <div className="py-20 text-center bg-card rounded-[2.5rem] border border-white/5 border-dashed">
+            <p className="text-stone-600 font-black uppercase tracking-widest text-[10px]">No active conversations yet.</p>
+            <Link href="/discover" className="mt-4 inline-block text-primary font-black uppercase tracking-widest text-[10px] hover:underline">Start Connecting</Link>
           </div>
         )}
-        {recentConvs.length === 0 && !loading && normalizedQuery && (
-          <div className="py-12 text-center text-muted-foreground font-medium">
-            No conversations found for &quot;{query}&quot;.
-          </div>
-        )}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
           {recentConvs.map((msg, i) => (
             <Link href={`/chat/${msg.id}`} key={msg.id}>
               <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + (i * 0.1) }}
-                className="flex items-center gap-4 group"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + (i * 0.05) }}
+                className="flex items-center gap-5 group p-2 -m-2 rounded-[2rem] hover:bg-white/5 transition-all"
               >
-                <div className="w-14 h-14 rounded-full overflow-hidden relative flex-shrink-0 bg-stone-100 border border-stone-100 shadow-sm">
+                <div className="w-16 h-16 rounded-[1.5rem] overflow-hidden relative flex-shrink-0 bg-card border border-white/5 shadow-2xl group-hover:border-primary/30 transition-colors">
                     <Image 
                       src={msg.image} 
                       alt={msg.name} 
@@ -141,18 +137,18 @@ export default function ChatClient({ initialConversations }: { initialConversati
                     />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-end mb-1">
-                    <h3 className="text-base font-bold text-foreground line-clamp-1">{msg.name}</h3>
-                    <span className={`text-xs font-semibold ${msg.unread > 0 ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <h3 className="text-[12px] font-black text-white uppercase tracking-tighter line-clamp-1">{msg.name}</h3>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${msg.unread > 0 ? 'text-primary' : 'text-stone-600'}`}>
                       {msg.time}
                     </span>
                   </div>
-                  <p className={`text-sm truncate ${msg.unread > 0 ? 'text-foreground font-bold' : 'text-muted-foreground font-medium'}`}>
+                  <p className={`text-[10px] uppercase tracking-widest truncate ${msg.unread > 0 ? 'text-white font-black' : 'text-stone-500 font-bold'}`}>
                     {msg.lastMessage}
                   </p>
                 </div>
                 {msg.unread > 0 && (
-                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
+                  <div className="w-6 h-6 rounded-[0.5rem] bg-primary text-black flex items-center justify-center text-[9px] font-black shadow-lg shadow-primary/20">
                     {msg.unread}
                   </div>
                 )}

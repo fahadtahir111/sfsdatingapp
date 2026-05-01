@@ -41,13 +41,13 @@ export default function Main() {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-white to-secondary overflow-hidden">
+    <div className="relative min-h-screen bg-background overflow-hidden">
       {/* Floating background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {isMounted && bgElements.map((el, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full opacity-60 blur-[100px] bg-gradient-to-r from-primary to-accent"
+            className="absolute rounded-full opacity-20 blur-[100px] bg-gradient-to-r from-primary to-primary/30"
             initial={el.initial}
             animate={{
               x: el.animate.x,
@@ -69,19 +69,19 @@ export default function Main() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-white/20 shadow-sm py-4"
+        className="fixed top-0 w-full z-50 bg-black/40 backdrop-blur-2xl border-b border-white/5 py-4"
       >
         <div className="container mx-auto px-4 sm:px-6 flex justify-between items-center">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-xl sm:text-2xl font-black tracking-tighter text-foreground"
+            className="text-xl sm:text-2xl font-black tracking-tighter text-white"
           >
             SFS <span className="text-primary">Elite</span>
           </motion.div>
           <div className="flex gap-2 sm:gap-4">
-            <Link href="/auth/login">
+            <Link href="/login">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -90,11 +90,11 @@ export default function Main() {
                 Log In
               </motion.button>
             </Link>
-            <Link href="/auth/signup">
+            <Link href="/signup">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-4 py-2 sm:px-6 sm:py-2 text-sm sm:text-base rounded-full bg-primary text-primary-foreground font-bold shadow-lg hover:shadow-primary/50 transition-all duration-300"
+                className="px-6 py-2.5 text-sm sm:text-base rounded-full bg-primary text-black font-black shadow-xl shadow-primary/20 transition-all duration-300 uppercase tracking-widest text-[10px]"
               >
                 Apply Now
               </motion.button>
@@ -112,23 +112,23 @@ export default function Main() {
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
             <motion.div 
-              className="inline-block mb-4 px-4 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary-foreground font-medium text-sm sm:text-base backdrop-blur-md"
+              className="inline-block mb-6 px-6 py-2 rounded-full bg-primary/5 border border-primary/20 text-primary font-black text-[10px] sm:text-xs tracking-[0.3em] uppercase backdrop-blur-md"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 }}
             >
-              ✨ The New Era of Exclusive Dating
+              ✨ The New Era of Executive Networking
             </motion.div>
             
             <motion.h1 
-              className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 text-foreground tracking-tight leading-[1.1]"
+              className="text-5xl sm:text-6xl md:text-7xl lg:text-9xl font-black mb-8 text-white tracking-tighter leading-[0.9] uppercase"
             >
-              Curated Connections,<br />
-              <span className="text-primary">Elevated Experiences.</span>
+              Curated<br />
+              <span className="text-primary">Connections.</span>
             </motion.h1>
             
             <motion.p
-              className="text-lg sm:text-xl md:text-2xl mb-10 text-muted-foreground max-w-2xl mx-auto px-2 sm:px-0 font-medium"
+              className="text-lg sm:text-xl md:text-2xl mb-12 text-stone-500 max-w-2xl mx-auto px-2 sm:px-0 font-medium uppercase tracking-widest leading-relaxed text-[10px]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -142,7 +142,7 @@ export default function Main() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              <Link href="/auth/signup">
+              <Link href="/signup">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -156,9 +156,9 @@ export default function Main() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full sm:w-auto px-8 py-4 sm:px-10 sm:py-5 text-base sm:text-lg border-2 border-border bg-white/50 backdrop-blur-md text-foreground font-bold rounded-full hover:bg-white transition-all duration-300 flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-10 py-5 text-[10px] border border-white/10 bg-white/5 backdrop-blur-md text-white font-black rounded-full hover:bg-white/10 transition-all duration-300 flex items-center justify-center gap-3 uppercase tracking-[0.2em]"
                 >
-                  <FaPlay className="text-sm" /> Explore Feed
+                  <FaPlay className="text-xs text-primary" /> Explore Network
                 </motion.button>
               </Link>
             </motion.div>
@@ -179,7 +179,7 @@ export default function Main() {
             <FeatureCard 
               icon={<FaVideo className="text-3xl sm:text-4xl text-primary" />} 
               title="Stories & Reels" 
-              description="Get authentic glimpses into matches' daily lives." 
+              description="Get authentic glimpses into elite connections' daily lives." 
             />
             <FeatureCard 
               icon={<FaCommentDots className="text-3xl sm:text-4xl text-primary" />} 
@@ -205,13 +205,15 @@ const FeatureCard = ({
   return (
     <motion.div
       whileHover={{ y: -8, scale: 1.02 }}
-      className="p-6 sm:p-8 rounded-3xl bg-white/60 backdrop-blur-lg border border-white/50 shadow-xl shadow-black/[0.03] hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300"
+      className="p-10 rounded-[2.5rem] bg-card backdrop-blur-2xl border border-white/5 shadow-2xl hover:border-primary/20 transition-all duration-500 group"
     >
-      <div className="w-14 h-14 sm:w-16 sm:h-16 mb-6 mx-auto rounded-2xl bg-gradient-to-br from-primary/10 to-accent/20 flex items-center justify-center border border-primary/20">
-        {icon}
+      <div className="w-16 h-16 sm:w-20 sm:h-20 mb-8 mx-auto rounded-[1.5rem] bg-white/5 flex items-center justify-center border border-white/5 group-hover:bg-primary transition-colors">
+        <div className="group-hover:text-black transition-colors">
+          {icon}
+        </div>
       </div>
-      <h3 className="text-lg sm:text-xl font-bold mb-3 text-foreground tracking-tight">{title}</h3>
-      <p className="text-sm sm:text-base text-muted-foreground font-medium">{description}</p>
+      <h3 className="text-lg sm:text-xl font-black mb-4 text-white tracking-tighter uppercase">{title}</h3>
+      <p className="text-[10px] text-stone-500 font-black uppercase tracking-widest leading-relaxed">{description}</p>
     </motion.div>
   );
 };

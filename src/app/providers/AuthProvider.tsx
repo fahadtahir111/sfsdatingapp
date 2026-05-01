@@ -9,6 +9,7 @@ interface User {
   name?: string | null;
   image?: string | null;
   adminRole?: "support" | "moderator" | "superadmin" | null;
+  tier?: string | null;
 }
 
 interface AuthContextType {
@@ -60,7 +61,7 @@ export default function AuthProvider({
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
-    router.push('/auth/login');
+    router.push('/login');
     router.refresh();
   };
 

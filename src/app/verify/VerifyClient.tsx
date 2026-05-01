@@ -121,20 +121,20 @@ export default function VerifyClient({ initialStatus }: { initialStatus?: Initia
 
   if (isBootstrapping) {
     return (
-      <div className="page-shell min-h-[80vh] flex flex-col items-center justify-center gap-4">
+      <div className="page-shell min-h-[80vh] flex flex-col items-center justify-center gap-4 bg-background text-white">
         <div
-          className="h-12 w-12 rounded-full border-2 border-primary border-t-transparent animate-spin"
+          className="h-12 w-12 rounded-full border-2 border-primary border-t-transparent animate-spin shadow-lg shadow-primary/20"
           aria-label="Loading"
         />
-        <p className="text-sm font-semibold text-muted-foreground">Loading verification…</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-stone-500">Securing environment…</p>
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className="page-shell min-h-[80vh] flex flex-col items-center justify-center gap-6 text-center">
-        <p className="text-muted-foreground max-w-sm">{loadError}</p>
+      <div className="page-shell min-h-[80vh] flex flex-col items-center justify-center gap-8 text-center bg-background p-10">
+        <p className="text-stone-500 font-black uppercase tracking-widest text-[10px] max-w-sm leading-relaxed">{loadError}</p>
         <button
           type="button"
           onClick={async () => {
@@ -143,9 +143,9 @@ export default function VerifyClient({ initialStatus }: { initialStatus?: Initia
             applyStatus(res);
             setIsBootstrapping(false);
           }}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-md"
+          className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-white/5 text-white font-black text-[10px] uppercase tracking-widest border border-white/10 shadow-2xl transition-all active:scale-95 hover:bg-white/10"
         >
-          <FaRedoAlt /> Try again
+          <FaRedoAlt /> Re-Initiate
         </button>
       </div>
     );
@@ -154,34 +154,36 @@ export default function VerifyClient({ initialStatus }: { initialStatus?: Initia
   /* Already verified */
   if (step === 5) {
     return (
-      <div className="page-shell min-h-[80vh] flex flex-col items-center justify-center gap-6 pt-10">
-        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center text-white text-4xl shadow-lg">
+      <div className="page-shell min-h-[80vh] flex flex-col items-center justify-center gap-8 pt-10 bg-background">
+        <div className="w-24 h-24 bg-green-500 rounded-[2rem] flex items-center justify-center text-white text-4xl shadow-2xl shadow-green-500/20">
           <FaCheckCircle />
         </div>
-        <h1 className="text-2xl font-black text-foreground">You&apos;re verified</h1>
-        <p className="text-muted-foreground text-sm max-w-xs text-center">
-          Your profile shows the verified badge across SFS Elite.
-        </p>
+        <div className="text-center">
+          <h1 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">Verified Elite</h1>
+          <p className="text-stone-500 text-[10px] uppercase tracking-widest font-black max-w-xs leading-relaxed">
+            Your profile shows the verified badge across SFS Elite.
+          </p>
+        </div>
         <button
           type="button"
           onClick={() => router.push("/profile")}
-          className="w-full max-w-sm py-4 bg-primary text-primary-foreground font-black rounded-xl shadow-lg"
+          className="w-full max-w-xs py-5 bg-primary text-black font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-primary/20 transition-all hover:scale-105"
         >
-          Back to Profile
+          Back to Identity
         </button>
       </div>
     );
   }
 
   return (
-    <div className="page-shell min-h-screen pt-6 pb-28 overflow-hidden max-w-lg mx-auto">
-      <div className="mb-6 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-muted-foreground">
-        <span>Verification progress</span>
-        <span>Step {Math.min(step, totalSteps)}/{totalSteps}</span>
+    <div className="page-shell min-h-screen bg-background pt-8 pb-28 overflow-hidden max-w-lg mx-auto px-6">
+      <div className="mb-8 flex items-center justify-between text-[10px] font-black uppercase tracking-[0.2em] text-stone-500">
+        <span>Verification Progress</span>
+        <span className="text-white">Step {Math.min(step, totalSteps)}/{totalSteps}</span>
       </div>
-      <div className="mb-6 h-2 rounded-full bg-muted overflow-hidden" aria-hidden>
+      <div className="mb-10 h-1.5 rounded-full bg-white/5 overflow-hidden shadow-inner" aria-hidden>
         <div
-          className="h-full bg-primary transition-all duration-300"
+          className="h-full bg-primary transition-all duration-500 shadow-lg shadow-primary/40"
           style={{ width: `${(Math.min(step, totalSteps) / totalSteps) * 100}%` }}
         />
       </div>
@@ -194,34 +196,33 @@ export default function VerifyClient({ initialStatus }: { initialStatus?: Initia
             exit={{ opacity: 0, x: -20 }}
             className="flex flex-col items-center text-center"
           >
-            <div className="w-24 h-24 bg-primary/15 rounded-full flex items-center justify-center border-4 border-primary/25 mb-8 mt-4">
+            <div className="w-24 h-24 bg-card rounded-[2rem] flex items-center justify-center border border-white/5 mb-10 mt-4 shadow-2xl">
               <FaShieldAlt className="text-4xl text-primary" />
             </div>
 
-            <h1 className="text-3xl font-black mb-3 text-foreground font-heading">Get Verified</h1>
-            <p className="text-muted-foreground font-medium mb-10 max-w-xs">
-              SFS Elite ensures all members are authentic. Complete verification to boost your profile and access higher
-              quality matches.
+            <h1 className="text-4xl font-black mb-4 text-white uppercase tracking-tighter">Secure Identity</h1>
+            <p className="text-stone-500 font-black uppercase tracking-[0.2em] text-[10px] mb-12 max-w-xs leading-relaxed">
+              SFS Elite ensures all members are authentic. Complete verification to boost your profile and access Elite Connections.
             </p>
 
-            <div className="space-y-4 w-full mb-10 text-left">
-              <div className="p-5 border border-border rounded-2xl flex items-center gap-4 bg-card surface-elevated">
-                <div className="w-10 h-10 rounded-full bg-background text-primary flex items-center justify-center text-lg shadow-sm border border-border">
+            <div className="space-y-4 w-full mb-12 text-left">
+              <div className="p-6 border border-white/5 rounded-3xl flex items-center gap-5 bg-card shadow-xl group hover:border-primary/20 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-white/5 text-primary flex items-center justify-center text-xl shadow-inner border border-white/5 transition-colors group-hover:bg-primary group-hover:text-black">
                   <FaIdCard />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-sm text-foreground">Scan Government ID</h3>
-                  <p className="text-xs text-muted-foreground font-medium">Passport or Driver&apos;s License</p>
+                  <h3 className="font-black text-[10px] text-white uppercase tracking-widest">Scan Government ID</h3>
+                  <p className="text-[10px] text-stone-600 font-bold uppercase tracking-widest mt-1">Passport or Driver&apos;s License</p>
                 </div>
               </div>
 
-              <div className="p-5 border border-border rounded-2xl flex items-center gap-4 bg-card">
-                <div className="w-10 h-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-lg shadow-sm border border-border">
+              <div className="p-6 border border-white/5 rounded-3xl flex items-center gap-5 bg-card shadow-xl group hover:border-primary/20 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-white/5 text-stone-500 flex items-center justify-center text-xl shadow-inner border border-white/5 transition-colors group-hover:bg-primary group-hover:text-black">
                   <FaCamera />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-sm text-foreground">Video Selfie</h3>
-                  <p className="text-xs text-muted-foreground font-medium">Capture a short live video</p>
+                  <h3 className="font-black text-[10px] text-white uppercase tracking-widest">Visual Analysis</h3>
+                  <p className="text-[10px] text-stone-600 font-bold uppercase tracking-widest mt-1">Capture a short live video</p>
                 </div>
               </div>
             </div>
@@ -230,9 +231,9 @@ export default function VerifyClient({ initialStatus }: { initialStatus?: Initia
               type="button"
               disabled={isSubmitting}
               onClick={handleStart}
-              className="w-full py-4 bg-foreground text-background font-black rounded-xl shadow-xl hover:opacity-95 transition-opacity flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full py-5 bg-primary text-black font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-60"
             >
-              {isSubmitting ? "Starting…" : "Start Verification"} <FaArrowRight className="text-sm" />
+              {isSubmitting ? "Initiating…" : "Secure Identity"} <FaArrowRight className="text-lg" />
             </button>
 
             {IS_DEV && (
@@ -256,23 +257,23 @@ export default function VerifyClient({ initialStatus }: { initialStatus?: Initia
             exit={{ opacity: 0, x: -20 }}
             className="flex flex-col items-center text-center"
           >
-            <div className="w-full aspect-[3/2] bg-muted rounded-3xl border-2 border-dashed border-border mb-8 flex flex-col items-center justify-center p-8">
-              <FaIdCard className="text-5xl text-muted-foreground mb-4" />
-              <p className="text-sm font-bold text-muted-foreground">Position your ID within the frame</p>
+            <div className="w-full aspect-[3/2] bg-card rounded-[2.5rem] border border-dashed border-white/10 mb-10 flex flex-col items-center justify-center p-12 shadow-2xl shadow-black/40">
+              <FaIdCard className="text-6xl text-white/10 mb-6" />
+              <p className="text-[10px] font-black text-stone-600 uppercase tracking-widest">Position ID within frame</p>
             </div>
 
-            <h2 className="text-2xl font-black mb-3 text-foreground">Scanning ID…</h2>
-            <p className="text-sm text-muted-foreground font-medium mb-12">
-              Make sure all details are clearly visible and there is no glare on the surface.
+            <h2 className="text-3xl font-black mb-4 text-white uppercase tracking-tighter">Scanning Identity…</h2>
+            <p className="text-[10px] text-stone-500 font-black uppercase tracking-widest mb-12 max-w-xs leading-relaxed">
+              Ensure high visibility and remove all protective cases.
             </p>
 
             <button
               type="button"
               disabled={isSubmitting}
               onClick={handleNext}
-              className="w-full py-4 bg-primary text-primary-foreground font-black rounded-xl shadow-lg disabled:opacity-60"
+              className="w-full py-5 bg-primary text-black font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl shadow-2xl shadow-primary/20 disabled:opacity-60 transition-all hover:bg-yellow-300 active:scale-95"
             >
-              {isSubmitting ? "Saving…" : "Capture ID"}
+              {isSubmitting ? "Processing…" : "Secure Capture"}
             </button>
           </motion.div>
         )}
@@ -285,24 +286,23 @@ export default function VerifyClient({ initialStatus }: { initialStatus?: Initia
             exit={{ opacity: 0, x: -20 }}
             className="flex flex-col items-center text-center"
           >
-            <div className="w-64 h-64 bg-muted rounded-full border-4 border-dashed border-border mb-8 flex flex-col items-center justify-center overflow-hidden">
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-transparent to-muted">
-                <FaCamera className="text-5xl text-muted-foreground" />
-              </div>
+            <div className="w-72 h-72 bg-card rounded-full border border-dashed border-white/10 mb-10 flex flex-col items-center justify-center overflow-hidden shadow-2xl shadow-black/40 relative">
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+              <FaCamera className="text-6xl text-white/10" />
             </div>
 
-            <h2 className="text-2xl font-black mb-3 text-foreground">Live Selfie</h2>
-            <p className="text-sm text-muted-foreground font-medium mb-12">
-              Look straight into the camera and follow the light for 3 seconds.
+            <h2 className="text-3xl font-black mb-4 text-white uppercase tracking-tighter">Live Verification</h2>
+            <p className="text-[10px] text-stone-500 font-black uppercase tracking-widest mb-12 max-w-xs leading-relaxed">
+              Focus on the lens and maintain a neutral expression for 3 seconds.
             </p>
 
             <button
               type="button"
               disabled={isSubmitting}
               onClick={handleSubmit}
-              className="w-full py-4 bg-foreground text-background font-black rounded-xl shadow-xl flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full py-5 bg-primary text-black font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl shadow-2xl shadow-primary/20 flex items-center justify-center gap-3 disabled:opacity-60 hover:bg-yellow-300 active:scale-95"
             >
-              {isSubmitting ? "Uploading…" : "Finalize & Submit"}
+              {isSubmitting ? "Securing…" : "Finalize Verification"}
             </button>
           </motion.div>
         )}
@@ -318,29 +318,29 @@ export default function VerifyClient({ initialStatus }: { initialStatus?: Initia
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", damping: 12 }}
-              className="w-24 h-24 bg-green-600 rounded-full flex items-center justify-center text-white text-5xl mb-8 shadow-lg"
+              className="w-28 h-28 bg-green-500 rounded-[2.5rem] flex items-center justify-center text-white text-5xl mb-10 shadow-2xl shadow-green-500/20"
             >
               <FaCheckCircle />
             </motion.div>
 
-            <h1 className="text-3xl font-black mb-3 text-foreground">Submitted</h1>
-            <p className="text-muted-foreground font-medium mb-10 max-w-xs">
+            <h1 className="text-4xl font-black mb-4 text-white uppercase tracking-tighter">Submission Secured</h1>
+            <p className="text-stone-500 font-black uppercase tracking-widest text-[10px] mb-12 max-w-xs leading-relaxed">
               Your verification is being processed by the SFS Concierge team. This usually takes less than 2 hours.
             </p>
 
             <button
               type="button"
               onClick={() => router.push("/profile")}
-              className="w-full max-w-sm py-4 bg-primary text-primary-foreground font-black rounded-xl shadow-xl"
+              className="w-full max-w-xs py-5 bg-primary text-black font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-primary/20 hover:scale-105 transition-all"
             >
-              Back to Profile
+              Back to Identity
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <p className="text-center text-xs text-muted-foreground font-semibold mt-10 px-4">
-        Your data is encrypted. We do not store your government ID permanently.
+      <p className="text-center text-[10px] text-stone-700 font-black uppercase tracking-[0.2em] mt-12 px-8 leading-relaxed">
+        Your data is fully encrypted. We do not store sensitive identity documents permanently on our infrastructure.
       </p>
     </div>
   );

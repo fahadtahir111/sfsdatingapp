@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
-import { FaCamera, FaTimes, FaSmile, FaSearch } from "react-icons/fa";
+import { FaCamera, FaTimes, FaSmile } from "react-icons/fa";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { fetchFeedPosts } from "./actions";
 import { getStories, createStory } from "./storyActions";
@@ -15,6 +14,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import EmojiPicker from "../components/EmojiPicker";
 import { useToast } from "@/app/providers/ToastProvider";
 import { deleteOwnContent } from "@/lib/actions/social";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 interface FeedPost {
   id: string;
@@ -204,36 +204,31 @@ export default function FeedPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6 pb-24">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-24">
         <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f7f5] pb-24">
-      {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-stone-100 px-4 py-4">
-        <div className="max-w-xl mx-auto flex items-center justify-between">
-          <div className="w-8" /> {/* Spacer */}
-          <h1 className="text-xl font-black text-stone-900 tracking-tight">Society Feed</h1>
-          <Link href="/search" className="w-8 h-8 flex items-center justify-center text-stone-600 hover:text-stone-900 bg-stone-50 rounded-full hover:bg-stone-100 transition-colors">
-            <FaSearch className="text-sm" />
-          </Link>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight">Society Feed</h1>
+          <p className="text-stone-500 font-medium">What&apos;s happening in the circle.</p>
         </div>
-      </header>
 
-      <div className="max-w-xl mx-auto p-4 space-y-4">
+        <div className="space-y-4">
         
         {/* Stories Section */}
-        <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-stone-100 mb-2">
+        <div className="bg-card rounded-[2.5rem] p-4 shadow-xl border border-border mb-2">
           <StoryTray stories={stories} onAddStory={handleAddStory} />
         </div>
         
         {/* Post Composer */}
-        <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-stone-100">
+        <div className="bg-card rounded-[2.5rem] p-6 shadow-xl border border-border">
            <div className="flex gap-4">
-             <div className="w-12 h-12 rounded-full bg-stone-100 overflow-hidden flex-shrink-0 border-2 border-white shadow-sm relative">
+             <div className="w-12 h-12 rounded-full bg-secondary overflow-hidden flex-shrink-0 border-2 border-white/10 shadow-sm relative">
                <Image 
                  src={user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Me')}`} 
                  alt="Me" 
@@ -248,7 +243,7 @@ export default function FeedPage() {
                      value={newPostContent}
                      onChange={(e) => setNewPostContent(e.target.value)}
                      placeholder="Share an elite update with the circle..."
-                     className="w-full bg-transparent border-none focus:ring-0 text-base font-medium text-stone-900 placeholder-stone-400 resize-none h-24"
+                     className="w-full bg-transparent border-none focus:ring-0 text-base font-medium text-foreground placeholder-stone-500 resize-none h-24"
                    />
                    <button 
                      onClick={() => setShowEmojis(!showEmojis)}
@@ -288,7 +283,7 @@ export default function FeedPage() {
                   )}
                 </AnimatePresence>
 
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-stone-50">
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
                    <div className="flex items-center gap-4">
                      <input 
                        type="file" 
@@ -339,7 +334,7 @@ export default function FeedPage() {
                      />
                      <label 
                        htmlFor="feed-media-upload"
-                       className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-50 text-stone-500 text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-stone-100 transition-colors"
+                       className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-stone-500 text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-secondary transition-colors"
                      >
                        {uploadingMedia ? (
                          <div className="w-3 h-3 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
@@ -353,7 +348,7 @@ export default function FeedPage() {
                    <button 
                      onClick={handleCreatePost}
                      disabled={isPosting || uploadingMedia || (!newPostContent.trim() && !mediaUrl)}
-                     className="bg-stone-900 text-white px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50 active:scale-95 transition-transform shadow-lg shadow-stone-200"
+                     className="bg-foreground text-card px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50 active:scale-95 transition-transform shadow-lg shadow-stone-200"
                    >
                      {isPosting ? "Posting..." : "Share"}
                    </button>
@@ -379,7 +374,8 @@ export default function FeedPage() {
             />
           ))
         )}
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

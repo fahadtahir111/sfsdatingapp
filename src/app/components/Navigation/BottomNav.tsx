@@ -3,22 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { FaCommentDots, FaUser, FaVideo, FaCamera, FaCrown, FaMicrophone } from "react-icons/fa";
+import { FaCommentDots, FaUser, FaVideo, FaCamera, FaCrown, FaMicrophone, FaCompass } from "react-icons/fa";
 import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getPendingRequestsCount } from "@/app/friends/actions";
-import { useAuth } from "@/app/providers/AuthProvider";
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const { user } = useAuth();
-  const isAdmin = !!user?.adminRole;
 
   const navItems = [
-    ...(isAdmin ? [{ name: "Admin", href: "/admin", icon: FaCrown }] : []),
+    { name: "Feed", href: "/feed", icon: FaCompass },
     { name: "Boardroom", href: "/boardroom", icon: FaMicrophone },
     { name: "Discover", href: "/discover", icon: FaCrown },
-    { name: "Reels", href: "/reels", icon: FaVideo },
     { name: "Create", href: "/create", icon: FaCamera, central: true },
+    { name: "Reels", href: "/reels", icon: FaVideo },
     { name: "Chat", href: "/chat", icon: FaCommentDots },
     { name: "Profile", href: "/profile", icon: FaUser, hasBadge: true },
   ];
@@ -29,7 +26,7 @@ export default function BottomNav() {
   if (pathname === "/" || pathname.startsWith("/auth")) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-border pb-safe">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-2xl border-t border-white/5 pb-safe">
       <div className="flex justify-around items-center px-2 py-3 max-w-md mx-auto relative">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
@@ -40,10 +37,10 @@ export default function BottomNav() {
               <Link key={item.name} href={item.href} className="relative -top-5">
                 <motion.div
                   whileTap={{ scale: 0.9 }}
-                  className="w-16 h-16 bg-[#FFD700] text-black rounded-full flex items-center justify-center shadow-2xl shadow-yellow-500/20 border-[6px] border-[#f8f7f5]"
+                  className="w-16 h-16 bg-yellow-400 text-black rounded-full flex items-center justify-center shadow-2xl shadow-yellow-500/40 border-[6px] border-stone-950"
                 >
                   <div className="w-6 h-6 bg-black rounded-lg flex items-center justify-center">
-                    <FaCamera className="text-white text-[10px]" />
+                    <FaCamera className="text-yellow-400 text-[10px]" />
                   </div>
                 </motion.div>
               </Link>
@@ -55,7 +52,7 @@ export default function BottomNav() {
               <motion.div
                 whileTap={{ scale: 0.9 }}
                 className={`relative p-2 rounded-xl transition-colors ${
-                  isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                  isActive ? "text-yellow-400" : "text-stone-500 group-hover:text-white"
                 }`}
               >
                 <Icon className="text-2xl" />
@@ -63,7 +60,7 @@ export default function BottomNav() {
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white"
+                    className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-black"
                   >
                     {requestCount > 9 ? '9+' : requestCount}
                   </motion.div>
@@ -71,7 +68,7 @@ export default function BottomNav() {
                 {isActive && (
                   <motion.div
                     layoutId="bottom-nav-indicator"
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full"
+                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-yellow-400 rounded-full"
                   />
                 )}
               </motion.div>

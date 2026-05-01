@@ -155,7 +155,7 @@ export default async function AdminPage({
   searchParams?: Promise<{ q?: string; txType?: string }>;
 }) {
   const currentUser = await getCurrentUser();
-  if (!currentUser) redirect("/auth/login?callbackUrl=/admin");
+  if (!currentUser) redirect("/login?callbackUrl=/admin");
 
   const adminUser = await getAdminUser();
   if (!adminUser) redirect("/feed");

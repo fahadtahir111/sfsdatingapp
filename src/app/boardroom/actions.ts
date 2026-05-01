@@ -1,60 +1,20 @@
 "use server";
 
-// Re-syncing types after DB push
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
-type BoardroomRecord = {
-  id: string;
-  title: string;
-  description: string | null;
-  hostId: string;
-  isLive: boolean;
-  createdAt: Date;
-  host: {
-    id: string;
-    name: string | null;
-    profile: {
-      photos: string | null;
-    } | null;
-  };
-};
-
-type BoardroomClientShape = {
-  findMany: (args: {
-    where: { isLive: boolean };
-    include: { host: { include: { profile: true } } };
-    orderBy: { createdAt: "desc" };
-  }) => Promise<BoardroomRecord[]>;
-  create: (args: {
-    data: {
-      title: string;
-      description?: string;
-      hostId: string;
-      isLive: boolean;
-    };
-  }) => Promise<BoardroomRecord>;
-  update: (args: {
-    where: { id: string; hostId: string };
-    data: { isLive: boolean };
-  }) => Promise<BoardroomRecord>;
-};
-
-const boardroomDb = (prisma as unknown as { boardroom: BoardroomClientShape }).boardroom;
-
 export async function getActiveBoardrooms() {
-  return await boardroomDb.findMany({
+  return await (prisma as any).boardroom.findMany({
     where: { isLive: true },
     include: {
       host: {
-        include: {
-          profile: true
-        }
-      }
+        include: { profile: true },
+      },
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
 }
 
@@ -62,26 +22,26 @@ export async function createBoardroom(title: string, description?: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  const boardroom = await boardroomDb.create({
+  const boardroom = await (prisma as any).boardroom.create({
     data: {
       title,
-      description,
+      description: description ?? null,
       hostId: user.id,
       isLive: true,
-    }
+    },
   });
 
   revalidatePath("/boardroom");
-  return boardroom;
+  return boardroom as { id: string; title: string };
 }
 
 export async function endBoardroom(id: string) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
 
-  await boardroomDb.update({
+  await (prisma as any).boardroom.update({
     where: { id, hostId: user.id },
-    data: { isLive: false }
+    data: { isLive: false },
   });
 
   revalidatePath("/boardroom");

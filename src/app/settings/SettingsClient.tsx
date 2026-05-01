@@ -18,20 +18,20 @@ export default function SettingsClient() {
   ];
 
   return (
-    <div className="page-shell min-h-screen bg-secondary/20 pt-8 pb-24 flex flex-col">
-      <h1 className="text-3xl font-black text-black tracking-tight mb-8">Settings</h1>
+    <div className="page-shell min-h-screen bg-background pt-8 pb-24 flex flex-col">
+      <h1 className="text-3xl font-black text-foreground tracking-tight mb-8">Settings</h1>
       
       <div className="flex-1 space-y-3">
         {settingsLinks.map((link) => (
           <Link href={link.href} key={link.name}>
-            <div className="bg-white p-5 rounded-2xl flex items-center justify-between border border-border shadow-sm active:scale-95 transition-all mb-3 focus-within:ring-2 focus-within:ring-primary/40">
-              <div className="flex items-center gap-4 text-foreground font-bold">
-                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-primary">
+            <div className="bg-card p-5 rounded-[1.75rem] flex items-center justify-between border border-white/5 shadow-xl active:scale-95 transition-all mb-4 group hover:border-primary/30">
+              <div className="flex items-center gap-4 text-white font-black uppercase tracking-widest text-[10px]">
+                <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-primary text-lg shadow-inner">
                   {link.icon}
                 </div>
                 {link.name}
               </div>
-              <FaChevronRight className="text-muted-foreground text-sm" />
+              <FaChevronRight className="text-stone-600 group-hover:text-primary transition-colors text-xs" />
             </div>
           </Link>
         ))}
@@ -48,22 +48,22 @@ export default function SettingsClient() {
                 setIsSigningOut(false);
               }
             }}
-            className="w-full bg-white p-5 rounded-2xl flex items-center gap-4 text-red-500 font-bold border border-red-500/20 shadow-sm active:scale-95 transition-all text-left disabled:opacity-60"
+            className="w-full bg-card p-5 rounded-[1.75rem] flex items-center gap-4 text-red-500 font-black uppercase tracking-widest text-[10px] border border-red-500/10 shadow-xl active:scale-95 transition-all text-left disabled:opacity-60 group hover:bg-red-500/5"
           >
-            <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-lg shadow-inner">
               <FaSignOutAlt />
             </div>
             {isSigningOut ? "Signing Out..." : "Sign Out"}
           </button>
         </div>
 
-        <div className="mt-auto pt-10 pb-4 flex flex-col items-center gap-2 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-default">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-500">Media Infrastructure</p>
+        <div className="mt-auto pt-10 pb-4 flex flex-col items-center gap-2 opacity-20 hover:opacity-100 transition-all cursor-default">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-stone-500">Media Infrastructure</p>
           <div className="flex items-center gap-2">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#3448C5]" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-stone-500" xmlns="http://www.w3.org/2000/svg">
               <path d="M17.586 7.414c-.663 0-1.285.18-1.828.487a4.99 4.99 0 0 0-3.328-1.487 4.99 4.99 0 0 0-3.328 1.487c-.543-.307-1.165-.487-1.828-.487-2.025 0-3.667 1.642-3.667 3.667 0 .195.016.386.046.572A4.326 4.326 0 0 0 2 15.333c0 2.394 1.94 4.334 4.333 4.334h11.334c2.393 0 4.333-1.94 4.333-4.334 0-2.083-1.472-3.823-3.414-4.248.03-.186.046-.377.046-.572 0-2.025-1.642-3.667-3.666-3.667z"/>
             </svg>
-            <span className="text-sm font-black tracking-tighter text-stone-700">Cloudinary</span>
+            <span className="text-[10px] font-black tracking-widest text-stone-500 uppercase">Cloudinary</span>
           </div>
         </div>
       </div>
