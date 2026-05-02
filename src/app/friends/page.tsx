@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaUserFriends, FaCheck, FaTimes, FaComment, FaEllipsisV } from "react-icons/fa";
+import { FaUserFriends, FaCheck, FaTimes, FaComment, FaEllipsisV, FaUserPlus } from "react-icons/fa";
 import { getFriends, getPendingRequests, acceptFriendRequest, rejectFriendRequest } from "./actions";
 import Image from "next/image";
 import Link from "next/link";
-import LoadingSpinner from "../components/LoadingSpinner";
+import FriendsLoading from "./loading";
 
 interface FriendData {
   id: string;
@@ -60,35 +60,46 @@ export default function FriendsHub() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* ── Sticky Header ─────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-2xl border-b border-border px-6 py-6">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-black text-stone-900 tracking-tight">Network</h1>
-          <div className="w-12 h-12 rounded-2xl bg-stone-900 flex items-center justify-center text-primary shadow-xl shadow-stone-200">
-             <FaUserFriends className="text-xl" />
+      <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-2xl border-b border-border px-6 py-5">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-black text-foreground tracking-tight uppercase">Network</h1>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-0.5">Your elite circle</p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-lg shadow-primary/10">
+            <FaUserFriends className="text-primary text-lg" />
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex p-1.5 bg-stone-100 rounded-[2rem]">
+        <div className="flex p-1 bg-secondary rounded-2xl border border-border">
           <button
             onClick={() => setActiveTab("friends")}
-            className={`flex-1 py-3.5 rounded-[1.5rem] text-sm font-black transition-all ${
-              activeTab === "friends" ? "bg-white text-stone-900 shadow-sm" : "text-stone-400"
+            className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+              activeTab === "friends"
+                ? "bg-primary text-black shadow-lg shadow-primary/20"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             My Circle ({friends.length})
           </button>
           <button
             onClick={() => setActiveTab("requests")}
-            className={`flex-1 py-3.5 rounded-[1.5rem] text-sm font-black transition-all relative ${
-              activeTab === "requests" ? "bg-white text-stone-900 shadow-sm" : "text-stone-400"
+            className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all relative ${
+              activeTab === "requests"
+                ? "bg-primary text-black shadow-lg shadow-primary/20"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Requests
             {requests.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-6 h-6 bg-primary text-stone-950 text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-lg">
-                {requests.length}
-              </span>
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary text-black text-[9px] font-black rounded-full flex items-center justify-center border-2 border-background shadow-lg"
+              >
+                {requests.length > 9 ? "9+" : requests.length}
+              </motion.span>
             )}
           </button>
         </div>
@@ -97,51 +108,64 @@ export default function FriendsHub() {
       <main className="page-shell py-6">
         <AnimatePresence mode="wait">
           {loading ? (
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }}
-              className="flex justify-center py-20"
-            >
-              <LoadingSpinner size="md" />
-            </motion.div>
+            <FriendsLoading />
           ) : activeTab === "friends" ? (
             <motion.div
               key="friends-list"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4"
+              className="space-y-3"
             >
               {friends.length === 0 ? (
-                <div className="py-20 text-center">
-                  <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl grayscale opacity-50">👥</div>
-                  <h3 className="text-lg font-black text-stone-800">Your circle is small</h3>
-                  <p className="text-stone-400 text-sm font-medium mt-1">Start connecting with Elite members to build your network.</p>
-                  <Link href="/discover" className="mt-6 inline-block px-8 py-3 bg-stone-900 text-white rounded-2xl font-black text-sm">Grow Network</Link>
-                </div>
-              ) : (
-                friends.map((friend) => (
-                  <div 
-                    key={friend.id}
-                    className="p-4 bg-white rounded-3xl border border-stone-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-all active:scale-[0.98]"
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="py-20 text-center"
+                >
+                  <div className="w-20 h-20 bg-secondary border border-border rounded-full flex items-center justify-center mx-auto mb-5 text-3xl">
+                    👥
+                  </div>
+                  <h3 className="text-lg font-black text-foreground tracking-tight">Your circle is empty</h3>
+                  <p className="text-muted-foreground text-sm font-medium mt-2 max-w-xs mx-auto">
+                    Start connecting with Elite members to build your network.
+                  </p>
+                  <Link
+                    href="/discover"
+                    className="mt-6 inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-black rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-105 transition-transform"
                   >
-                    <div className="w-14 h-14 rounded-2xl overflow-hidden relative bg-stone-100">
+                    <FaUserPlus /> Grow Network
+                  </Link>
+                </motion.div>
+              ) : (
+                friends.map((friend, i) => (
+                  <motion.div
+                    key={friend.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="p-4 bg-card rounded-3xl border border-border flex items-center gap-4 hover:border-primary/30 hover:bg-card/80 transition-all active:scale-[0.98] shadow-sm"
+                  >
+                    <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-secondary flex-shrink-0 border border-border">
                       <Image src={friend.image} alt={friend.name || "Friend"} fill className="object-cover" />
+                      <div className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-card" />
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-black text-stone-900">{friend.name}</h4>
-                      <p className="text-xs text-stone-400 font-bold uppercase tracking-widest mt-0.5">Connected</p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-black text-foreground truncate">{friend.name}</h4>
+                      <p className="text-[10px] text-primary font-bold uppercase tracking-widest mt-0.5">Connected</p>
                     </div>
                     <div className="flex gap-2">
-                       <Link href={`/chat/${friend.friendId}`} className="w-10 h-10 rounded-xl bg-stone-50 text-stone-900 flex items-center justify-center hover:bg-stone-900 hover:text-white transition-all">
-                          <FaComment className="text-sm" />
-                       </Link>
-                       <button className="w-10 h-10 rounded-xl bg-stone-50 text-stone-400 flex items-center justify-center">
-                          <FaEllipsisV className="text-sm" />
-                       </button>
+                      <Link
+                        href={`/chat/${friend.friendId}`}
+                        className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center hover:bg-primary hover:text-black transition-all"
+                      >
+                        <FaComment className="text-sm" />
+                      </Link>
+                      <button className="w-10 h-10 rounded-xl bg-secondary border border-border text-muted-foreground flex items-center justify-center hover:text-foreground transition-colors">
+                        <FaEllipsisV className="text-sm" />
+                      </button>
                     </div>
-                  </div>
+                  </motion.div>
                 ))
               )}
             </motion.div>
@@ -154,47 +178,60 @@ export default function FriendsHub() {
               className="space-y-4"
             >
               {requests.length === 0 ? (
-                <div className="py-20 text-center">
-                  <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl grayscale opacity-50">📬</div>
-                  <h3 className="text-lg font-black text-stone-800">Inbox Clear</h3>
-                  <p className="text-stone-400 text-sm font-medium mt-1">No pending invitations at the moment.</p>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="py-20 text-center"
+                >
+                  <div className="w-20 h-20 bg-secondary border border-border rounded-full flex items-center justify-center mx-auto mb-5 text-3xl">
+                    📬
+                  </div>
+                  <h3 className="text-lg font-black text-foreground tracking-tight">Inbox Clear</h3>
+                  <p className="text-muted-foreground text-sm font-medium mt-2">No pending invitations at the moment.</p>
+                </motion.div>
               ) : (
-                requests.map((request) => (
-                  <div 
+                requests.map((request, i) => (
+                  <motion.div
                     key={request.id}
-                    className="p-5 bg-white rounded-3xl border border-stone-100 shadow-sm"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    className="p-5 bg-card rounded-3xl border border-border hover:border-primary/20 transition-all shadow-sm"
                   >
                     <div className="flex items-center gap-4 mb-5">
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden relative bg-stone-100">
-                        <Image 
-                          src={request.senderUser.profile?.photos ? JSON.parse(request.senderUser.profile.photos)[0] : `https://ui-avatars.com/api/?name=${request.senderUser.name}`} 
-                          alt={request.senderUser.name || "Member"} 
-                          fill 
-                          className="object-cover" 
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden relative bg-secondary flex-shrink-0 border border-border">
+                        <Image
+                          src={
+                            request.senderUser.profile?.photos
+                              ? JSON.parse(request.senderUser.profile.photos)[0]
+                              : `https://ui-avatars.com/api/?name=${request.senderUser.name}&background=1a1a1a&color=FF1493`
+                          }
+                          alt={request.senderUser.name || "Member"}
+                          fill
+                          className="object-cover"
                         />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-black text-stone-900 text-lg leading-tight">{request.senderUser.name}</h4>
-                        <p className="text-sm text-stone-400 font-medium">wants to connect</p>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-black text-foreground text-lg leading-tight truncate">{request.senderUser.name}</h4>
+                        <p className="text-sm text-muted-foreground font-medium mt-0.5">wants to connect</p>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-3">
-                       <button 
+                      <button
                         onClick={() => handleAccept(request.id)}
-                        className="py-3 bg-stone-900 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-stone-800 transition-all active:scale-95"
-                       >
-                          <FaCheck /> Accept
-                       </button>
-                       <button 
+                        className="py-3.5 bg-primary text-black rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20"
+                      >
+                        <FaCheck /> Accept
+                      </button>
+                      <button
                         onClick={() => handleReject(request.id)}
-                        className="py-3 bg-stone-100 text-stone-400 rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-stone-200 transition-all active:scale-95"
-                       >
-                          <FaTimes /> Decline
-                       </button>
+                        className="py-3.5 bg-secondary border border-border text-muted-foreground rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:border-destructive/50 hover:text-destructive-foreground transition-all"
+                      >
+                        <FaTimes /> Decline
+                      </button>
                     </div>
-                  </div>
+                  </motion.div>
                 ))
               )}
             </motion.div>
@@ -204,4 +241,3 @@ export default function FriendsHub() {
     </div>
   );
 }
-

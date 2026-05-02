@@ -40,7 +40,7 @@ export function DashboardSidebar({
   return (
     <aside 
       className={cn(
-        "h-screen fixed left-0 top-0 bg-[#0a0a0a] border-r border-white/5 hidden md:flex flex-col transition-all duration-500 z-50",
+        "h-screen fixed left-0 top-0 bg-card border-r border-border hidden md:flex flex-col transition-all duration-500 z-50",
         isCollapsed ? "w-20" : "w-72"
       )}
     >
@@ -68,7 +68,7 @@ export function DashboardSidebar({
                 "group flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-200 relative",
                 isActive 
                   ? "bg-primary text-black shadow-xl shadow-primary/20" 
-                  : "text-stone-500 hover:bg-white/5 hover:text-white"
+                  : "text-muted-foreground hover:bg-white/5 hover:text-white"
               )}
             >
               <item.icon className={cn("w-5 h-5 shrink-0", isActive ? "text-black" : "group-hover:scale-110 transition-transform")} />
@@ -105,14 +105,14 @@ export function DashboardSidebar({
       <div className="p-4 border-t border-white/5 space-y-2">
         <Link 
           href="/settings"
-          className="flex items-center gap-4 px-4 py-3 rounded-xl text-stone-500 hover:bg-white/5 hover:text-white transition-colors"
+          className="flex items-center gap-4 px-4 py-3 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-white transition-colors"
         >
           <Settings className="w-5 h-5 shrink-0" />
           {!isCollapsed && <span className="font-bold text-sm">Settings</span>}
         </Link>
         <button 
           onClick={() => logout()}
-          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-stone-600 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-muted-foreground hover:bg-red-500/10 hover:text-red-400 transition-colors"
         >
           <LogOut className="w-5 h-5 shrink-0" />
           {!isCollapsed && <span className="font-bold text-sm">Logout</span>}
@@ -122,7 +122,7 @@ export function DashboardSidebar({
       {/* Collapse Toggle */}
       <button 
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-24 w-6 h-6 bg-stone-900 border border-white/10 rounded-full shadow-md flex items-center justify-center text-stone-500 hover:text-primary transition-colors"
+        className="absolute -right-3 top-24 w-6 h-6 bg-card border border-border rounded-full shadow-md flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
       >
         <ChevronRight className={cn("w-3 h-3 transition-transform duration-300", isCollapsed ? "" : "rotate-180")} />
       </button>

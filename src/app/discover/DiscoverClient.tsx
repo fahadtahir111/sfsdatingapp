@@ -2,23 +2,29 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { fetchDiscoverFeed, submitSwipe } from "./actions";
-import LoadingSpinner from "../components/LoadingSpinner";
+import DiscoverLoading from "./loading";
 import { useToast } from "@/app/providers/ToastProvider";
 import { SwipeableCardStack, CardData } from "@/components/magic-ui/SwipeableCardStack";
 import { FaSlidersH } from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
+import { ExpandingSearchDock } from "@/components/magic-ui/ExpandingSearchDock";
+import { useDebounce } from "@/lib/hooks/use-debounce"; // I'll check if this exists or create it
 
 export default function DiscoverClient({ initialCards }: { initialCards: CardData[] }) {
   const [cards, setCards] = useState<CardData[]>(initialCards);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({ minAge: 18, maxAge: 50 });
+  const [filters, setFilters] = useState({ minAge: 18, maxAge: 50, searchQuery: "" });
+  const debouncedSearch = useDebounce(filters.searchQuery, 500);
   const { showToast } = useToast();
 
   const loadMatches = useCallback(async () => {
     try {
       setLoading(true);
-      const matches = await fetchDiscoverFeed(filters);
+      const matches = await fetchDiscoverFeed({
+        ...filters,
+        searchQuery: debouncedSearch
+      });
       setCards(matches);
     } catch (e) {
       console.error("Failed to fetch matches", e);
@@ -26,17 +32,18 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
     } finally {
       setLoading(false);
     }
-  }, [filters, showToast]);
+  }, [filters, showToast, debouncedSearch]);
 
   useEffect(() => {
-    if (filters.minAge !== 18 || filters.maxAge !== 50) {
-      loadMatches();
-    }
-  }, [loadMatches, filters]);
+    loadMatches();
+  }, [loadMatches, filters.minAge, filters.maxAge, debouncedSearch]);
 
   const handleSwipe = async (card: CardData, direction: "left" | "right") => {
     try {
       await submitSwipe(card.id, direction === "right" ? "LIKE" : "PASS");
+      if (direction === "right") {
+        showToast(`Friend request sent to ${card.name}!`, "success");
+      }
       // The SwipeableCardStack handles the local index update
     } catch (e) {
       console.error("Swipe submission failed", e);
@@ -45,18 +52,17 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
   };
 
   if (loading && cards.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <LoadingSpinner size="lg" />
-        <p className="text-sm font-black text-stone-400 uppercase tracking-widest">Scanning Elite Network...</p>
-      </div>
-    );
+    return <DiscoverLoading />;
   }
 
   return (
     <div className="relative">
-      {/* Filter Button */}
-      <div className="absolute top-0 right-0 z-10">
+      {/* Header Actions */}
+      <div className="absolute top-0 right-0 z-10 flex items-center gap-3">
+        <ExpandingSearchDock 
+          className="bg-card/80 border-border" 
+          onChange={(val) => setFilters(prev => ({ ...prev, searchQuery: val }))}
+        />
         <button 
           onClick={() => setShowFilters(true)}
           className="w-12 h-12 bg-card rounded-2xl border border-border shadow-xl flex items-center justify-center text-foreground hover:border-primary transition-colors"
@@ -78,7 +84,7 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowFilters(false)}
-              className="fixed inset-0 bg-stone-900/20 backdrop-blur-md z-[60]"
+              className="fixed inset-0 bg-background/40 backdrop-blur-md z-[60]"
             />
             <motion.div 
               initial={{ x: "100%" }}
@@ -91,7 +97,7 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
                 <h3 className="text-3xl font-black tracking-tight">Filters</h3>
                 <button 
                   onClick={() => setShowFilters(false)}
-                  className="text-sm font-black text-stone-400 hover:text-stone-900"
+                  className="text-sm font-black text-muted-foreground hover:text-foreground"
                 >
                   Close
                 </button>
@@ -100,7 +106,7 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
               <div className="space-y-12">
                 <div>
                   <div className="flex justify-between items-end mb-6">
-                    <label className="text-xs font-black uppercase tracking-widest text-stone-400">Age Range</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Age Range</label>
                     <span className="text-xl font-black text-foreground">{filters.minAge} — {filters.maxAge}</span>
                   </div>
                   <input 
@@ -114,11 +120,11 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
                 </div>
 
                 <div className="pt-8 border-t border-stone-100">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-stone-400 mb-6">Preferences</h4>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-6">Preferences</h4>
                   <div className="space-y-4">
                     {["Verified Only", "Networking Mode", "Elite Members"].map((pref) => (
                       <label key={pref} className="flex items-center justify-between group cursor-pointer">
-                        <span className="font-bold text-stone-400 group-hover:text-foreground transition-colors">{pref}</span>
+                        <span className="font-bold text-muted-foreground group-hover:text-foreground transition-colors">{pref}</span>
                         <div className="w-12 h-6 bg-secondary rounded-full relative transition-colors group-hover:bg-secondary/80">
                           <div className="absolute top-1 left-1 w-4 h-4 bg-foreground rounded-full shadow-sm" />
                         </div>

@@ -24,15 +24,15 @@ export default function PremiumClient() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-10 px-6 pb-24 overflow-y-auto">
+    <div className="min-h-screen bg-background text-white pt-10 px-6 pb-24 overflow-y-auto">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-black mb-2 text-primary">SFS Elite</h1>
-        <p className="text-white/70 font-medium">Elevate your access.</p>
+        <p className="text-muted-foreground font-medium">Elevate your access.</p>
       </div>
 
       <div className="space-y-6">
         <div className="p-1 rounded-3xl bg-gradient-to-br from-primary via-accent to-primary">
-          <div className="bg-black p-6 rounded-[22px]">
+          <div className="bg-card p-6 rounded-[22px]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-black flex items-center gap-2">
                 <FaCrown className="text-primary" /> Elite Concierge
@@ -41,7 +41,7 @@ export default function PremiumClient() {
             </div>
             
             <p className="text-3xl font-black mb-1">$99<span className="text-sm text-white/50 font-medium">/month</span></p>
-            <p className="text-sm text-white/70 mb-6">Full suite of privacy tools and priority matching.</p>
+            <p className="text-sm text-muted-foreground mb-6">Full suite of privacy tools and priority matching.</p>
 
             <ul className="space-y-3 mb-8">
               {['Ghost Mode Browsing', 'See exactly who liked you', 'Prioritized Discover placement', 'Direct Concierge Access', 'SFS Private Mixer Invites'].map((feature, i) => (
@@ -67,7 +67,7 @@ export default function PremiumClient() {
         <div className="border border-white/20 p-6 rounded-3xl bg-white/5">
           <h2 className="text-xl font-bold mb-2">Signature Level</h2>
           <p className="text-2xl font-black mb-1">$29<span className="text-sm text-white/50 font-medium">/month</span></p>
-          <p className="text-sm text-white/70 mb-6">Enhanced experience and unlimited swipes.</p>
+          <p className="text-sm text-muted-foreground mb-6">Enhanced experience and unlimited swipes.</p>
           
           <ul className="space-y-3 mb-8">
               {['Unlimited Swipes', 'Advanced Filters (Height, Vices)', 'Read Receipts in Chat'].map((feature, i) => (

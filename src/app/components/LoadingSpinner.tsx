@@ -19,16 +19,16 @@ export default function LoadingSpinner({
 
   const colorClasses = {
     primary: "border-primary border-t-transparent",
-    stone: "border-stone-200 border-t-stone-900"
+    stone: "border-muted-foreground/20 border-t-primary"
   };
 
   const spinner = (
-    <div className={`${sizeClasses[size]} ${colorClasses[color]} rounded-full animate-spin`} />
+    <div className={`${sizeClasses[size]} ${colorClasses[color]} rounded-full animate-spin shadow-lg shadow-primary/10`} />
   );
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-[100] bg-white/80 backdrop-blur-sm flex items-center justify-center">
+      <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-xl flex items-center justify-center">
         {spinner}
       </div>
     );

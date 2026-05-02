@@ -49,7 +49,7 @@ export default function ChatClient({ initialConversations }: { initialConversati
         <Link
           href="/profile"
           aria-label="Open profile"
-          className="w-12 h-12 flex items-center justify-center rounded-[1rem] bg-card text-stone-400 hover:text-primary transition-all border border-white/5 shadow-2xl"
+          className="w-12 h-12 flex items-center justify-center rounded-[1rem] bg-card text-muted-foreground hover:text-primary transition-all border border-border shadow-2xl"
         >
           <FaEllipsisH />
         </Link>
@@ -58,7 +58,7 @@ export default function ChatClient({ initialConversations }: { initialConversati
       {/* Search */}
       <div className="mb-10">
         <div className="relative group">
-          <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-stone-600 transition-colors group-focus-within:text-primary" />
+          <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground/50 transition-colors group-focus-within:text-primary" />
           <input 
             type="text" 
             placeholder="Search connections or messages..." 
@@ -73,7 +73,7 @@ export default function ChatClient({ initialConversations }: { initialConversati
       {newConnections.length > 0 && (
         <div className="mb-12">
           <div className="flex justify-between items-center mb-6 px-2">
-            <h2 className="text-[10px] font-black text-stone-500 uppercase tracking-[0.3em]">New Connections</h2>
+            <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">New Connections</h2>
             <Link href="/discover" className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline">See all</Link>
           </div>
           <div className="flex overflow-x-auto gap-5 no-scrollbar pb-4">
@@ -106,15 +106,15 @@ export default function ChatClient({ initialConversations }: { initialConversati
 
       {/* Conversations */}
       <div>
-        <h2 className="text-[10px] font-black text-stone-500 uppercase tracking-[0.3em] mb-8 px-2">Active Networking</h2>
+        <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-8 px-2">Active Networking</h2>
         {loading && (
-          <div className="py-12 text-center text-stone-500 font-black uppercase tracking-widest text-[10px]">
+          <div className="py-12 text-center text-muted-foreground font-black uppercase tracking-widest text-[10px]">
             Refreshing secure channel…
           </div>
         )}
         {!loading && recentConvs.length === 0 && (
           <div className="py-20 text-center bg-card rounded-[2.5rem] border border-white/5 border-dashed">
-            <p className="text-stone-600 font-black uppercase tracking-widest text-[10px]">No active conversations yet.</p>
+            <p className="text-muted-foreground font-black uppercase tracking-widest text-[10px]">No active conversations yet.</p>
             <Link href="/discover" className="mt-4 inline-block text-primary font-black uppercase tracking-widest text-[10px] hover:underline">Start Connecting</Link>
           </div>
         )}
@@ -139,11 +139,11 @@ export default function ChatClient({ initialConversations }: { initialConversati
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center mb-1.5">
                     <h3 className="text-[12px] font-black text-white uppercase tracking-tighter line-clamp-1">{msg.name}</h3>
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${msg.unread > 0 ? 'text-primary' : 'text-stone-600'}`}>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${msg.unread > 0 ? 'text-primary' : 'text-muted-foreground'}`}>
                       {msg.time}
                     </span>
                   </div>
-                  <p className={`text-[10px] uppercase tracking-widest truncate ${msg.unread > 0 ? 'text-white font-black' : 'text-stone-500 font-bold'}`}>
+                  <p className={`text-[10px] uppercase tracking-widest truncate ${msg.unread > 0 ? 'text-white font-black' : 'text-muted-foreground font-bold'}`}>
                     {msg.lastMessage}
                   </p>
                 </div>

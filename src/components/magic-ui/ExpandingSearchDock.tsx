@@ -4,7 +4,13 @@ import * as React from "react"
 import { Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-export function ExpandingSearchDock({ className }: { className?: string }) {
+export function ExpandingSearchDock({ 
+  className,
+  onChange 
+}: { 
+  className?: string;
+  onChange?: (value: string) => void;
+}) {
   const [isExpanded, setIsExpanded] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
 
@@ -29,6 +35,7 @@ export function ExpandingSearchDock({ className }: { className?: string }) {
           isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onBlur={() => setIsExpanded(false)}
+        onChange={(e) => onChange?.(e.target.value)}
       />
     </div>
   )

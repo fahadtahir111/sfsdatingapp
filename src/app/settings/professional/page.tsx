@@ -43,7 +43,7 @@ export default function ProfessionalSettingsPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="bg-card p-6 border-b border-white/5 flex items-center gap-4">
-        <button onClick={() => router.back()} className="text-stone-500 hover:text-white transition-colors">
+        <button onClick={() => router.back()} className="text-muted-foreground hover:text-white transition-colors">
           <FaArrowLeft />
         </button>
         <h1 className="text-xl font-black text-foreground tracking-tight uppercase tracking-widest text-[11px]">Professional Elite</h1>
@@ -60,15 +60,15 @@ export default function ProfessionalSettingsPage() {
               Collaborator Mode
               {isNetworkingMode && <FaCheckCircle className="text-primary text-xl" />}
             </h2>
-            <p className="text-stone-500 text-sm mb-8 leading-relaxed font-medium">
+            <p className="text-muted-foreground text-sm mb-8 leading-relaxed font-medium">
               Switching to Collaborator Mode prioritizes professional networking and partnership discovery. Your profile will be highlighted to other founders and creators.
             </p>
             <button 
               onClick={() => setIsNetworkingMode(!isNetworkingMode)}
               className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl ${
                 isNetworkingMode 
-                ? "bg-primary text-black shadow-primary/20" 
-                : "bg-white/5 text-stone-400 hover:bg-white/10 hover:text-white border border-white/5"
+                ? "bg-primary text-white shadow-primary/20" 
+                : "bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white border border-white/5"
               }`}
             >
               {isNetworkingMode ? "Active" : "Activate Elite Mode"}
@@ -78,17 +78,17 @@ export default function ProfessionalSettingsPage() {
 
         {/* Professional Details */}
         <div className="space-y-4">
-          <h3 className="text-[10px] font-black text-stone-500 uppercase tracking-[0.4em] ml-2">Verification & Digital Links</h3>
+          <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] ml-2">Verification & Digital Links</h3>
           
           <div className="bg-card rounded-[2.5rem] p-8 border border-white/5 shadow-2xl space-y-8">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1 mb-2 block">LinkedIn Identity</label>
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 mb-2 block">LinkedIn Identity</label>
               <div className="relative">
                 <FaLinkedin className="absolute left-6 top-1/2 -translate-y-1/2 text-[#0077B5] text-lg" />
                 <input 
                   type="text" 
                   placeholder="linkedin.com/in/username"
-                  className="w-full bg-white/5 border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-sm font-black text-white focus:border-primary focus:ring-0 outline-none transition-all placeholder:text-stone-700"
+                  className="w-full bg-white/5 border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-sm font-black text-white focus:border-primary focus:ring-0 outline-none transition-all placeholder:text-muted-foreground/20"
                   value={linkedinUrl}
                   onChange={(e) => setLinkedinUrl(e.target.value)}
                 />
@@ -96,13 +96,13 @@ export default function ProfessionalSettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1 mb-2 block">Company / Venture</label>
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 mb-2 block">Company / Venture</label>
               <div className="relative">
-                <FaBriefcase className="absolute left-6 top-1/2 -translate-y-1/2 text-stone-500" />
+                <FaBriefcase className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input 
                   type="text" 
                   placeholder="e.g. SFS Elite"
-                  className="w-full bg-white/5 border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-sm font-black text-white focus:border-primary focus:ring-0 outline-none transition-all placeholder:text-stone-700"
+                  className="w-full bg-white/5 border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-sm font-black text-white focus:border-primary focus:ring-0 outline-none transition-all placeholder:text-muted-foreground/20"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                 />
@@ -110,13 +110,13 @@ export default function ProfessionalSettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1 mb-2 block">Industry Focus</label>
+              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1 mb-2 block">Industry Focus</label>
               <div className="relative">
-                <FaGlobe className="absolute left-6 top-1/2 -translate-y-1/2 text-stone-500" />
+                <FaGlobe className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input 
                   type="text" 
                   placeholder="e.g. Fintech, AI, Web3"
-                  className="w-full bg-white/5 border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-sm font-black text-white focus:border-primary focus:ring-0 outline-none transition-all placeholder:text-stone-700"
+                  className="w-full bg-white/5 border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-sm font-black text-white focus:border-primary focus:ring-0 outline-none transition-all placeholder:text-muted-foreground/20"
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
                 />
@@ -128,7 +128,7 @@ export default function ProfessionalSettingsPage() {
         <button 
           onClick={handleSave}
           disabled={saving}
-          className="w-full py-6 bg-primary text-black rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 transition-all active:scale-95 disabled:opacity-50 hover:bg-yellow-300"
+          className="w-full py-6 bg-primary text-white rounded-[2.5rem] font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl shadow-primary/20 flex items-center justify-center gap-4 transition-all active:scale-95 disabled:opacity-50 hover:opacity-90"
         >
           {saving ? <FaSpinner className="animate-spin text-lg" /> : "Secure Professional Identity"}
         </button>

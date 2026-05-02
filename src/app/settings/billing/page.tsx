@@ -26,7 +26,7 @@ export default function BillingSettings() {
   return (
     <div className="min-h-screen bg-background pt-10 px-6 pb-24">
       <div className="flex items-center gap-4 mb-10 text-white">
-        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-xl text-black shadow-lg shadow-primary/20">
+        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-xl text-white shadow-lg shadow-primary/20">
           <FaCreditCard />
         </div>
         <h1 className="text-3xl font-black tracking-tight uppercase tracking-tighter">Billing</h1>
@@ -48,9 +48,9 @@ export default function BillingSettings() {
           <div className="mt-10 flex justify-between items-end">
             <span className="text-5xl font-black">
               {profile?.membership === "Signature Member" ? "$499" : "$0"}
-              <span className="text-sm font-bold text-stone-500 ml-1">/MO</span>
+               <span className="text-sm font-bold text-muted-foreground ml-1">/MO</span>
             </span>
-            <button className="bg-primary text-black px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+            <button className="bg-primary text-white px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
               Manage
             </button>
           </div>
@@ -60,7 +60,7 @@ export default function BillingSettings() {
         <div className="p-8 border border-white/5 rounded-[2.5rem] bg-secondary flex justify-between items-center shadow-xl">
           <div>
             <h3 className="font-black text-white uppercase tracking-widest text-[10px]">Billing Support</h3>
-            <p className="text-[10px] text-stone-500 font-medium mt-1 uppercase tracking-widest">
+            <p className="text-[10px] text-muted-foreground font-medium mt-1 uppercase tracking-widest">
               Dedicated assistance for elite members.
             </p>
           </div>

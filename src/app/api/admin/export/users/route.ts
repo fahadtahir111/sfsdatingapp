@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
-import { getAdminRole } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { getAdminUser } from "@/lib/admin";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const role = await getAdminRole();
-  if (role !== "superadmin") {
+  const me = await getCurrentUser();
+  if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const admin = await getAdminUser();
+  if (!admin || admin.adminRole !== "superadmin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -12,28 +18,39 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
-      email: true,
       name: true,
-      isSuspended: true,
+      email: true,
       roseBalance: true,
+      isSuspended: true,
       createdAt: true,
-      lastActive: true,
+      profile: { select: { occupation: true, trustScore: true, professionalVerified: true } },
+      subscriptions: { orderBy: { createdAt: "desc" }, take: 1, select: { tier: true, createdAt: true } },
     },
   });
 
-  const header = "id,email,name,isSuspended,roseBalance,createdAt,lastActive";
-  const rows = users.map((u) =>
-    [u.id, u.email, u.name ?? "", String(u.isSuspended), String(u.roseBalance), u.createdAt.toISOString(), u.lastActive.toISOString()]
-      .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-      .join(",")
-  );
-  const csv = [header, ...rows].join("\n");
+  const rows = [
+    ["ID", "Name", "Email", "Roses", "Suspended", "Joined", "Occupation", "TrustScore", "ProfVerified", "SubTier", "SubDate"],
+    ...users.map((u) => [
+      u.id,
+      u.name || "",
+      u.email || "",
+      u.roseBalance,
+      u.isSuspended ? "Yes" : "No",
+      new Date(u.createdAt).toISOString(),
+      u.profile?.occupation || "",
+      u.profile?.trustScore ?? 0,
+      u.profile?.professionalVerified ? "Yes" : "No",
+      u.subscriptions?.[0]?.tier || "Free",
+      u.subscriptions?.[0]?.createdAt ? new Date(u.subscriptions[0].createdAt).toISOString() : "",
+    ]),
+  ];
+
+  const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
 
   return new NextResponse(csv, {
     headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="users-export.csv"`,
+      "Content-Type": "text/csv",
+      "Content-Disposition": `attachment; filename="sfs-users-${Date.now()}.csv"`,
     },
   });
 }
-

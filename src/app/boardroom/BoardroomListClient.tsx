@@ -48,7 +48,7 @@ export default function BoardroomListClient({
         
         <div className="relative z-10 max-w-lg">
           <h2 className="text-4xl font-black mb-4 tracking-tight">Host a Session</h2>
-          <p className="text-stone-400 text-lg mb-8 leading-relaxed font-medium">
+          <p className="text-muted-foreground text-lg mb-8 leading-relaxed font-medium">
             Share insights, pitch ideas, or just network with fellow elite members.
           </p>
           
@@ -56,7 +56,7 @@ export default function BoardroomListClient({
             <input
               type="text"
               placeholder="Room Title (e.g. Scaling to $10M ARR)"
-              className="flex-1 bg-white/10 border border-white/10 rounded-[1.5rem] px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-white/20 outline-none placeholder:text-white/20"
+              className="flex-1 bg-white/10 border border-white/10 rounded-[1.5rem] px-6 py-4 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-white/20 text-white"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
@@ -75,7 +75,7 @@ export default function BoardroomListClient({
       {/* Active Rooms Grid */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-black uppercase tracking-[0.3em] text-stone-400">Live Now</h3>
+          <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground">Live Now</h3>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">{rooms.length} Active</span>
@@ -85,8 +85,8 @@ export default function BoardroomListClient({
         {rooms.length === 0 ? (
           <div className="py-24 text-center bg-card rounded-[3rem] border border-border shadow-xl">
             <FaMicrophone className="text-secondary text-6xl mx-auto mb-4" />
-            <p className="text-stone-400 font-bold uppercase tracking-widest text-xs">The boardroom is quiet.</p>
-            <p className="text-stone-500 text-sm font-medium mt-1">Be the first to start a conversation.</p>
+            <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">The boardroom is quiet.</p>
+            <p className="text-muted-foreground/60 text-sm font-medium mt-1">Be the first to start a conversation.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -104,7 +104,7 @@ export default function BoardroomListClient({
                   className="bg-card p-6 rounded-[2rem] border border-border shadow-xl hover:border-primary transition-all group text-left"
                 >
                   <div className="flex justify-between items-start mb-6">
-                    <div className="w-12 h-12 rounded-2xl overflow-hidden bg-stone-100 relative shadow-sm border border-stone-50">
+                    <div className="w-12 h-12 rounded-2xl overflow-hidden bg-secondary relative shadow-sm border border-border">
                       <Image
                         src={photoUrl}
                         alt={room.host.name ?? "Host"}
@@ -113,10 +113,7 @@ export default function BoardroomListClient({
                         unoptimized={photoUrl.startsWith("https://ui-avatars")}
                       />
                     </div>
-                    <div className="bg-green-50 px-3 py-1 rounded-full flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                      <span className="text-[10px] font-black text-green-600 uppercase tracking-tight">Live</span>
-                    </div>
+                      <span className="text-[10px] font-black text-green-500 uppercase tracking-tight">Live</span>
                   </div>
                   
                   <h4 className="text-xl font-black text-foreground mb-2 leading-tight group-hover:text-primary transition-colors line-clamp-2">
@@ -125,7 +122,7 @@ export default function BoardroomListClient({
                   
                   <div className="flex items-center gap-2 mt-auto pt-4 border-t border-border">
                     <FaUsers className="text-stone-600 text-[10px]" />
-                    <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">{room.host.name}</span>
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{room.host.name}</span>
                   </div>
                 </button>
               );

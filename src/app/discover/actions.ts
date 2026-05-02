@@ -3,11 +3,13 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { sendFriendRequest } from "../friends/actions";
 
 export async function fetchDiscoverFeed(filters?: {
   minAge?: number;
   maxAge?: number;
   networkingGoals?: string[];
+  searchQuery?: string;
 }) {
   try {
     const user = await getCurrentUser();
@@ -69,6 +71,13 @@ export async function fetchDiscoverFeed(filters?: {
             }
           : {}),
         ...ageFilter,
+        ...(filters?.searchQuery ? {
+          OR: [
+            { user: { name: { contains: filters.searchQuery, mode: 'insensitive' } } },
+            { bio: { contains: filters.searchQuery, mode: 'insensitive' } },
+            { occupation: { contains: filters.searchQuery, mode: 'insensitive' } },
+          ]
+        } : {}),
         ...(filters?.networkingGoals && filters.networkingGoals.length > 0
           ? {
               networkingGoals: {
@@ -89,10 +98,16 @@ export async function fetchDiscoverFeed(filters?: {
       try { photos = JSON.parse(profile.photos); } catch {}
 
       // Calculate pseudo age from birthDate
-      let age = 25; // default fallback
+      let age = profile.age;
       if (profile.birthDate) {
         const diff = Date.now() - new Date(profile.birthDate).getTime();
         age = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+      }
+      
+      // Final fallback if still missing or 0 - deterministic random based on userId
+      if (!age || age === 0) {
+        const hash = profile.userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        age = 22 + (hash % 12); // Deterministic age between 22 and 33
       }
 
       return {
@@ -144,6 +159,15 @@ export async function submitSwipe(toUserId: string, action: "LIKE" | "PASS") {
         action
       }
     });
+
+    // 4. If LIKE, also send a Friend Request
+    if (action === "LIKE") {
+      try {
+        await sendFriendRequest(toUserId);
+      } catch (err) {
+        console.error("Failed to auto-send friend request during swipe:", err);
+      }
+    }
 
     // 2. Check for a match if the action is LIKE
     if (action === "LIKE") {

@@ -50,7 +50,7 @@ export default function NotificationsSettings() {
   return (
     <div className="min-h-screen bg-background pt-10 px-6 pb-24">
       <div className="flex items-center gap-4 mb-10 text-white">
-        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-xl text-black shadow-lg shadow-primary/20">
+        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-xl text-white shadow-lg shadow-primary/20">
           <FaBell />
         </div>
         <h1 className="text-3xl font-black tracking-tight uppercase tracking-tighter">Alerts</h1>
@@ -60,7 +60,7 @@ export default function NotificationsSettings() {
         <div className="flex items-center justify-between p-6 border border-white/5 rounded-[1.75rem] bg-card shadow-xl">
           <div>
             <h3 className="font-black text-white uppercase tracking-widest text-[10px]">Push Notifications</h3>
-            <p className="text-[10px] text-stone-500 mt-1 font-medium">Get alerts instantly on your device.</p>
+            <p className="text-[10px] text-muted-foreground mt-1 font-medium">Get alerts instantly on your device.</p>
           </div>
           <button 
             onClick={() => handleToggle('push', !pushEnabled)}
@@ -73,7 +73,7 @@ export default function NotificationsSettings() {
         <div className="flex items-center justify-between p-6 border border-white/5 rounded-[1.75rem] bg-card shadow-xl">
           <div>
             <h3 className="font-black text-white uppercase tracking-widest text-[10px]">Email Summaries</h3>
-            <p className="text-[10px] text-stone-500 mt-1 font-medium">Weekly digests of your activity.</p>
+            <p className="text-[10px] text-muted-foreground mt-1 font-medium">Weekly digests of your activity.</p>
           </div>
           <button 
             onClick={() => handleToggle('email', !emailEnabled)}
@@ -86,7 +86,7 @@ export default function NotificationsSettings() {
         <div className="flex items-center justify-between p-6 border border-white/5 rounded-[1.75rem] bg-card shadow-xl">
           <div>
             <h3 className="font-black text-white uppercase tracking-widest text-[10px]">Elite Connections</h3>
-            <p className="text-[10px] text-stone-500 mt-1 font-medium">Notify me immediately when I connect.</p>
+            <p className="text-[10px] text-muted-foreground mt-1 font-medium">Notify me immediately when I connect.</p>
           </div>
           <button 
             onClick={() => handleToggle('matches', !matchesEnabled)}

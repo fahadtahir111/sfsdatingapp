@@ -11,7 +11,7 @@ export default function EmojiPicker({ onSelect, className = "" }: EmojiPickerPro
   const emojis = ["🔥", "✨", "👑", "💎", "💯", "🚀", "❤️", "🥂", "🌟", "📍", "💼", "🤝", "🤩", "🙌", "🥃", "📸", "🎬", "🎩", "💰", "🍷", "🏇", "🏌️", "🐆", "🐉", "💍", "🏡"];
   
   return (
-    <div className={`flex flex-wrap gap-2 p-3 bg-white/80 backdrop-blur-md border border-stone-100 rounded-2xl shadow-xl ${className}`}>
+    <div className={`flex flex-wrap gap-2 p-3 bg-card/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl ${className}`}>
       {emojis.map(e => (
         <button 
           key={e} 

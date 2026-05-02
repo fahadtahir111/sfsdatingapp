@@ -42,7 +42,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${outfit.variable}`}>
       <body
         suppressHydrationWarning
-        className="antialiased bg-white text-stone-900 font-sans min-h-screen selection:bg-yellow-200"
+        className="antialiased bg-background text-foreground font-sans min-h-screen selection:bg-primary/20"
       >
         <AppWrapper initialUser={user ? { id: user.id, name: user.name } : null}>
           <GlobalSignaling />

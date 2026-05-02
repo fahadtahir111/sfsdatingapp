@@ -3,7 +3,7 @@
 import React from "react";
 import { DashboardSidebar } from "@/components/layout/DashboardSidebar";
 import { Bell } from "lucide-react";
-import { ExpandingSearchDock } from "@/components/magic-ui/ExpandingSearchDock";
+
 import BottomNav from "@/app/components/Navigation/BottomNav";
 import { useAuth } from "@/app/providers/AuthProvider";
 import Image from "next/image";
@@ -20,7 +20,7 @@ export default function DashboardLayout({
   const [isCollapsed, setIsCollapsed] = React.useState(false);
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#050505] text-white overflow-x-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen bg-background text-white overflow-x-hidden">
       {/* Desktop Sidebar */}
       <DashboardSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       
@@ -33,10 +33,10 @@ export default function DashboardLayout({
         
         {/* Header - Desktop Only */}
         <header className="hidden md:flex h-20 bg-black/40 backdrop-blur-2xl border-b border-white/5 items-center justify-between px-8 sticky top-0 z-40">
-          <ExpandingSearchDock className="w-96 bg-white/5 border-white/10" />
+          <div />
           
           <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-stone-400 hover:text-primary transition-colors shadow-sm">
+            <button className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors shadow-sm">
               <Bell className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-3 pl-4 border-l border-white/10">
@@ -46,11 +46,11 @@ export default function DashboardLayout({
                   {user?.tier || "Elite Member"}
                 </p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-stone-900 border border-white/10 overflow-hidden relative shadow-[0_0_20px_rgba(250,204,21,0.1)]">
+              <div className="w-10 h-10 rounded-full bg-card border border-white/10 overflow-hidden relative shadow-[0_0_20px_rgba(219,39,119,0.1)]">
                 {user?.image ? (
                   <Image src={user.image} alt={user.name || "User"} fill className="object-cover" unoptimized />
                 ) : (
-                  <div className="w-full h-full bg-primary flex items-center justify-center text-black font-black text-xs uppercase">
+                  <div className="w-full h-full bg-primary flex items-center justify-center text-white font-black text-xs uppercase">
                     {(user?.name || "M").substring(0, 2)}
                   </div>
                 )}

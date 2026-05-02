@@ -34,21 +34,19 @@ export default function BoardroomClient({
   boardroom: BoardroomData;
 }) {
   const client = useStreamVideoClient();
-  const [call, setCall] = useState<Call | null>(null);
-  const [joining, setJoining] = useState(true);
+  const [call, setCall] = useState<Call | undefined>(undefined);
   const [joinError, setJoinError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     if (!client) {
       // No Stream client means it's not configured — still allow a graceful UI
-      setJoining(false);
       setJoinError("Stream Video is not configured. Audio rooms are unavailable.");
       return;
     }
 
     let active = true;
-    let myCall: Call | null = null;
+    let myCall: Call | undefined = undefined;
 
     const join = async () => {
       try {
@@ -68,8 +66,6 @@ export default function BoardroomClient({
         console.error("Failed to join boardroom:", err);
         if (active)
           setJoinError("Could not connect to the boardroom. Please try again.");
-      } finally {
-        if (active) setJoining(false);
       }
     };
 
@@ -96,26 +92,14 @@ export default function BoardroomClient({
     router.push("/boardroom");
   }, [call, boardroom.id, router]);
 
-  // — Loading state —
-  if (joining) {
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-stone-950 gap-4">
-        <FaSpinner className="text-primary text-3xl animate-spin" />
-        <p className="text-stone-400 text-xs font-black uppercase tracking-[0.25em]">
-          Entering Boardroom…
-        </p>
-      </div>
-    );
-  }
-
   // — Error state —
   if (joinError) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-stone-950 gap-6 px-6 text-center">
-        <p className="text-stone-400 text-sm font-semibold max-w-xs">{joinError}</p>
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background gap-6 px-6 text-center">
+        <p className="text-muted-foreground text-sm font-semibold max-w-xs">{joinError}</p>
         <button
           onClick={() => router.push("/boardroom")}
-          className="px-6 py-3 bg-primary text-stone-900 rounded-xl font-black text-sm uppercase tracking-widest"
+          className="px-6 py-3 bg-primary text-white rounded-xl font-black text-sm uppercase tracking-widest"
         >
           Go Back
         </button>
@@ -123,7 +107,16 @@ export default function BoardroomClient({
     );
   }
 
-  if (!call) return null;
+  if (!call) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background gap-4">
+        <FaSpinner className="text-primary text-3xl animate-spin" />
+        <p className="text-muted-foreground text-xs font-black uppercase tracking-[0.25em]">
+          Entering Boardroom…
+        </p>
+      </div>
+    );
+  }
 
   return (
     <StreamCall call={call}>
@@ -155,9 +148,9 @@ function BoardroomUI({
 
   if (callingState !== CallingState.JOINED) {
     return (
-      <div className="flex h-screen w-full flex-col items-center justify-center bg-stone-950 gap-3">
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background gap-3">
         <FaSpinner className="text-primary text-3xl animate-spin" />
-        <p className="text-stone-400 text-xs font-black uppercase tracking-widest">
+        <p className="text-muted-foreground text-xs font-black uppercase tracking-widest">
           Syncing…
         </p>
       </div>
@@ -165,9 +158,9 @@ function BoardroomUI({
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-stone-950 text-white">
+    <div className="flex flex-col h-[100dvh] bg-background text-foreground">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-5 pt-safe pt-5 pb-4 border-b border-white/5">
+      <div className="flex items-center justify-between px-5 pt-safe pt-5 pb-4 border-b border-white/5 bg-card/50 backdrop-blur-xl">
         <div>
           <p className="text-[10px] font-black text-primary uppercase tracking-[0.25em] mb-0.5">
             The Boardroom
@@ -197,7 +190,7 @@ function BoardroomUI({
                 : "shadow-xl"
             } transition-all`}
           >
-            <div className="w-full h-full rounded-[2.3rem] bg-stone-900 overflow-hidden relative flex items-center justify-center">
+            <div className="w-full h-full rounded-[2.3rem] bg-card overflow-hidden relative flex items-center justify-center border border-white/10">
               {hostParticipant?.image ? (
                 <Image
                   src={hostParticipant.image}
@@ -214,7 +207,7 @@ function BoardroomUI({
             </div>
           </div>
           {/* Host badge */}
-          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-stone-900 border border-primary/50 px-3 py-0.5 rounded-full flex items-center gap-1.5 shadow-xl whitespace-nowrap">
+          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-background border border-primary/50 px-3 py-0.5 rounded-full flex items-center gap-1.5 shadow-xl whitespace-nowrap">
             <FaCrown className="text-primary text-[9px]" />
             <span className="text-[9px] font-black uppercase tracking-tight text-primary">
               Host
@@ -226,7 +219,7 @@ function BoardroomUI({
           <h2 className="text-xl font-black text-white">
             {boardroom.host.name ?? "Host"}
           </h2>
-          <p className="text-stone-500 text-xs mt-1 font-medium max-w-xs mx-auto">
+          <p className="text-muted-foreground text-xs mt-1 font-medium max-w-xs mx-auto">
             {boardroom.description ?? "Live audio discussion in progress."}
           </p>
         </div>
@@ -234,7 +227,7 @@ function BoardroomUI({
         {/* ── Listeners grid ── */}
         {others.length > 0 && (
           <div className="w-full max-w-sm mt-2">
-            <div className="flex items-center gap-2 mb-3 text-stone-500">
+            <div className="flex items-center gap-2 mb-3 text-muted-foreground">
               <FaUsers className="text-sm" />
               <span className="text-[10px] font-black uppercase tracking-widest">
                 Listeners ({others.length})
@@ -244,7 +237,7 @@ function BoardroomUI({
               {others.slice(0, 12).map((p) => (
                 <div key={p.sessionId} className="flex flex-col items-center gap-1.5">
                   <div
-                    className={`w-12 h-12 rounded-2xl bg-stone-800 border overflow-hidden relative flex items-center justify-center transition-all ${
+                    className={`w-12 h-12 rounded-2xl bg-card border overflow-hidden relative flex items-center justify-center transition-all ${
                       p.isSpeaking ? "border-primary/40 shadow-lg shadow-primary/10" : "border-white/5"
                     }`}
                   >
@@ -262,14 +255,14 @@ function BoardroomUI({
                       </span>
                     )}
                   </div>
-                  <span className="text-[8px] font-bold text-stone-500 truncate w-full text-center">
+                  <span className="text-[8px] font-bold text-muted-foreground truncate w-full text-center">
                     {p.name?.split(" ")[0] ?? "User"}
                   </span>
                 </div>
               ))}
               {others.length > 12 && (
-                <div className="w-12 h-12 rounded-2xl bg-stone-800 border border-white/5 flex items-center justify-center">
-                  <span className="text-[9px] font-black text-stone-400">
+                <div className="w-12 h-12 rounded-2xl bg-card border border-white/5 flex items-center justify-center">
+                  <span className="text-[9px] font-black text-muted-foreground">
                     +{others.length - 12}
                   </span>
                 </div>
@@ -280,7 +273,7 @@ function BoardroomUI({
       </div>
 
       {/* ── Controls ── */}
-      <div className="flex items-center justify-center gap-5 px-6 py-6 pb-safe border-t border-white/5 bg-stone-950">
+      <div className="flex items-center justify-center gap-5 px-6 py-6 pb-safe border-t border-white/5 bg-card/80 backdrop-blur-xl">
         {/* Mute toggle */}
         <button
           type="button"
@@ -288,8 +281,8 @@ function BoardroomUI({
           onClick={() => microphone.toggle()}
           className={`w-16 h-16 rounded-3xl flex items-center justify-center text-2xl transition-all shadow-lg active:scale-90 ${
             isMute
-              ? "bg-stone-800 text-stone-400"
-              : "bg-primary text-stone-900 shadow-primary/20"
+              ? "bg-secondary text-muted-foreground"
+              : "bg-primary text-white shadow-primary/20"
           }`}
         >
           {isMute ? <FaMicrophoneSlash /> : <FaMicrophone />}

@@ -54,7 +54,7 @@ export default function PrivacySettingsPage() {
 
         <div className="flex items-center gap-4 mb-6">
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl shadow-inner ${
-             isElite ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'bg-white/10 text-stone-600'
+             isElite ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white/10 text-muted-foreground'
           }`}>
             <FaUserSecret />
           </div>
@@ -64,19 +64,19 @@ export default function PrivacySettingsPage() {
           </div>
         </div>
 
-        <p className="text-stone-500 font-medium mb-8 text-sm leading-relaxed uppercase tracking-widest text-[10px]">
+        <p className="text-muted-foreground font-medium mb-8 text-sm leading-relaxed uppercase tracking-widest text-[10px]">
           When active, your profile is hidden from the public Discover feed. You will only be visible to members you have explicitly swiped right on.
         </p>
 
         {!isElite && (
           <div className="mb-8 p-5 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-between">
-            <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">Upgrade to Elite to unlock</span>
+            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Upgrade to Elite to unlock</span>
             <Link href="/premium" className="text-[10px] font-black text-primary underline uppercase tracking-widest">View Tiers</Link>
           </div>
         )}
 
         <div className="flex items-center justify-between">
-          <span className={`text-[10px] font-black uppercase tracking-widest ${isElite ? 'text-white' : 'text-stone-700'}`}>Enable Ghost Mode</span>
+          <span className={`text-[10px] font-black uppercase tracking-widest ${isElite ? 'text-white' : 'text-muted-foreground/20'}`}>Enable Ghost Mode</span>
           
           <button 
             onClick={handleToggle}
@@ -98,17 +98,17 @@ export default function PrivacySettingsPage() {
       <div className="space-y-4">
         <button className="w-full flex items-center justify-between p-6 bg-card rounded-[1.75rem] border border-white/5 shadow-xl group">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-stone-500 group-hover:text-primary transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
               <FaEyeSlash />
             </div>
             <span className="text-[10px] font-black text-white uppercase tracking-widest">Hidden Contacts</span>
           </div>
-          <span className="text-[9px] font-black bg-white/5 text-stone-500 px-4 py-2 rounded-xl uppercase tracking-widest border border-white/5">Secured</span>
+          <span className="text-[9px] font-black bg-white/5 text-muted-foreground/60 px-4 py-2 rounded-xl uppercase tracking-widest border border-white/5">Secured</span>
         </button>
 
         <button className="w-full flex items-center justify-between p-6 bg-card rounded-[1.75rem] border border-white/5 shadow-xl group">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-stone-500 group-hover:text-primary transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
               <FaShieldAlt />
             </div>
             <span className="text-[10px] font-black text-white uppercase tracking-widest">Data & Privacy Center</span>

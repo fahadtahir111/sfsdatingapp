@@ -2,46 +2,53 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
-type SearchUserRow = {
-  id: string;
-  name: string | null;
-  profile: {
-    photos: string | null;
-    occupation: string | null;
-    trustScore: number | null;
-    professionalVerified: boolean | null;
-  } | null;
-  subscriptions: Array<{
-    tier: string;
-  }>;
-};
-
 export async function GET(req: NextRequest) {
   const me = await getCurrentUser();
   if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
-  if (q.length < 1) return NextResponse.json([]);
+  const networkingOnly = req.nextUrl.searchParams.get("networking") === "true";
+
+  if (q.length < 1 && !networkingOnly) return NextResponse.json([]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const whereClause: Record<string, any> = {
+    id: { not: me.id },
+  };
+
+  if (q.length >= 1) {
+    whereClause.OR = [
+      { name: { contains: q, mode: "insensitive" } },
+    ];
+  }
+
+  if (networkingOnly) {
+    whereClause.profile = { isNetworkingMode: true };
+  }
 
   const users = await prisma.user.findMany({
-    where: {
-      id: { not: me.id },
-      name: { contains: q, mode: "insensitive" },
-    },
-    take: 20,
+    where: whereClause,
+    take: 30,
     include: {
-      profile: true,
-      subscriptions: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
+      profile: {
+        select: {
+          photos: true,
+          occupation: true,
+          company: true,
+          industry: true,
+          trustScore: true,
+          professionalVerified: true,
+          isNetworkingMode: true,
+        },
       },
+      subscriptions: { orderBy: { createdAt: "desc" }, take: 1 },
     },
   });
 
-  const result = (users as SearchUserRow[]).map((u) => {
-    let avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || "User")}`;
+  const result = users.map((u) => {
+    let avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || "User")}&background=1a1a1a&color=FF1493`;
     try {
-      const photos = JSON.parse(u.profile?.photos || "[]");
+      const photos = JSON.parse((u.profile as { photos?: string })?.photos || "[]");
       if (photos[0]) avatar = photos[0];
     } catch {}
 
@@ -49,9 +56,11 @@ export async function GET(req: NextRequest) {
       id: u.id,
       name: u.name,
       avatar,
-      occupation: u.profile?.occupation ?? null,
-      trustScore: u.profile?.trustScore ?? 50,
-      professionalVerified: u.profile?.professionalVerified ?? false,
+      occupation: (u.profile as { occupation?: string | null })?.occupation ?? null,
+      company: (u.profile as { company?: string | null })?.company ?? null,
+      industry: (u.profile as { industry?: string | null })?.industry ?? null,
+      trustScore: (u.profile as { trustScore?: number | null })?.trustScore ?? 50,
+      professionalVerified: (u.profile as { professionalVerified?: boolean | null })?.professionalVerified ?? false,
       tier: u.subscriptions?.[0]?.tier ?? "Free",
     };
   });

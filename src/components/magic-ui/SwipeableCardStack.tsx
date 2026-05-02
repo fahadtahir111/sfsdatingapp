@@ -151,7 +151,10 @@ function ProfileCard({
               <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Trust Score</span>
               <span className="text-xl font-black text-primary">{card.trustScore}%</span>
             </div>
-            <button className="w-12 h-12 bg-black/50 border border-white/20 rounded-full flex items-center justify-center text-primary shadow-xl hover:scale-110 transition-transform">
+            <button 
+              onClick={() => onSwipe("right")}
+              className="w-12 h-12 bg-black/50 border border-white/20 rounded-full flex items-center justify-center text-primary shadow-xl hover:scale-110 transition-transform active:scale-95"
+            >
               <Heart className="w-6 h-6 fill-current" />
             </button>
           </div>

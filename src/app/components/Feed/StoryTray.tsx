@@ -68,9 +68,9 @@ export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
         <div className="flex flex-col items-center gap-2 flex-shrink-0">
           <button 
             onClick={onAddStory}
-            className="relative w-16 h-16 rounded-full border-2 border-stone-200 p-1 flex items-center justify-center hover:border-primary transition-colors"
+            className="relative w-16 h-16 rounded-full border-2 border-white/5 p-1 flex items-center justify-center hover:border-primary transition-colors bg-card shadow-xl"
           >
-            <div className="w-full h-full rounded-full bg-stone-100 overflow-hidden relative">
+            <div className="w-full h-full rounded-full bg-secondary overflow-hidden relative">
               <img 
                 src={user?.image || `https://ui-avatars.com/api/?name=${user?.name || 'Me'}`} 
                 alt="Me" 
@@ -83,7 +83,7 @@ export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
               </div>
             </div>
           </button>
-          <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">My Story</span>
+          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">My Story</span>
         </div>
 
         {/* Friends Stories */}
@@ -116,7 +116,7 @@ export default function StoryTray({ stories, onAddStory }: StoryTrayProps) {
 
               </div>
             </button>
-            <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest truncate w-16 text-center">
+            <span className="text-[10px] font-black text-foreground uppercase tracking-widest truncate w-16 text-center">
               {group.userName.split(' ')[0]}
             </span>
           </div>

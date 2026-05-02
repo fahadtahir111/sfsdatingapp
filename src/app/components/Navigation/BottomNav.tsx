@@ -39,7 +39,7 @@ export default function BottomNav() {
               <motion.div
                 whileTap={{ scale: 0.85 }}
                 className={`relative p-2 rounded-xl transition-all duration-300 ${
-                  isActive ? "text-primary" : "text-stone-500 group-hover:text-white"
+                  isActive ? "text-primary" : "text-muted-foreground group-hover:text-white"
                 }`}
               >
                 <Icon className={`text-2xl transition-transform ${isActive ? 'scale-110' : 'scale-100'}`} />
@@ -47,7 +47,7 @@ export default function BottomNav() {
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute top-1 right-0 w-4 h-4 bg-[#FF1493] text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-black"
+                    className="absolute top-1 right-0 w-4 h-4 bg-primary text-black text-[10px] font-black rounded-full flex items-center justify-center border-2 border-black"
                   >
                     {requestCount > 9 ? '9+' : requestCount}
                   </motion.div>

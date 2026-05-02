@@ -10,11 +10,11 @@ import { getStories, createStory } from "./storyActions";
 import { toggleLike, createSocialContent } from "@/lib/actions/social";
 import StoryTray from "../components/Feed/StoryTray";
 import PostCard from "../components/Feed/PostCard";
-import LoadingSpinner from "../components/LoadingSpinner";
 import EmojiPicker from "../components/EmojiPicker";
 import { useToast } from "@/app/providers/ToastProvider";
 import { deleteOwnContent } from "@/lib/actions/social";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import FeedLoading from "./loading";
 
 interface FeedPost {
   id: string;
@@ -204,9 +204,9 @@ export default function FeedPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 pb-24">
-        <LoadingSpinner size="lg" />
-      </div>
+      <DashboardLayout>
+        <FeedLoading />
+      </DashboardLayout>
     );
   }
 
@@ -215,7 +215,7 @@ export default function FeedPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-black tracking-tight">Society Feed</h1>
-          <p className="text-stone-500 font-medium">What&apos;s happening in the circle.</p>
+          <p className="text-muted-foreground font-medium">What&apos;s happening in the circle.</p>
         </div>
 
         <div className="space-y-4">
@@ -243,11 +243,11 @@ export default function FeedPage() {
                      value={newPostContent}
                      onChange={(e) => setNewPostContent(e.target.value)}
                      placeholder="Share an elite update with the circle..."
-                     className="w-full bg-transparent border-none focus:ring-0 text-base font-medium text-foreground placeholder-stone-500 resize-none h-24"
+                     className="w-full bg-transparent border-none focus:ring-0 text-base font-medium text-foreground placeholder-muted-foreground/40 resize-none h-24"
                    />
                    <button 
                      onClick={() => setShowEmojis(!showEmojis)}
-                     className="absolute bottom-2 right-0 text-stone-300 hover:text-primary/90 transition-colors"
+                     className="absolute bottom-2 right-0 text-muted-foreground/30 hover:text-primary transition-colors"
                    >
                      <FaSmile className="text-lg" />
                    </button>
@@ -266,7 +266,7 @@ export default function FeedPage() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="relative mt-4 rounded-2xl overflow-hidden border border-stone-100 bg-stone-50 aspect-video"
+                      className="relative mt-4 rounded-2xl overflow-hidden border border-white/5 bg-secondary aspect-video shadow-2xl"
                     >
                       {mediaType === "VIDEO" ? (
                         <video src={mediaUrl} className="w-full h-full object-cover" controls />
@@ -334,10 +334,10 @@ export default function FeedPage() {
                      />
                      <label 
                        htmlFor="feed-media-upload"
-                       className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary text-stone-500 text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-secondary transition-colors"
+                       className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5 text-muted-foreground text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-white/10 transition-colors"
                      >
                        {uploadingMedia ? (
-                         <div className="w-3 h-3 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
+                         <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                        ) : (
                          <FaCamera />
                        )}
@@ -348,7 +348,7 @@ export default function FeedPage() {
                    <button 
                      onClick={handleCreatePost}
                      disabled={isPosting || uploadingMedia || (!newPostContent.trim() && !mediaUrl)}
-                     className="bg-foreground text-card px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest disabled:opacity-50 active:scale-95 transition-transform shadow-lg shadow-stone-200"
+                     className="bg-primary text-white px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50 active:scale-95 transition-transform shadow-lg shadow-primary/20"
                    >
                      {isPosting ? "Posting..." : "Share"}
                    </button>
@@ -360,7 +360,7 @@ export default function FeedPage() {
         {/* Feed Posts */}
         {posts.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-stone-400 font-bold uppercase tracking-widest text-[10px]">The feed is quiet today.</p>
+            <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">The feed is quiet today.</p>
           </div>
         ) : (
           posts.map((post, i) => (

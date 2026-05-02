@@ -61,7 +61,7 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
     >
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href={`/profile/${post.user.id}`} className="w-10 h-10 rounded-full bg-stone-100 overflow-hidden border border-stone-100 relative block flex-shrink-0">
+          <Link href={`/profile/${post.user.id}`} className="w-10 h-10 rounded-full bg-secondary overflow-hidden border border-white/5 relative block flex-shrink-0">
             <Image 
               src={post.user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.user.name || 'User')}`} 
               alt={post.user.name || "User"} 
@@ -78,7 +78,7 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
                 <FaCrown className="text-[10px] text-primary/90" />
               )}
             </div>
-            <p className="text-[10px] text-stone-400 font-bold uppercase tracking-tighter">
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
               {formatRelativeTime(post.createdAt)}
             </p>
           </div>
@@ -104,12 +104,12 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
             {confirmingDelete ? "Confirm?" : "Delete"}
           </button>
         ) : (
-          <button type="button" className="text-stone-300" aria-label="Post menu">•••</button>
+          <button type="button" className="text-muted-foreground/30" aria-label="Post menu">•••</button>
         )}
       </div>
 
       <div className="px-6 pb-4">
-        <p className="text-sm text-stone-300 leading-relaxed font-medium whitespace-pre-wrap">
+        <p className="text-sm text-muted-foreground leading-relaxed font-medium whitespace-pre-wrap">
           {post.content}
         </p>
       </div>
@@ -153,12 +153,12 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
       <div className="px-6 py-4 flex items-center gap-6 border-t border-border">
         <button 
           onClick={() => onLike(post.id, post.type)}
-          className={`flex items-center gap-2 text-xs font-black transition-colors ${post.isLiked ? 'text-primary' : 'text-stone-500 hover:text-foreground'}`}
+          className={`flex items-center gap-2 text-xs font-black transition-colors ${post.isLiked ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <FaHeart className={post.isLiked ? "scale-110" : ""} />
           {post.likesCount}
         </button>
-        <button className="flex items-center gap-2 text-xs font-black text-stone-500 hover:text-foreground transition-colors">
+        <button className="flex items-center gap-2 text-xs font-black text-muted-foreground hover:text-foreground transition-colors">
           <FaComment />
           {post.commentsCount}
         </button>
@@ -176,7 +176,7 @@ export default function PostCard({ post, onLike, onDelete, canDelete = false, in
               showToast("Link copied to clipboard", "success");
             }
           }}
-          className="flex items-center gap-2 text-xs font-black text-stone-400 hover:text-stone-900 transition-colors ml-auto"
+          className="flex items-center gap-2 text-xs font-black text-muted-foreground hover:text-primary transition-colors ml-auto"
         >
           <FaShare />
         </button>

@@ -1,41 +1,49 @@
 import { NextResponse } from "next/server";
-import { getAdminRole } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { getAdminUser } from "@/lib/admin";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const role = await getAdminRole();
-  if (role !== "superadmin") {
+  const me = await getCurrentUser();
+  if (!me) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const admin = await getAdminUser();
+  if (!admin || admin.adminRole !== "superadmin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const txs = await prisma.roseTransaction.findMany({
+  const transactions = await prisma.roseTransaction.findMany({
     orderBy: { createdAt: "desc" },
-    take: 5000,
     select: {
       id: true,
-      userId: true,
       amount: true,
       type: true,
       createdAt: true,
-      user: {
-        select: { email: true, name: true },
-      },
+      user: { select: { id: true, name: true, email: true } },
     },
   });
 
-  const header = "id,userId,userEmail,userName,amount,type,createdAt";
-  const rows = txs.map((t) =>
-    [t.id, t.userId, t.user.email, t.user.name ?? "", String(t.amount), t.type, t.createdAt.toISOString()]
-      .map((v) => `"${String(v).replace(/"/g, '""')}"`)
-      .join(",")
-  );
-  const csv = [header, ...rows].join("\n");
+  const rows = [
+    ["TX ID", "User ID", "User Name", "User Email", "Amount", "Type", "Date"],
+    ...transactions.map((tx) => [
+      tx.id,
+      tx.user.id,
+      tx.user.name || "",
+      tx.user.email || "",
+      tx.amount,
+      tx.type,
+      new Date(tx.createdAt).toISOString(),
+    ]),
+  ];
+
+  const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
 
   return new NextResponse(csv, {
     headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="roses-ledger-export.csv"`,
+      "Content-Type": "text/csv",
+      "Content-Disposition": `attachment; filename="sfs-roses-${Date.now()}.csv"`,
     },
   });
 }
-

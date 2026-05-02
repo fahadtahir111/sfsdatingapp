@@ -119,7 +119,7 @@ export default function ChatRoomPage() {
   type CallPhase = "idle" | "outgoing" | "incoming" | "connected";
   const [callPhase, setCallPhase] = useState<CallPhase>("idle");
   const [callType, setCallType] = useState<"video" | "audio">("video");
-  const [streamCall, setStreamCall] = useState<Call | null>(null);
+  const [streamCall, setStreamCall] = useState<Call | undefined>(undefined);
 
   const client = useStreamVideoClient();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -251,7 +251,7 @@ export default function ChatRoomPage() {
       await streamCall?.leave();
       await sendMessage(conversationId, "Call ended", "info");
     } catch {}
-    setStreamCall(null);
+    setStreamCall(undefined);
     setCallPhase("idle");
     setHandledMsgId(null);
   };
@@ -323,7 +323,7 @@ export default function ChatRoomPage() {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#f5f3f0] flex flex-col z-[60]">
+    <div className="fixed inset-0 bg-background flex flex-col z-[60]">
       {/* ════════════════════ CALL OVERLAYS ════════════════════ */}
       <AnimatePresence>
         {/* — Connected call (Stream video/audio) — */}
@@ -444,11 +444,11 @@ export default function ChatRoomPage() {
       </AnimatePresence>
 
       {/* ════════════════════ CHAT HEADER ════════════════════ */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-border shadow-sm flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm flex-shrink-0">
         <div className="flex items-center gap-3">
           <Link
             href="/chat"
-            className="w-9 h-9 flex items-center justify-center -ml-1 text-foreground rounded-full hover:bg-secondary transition-colors"
+            className="w-9 h-9 flex items-center justify-center -ml-1 text-muted-foreground rounded-full hover:bg-secondary transition-colors"
             aria-label="Back to chats"
           >
             <FaChevronLeft className="text-lg" />
@@ -501,12 +501,11 @@ export default function ChatRoomPage() {
       {/* ════════════════════ MESSAGES AREA ════════════════════ */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3"
-        style={{ backgroundColor: "#f0ece4" }}
+        className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 bg-background"
       >
         {/* E2E label */}
         <div className="flex justify-center">
-          <span className="bg-black/10 text-stone-600 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+          <span className="bg-white/5 text-muted-foreground text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
             End-to-End Encrypted
           </span>
         </div>
@@ -528,10 +527,10 @@ export default function ChatRoomPage() {
                 className={`flex ${isMe ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[78%] rounded-2xl px-4 py-3 shadow-sm ${
+                  className={`max-w-[78%] rounded-2xl px-4 py-3 shadow-lg ${
                     isMe
-                      ? "bg-[#DCF8C6] text-stone-900 rounded-br-[4px]"
-                      : "bg-white text-foreground rounded-bl-[4px] border border-border"
+                      ? "bg-primary text-white rounded-br-[4px] shadow-primary/20"
+                      : "bg-secondary text-foreground rounded-bl-[4px] border border-border"
                   }`}
                 >
                   {msg.messageType === "audio" ? (
@@ -559,7 +558,7 @@ export default function ChatRoomPage() {
 
                   <span
                     className={`text-[10px] mt-1.5 block font-semibold text-right ${
-                      isMe ? "text-stone-500" : "text-muted-foreground"
+                      isMe ? "text-white/60" : "text-muted-foreground"
                     }`}
                   >
                     {time}
@@ -575,7 +574,7 @@ export default function ChatRoomPage() {
       </div>
 
       {/* ════════════════════ INPUT AREA ════════════════════ */}
-      <div className="px-3 py-2 pb-safe bg-white border-t border-border flex-shrink-0">
+      <div className="px-3 py-2 pb-safe bg-card/80 backdrop-blur-xl border-t border-border flex-shrink-0">
         {/* Emoji picker */}
         <AnimatePresence>
           {showEmojis && (

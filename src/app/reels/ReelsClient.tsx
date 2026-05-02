@@ -46,12 +46,12 @@ export default function ReelsClient({ initialReels }: { initialReels: ReelData[]
 
   if (displayReels.length === 0 && !loading) {
     return (
-      <div className="absolute inset-0 bg-black flex flex-col items-center justify-center text-center p-8">
+      <div className="absolute inset-0 bg-background flex flex-col items-center justify-center text-center p-8">
         <FaMusic className="text-6xl text-primary mb-6 animate-pulse" />
         <h2 className="text-3xl font-black text-white mb-2">
           {feedMode === "following" ? "No Following Reels Yet" : "The Stage is Set"}
         </h2>
-        <p className="text-white/60 mb-8 max-w-xs">
+        <p className="text-muted-foreground mb-8 max-w-xs">
           {feedMode === "following"
             ? "Follow more people to build your following reel stream."
             : "Be the first to share an elite moment with the community."}
@@ -334,7 +334,7 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
             {/* Avatar with Match Button */}
             <div className="relative group mb-2">
               <Link href={`/profile/${reel.userId}`}>
-                <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-stone-800 shadow-lg">
+                <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-secondary shadow-lg">
                   <Image 
                     src={reel.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reel.user)}`}
                     alt={reel.user}
@@ -395,13 +395,13 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
       {showComments && (
         <div className="absolute inset-0 z-50 flex flex-col justify-end pointer-events-auto">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowComments(false)} />
-          <div className="bg-[#0a0a0a] border-t border-white/10 w-full h-[60vh] rounded-t-[2.5rem] flex flex-col relative z-10 animate-slide-up shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+          <div className="bg-card border-t border-border w-full h-[60vh] rounded-t-[2.5rem] flex flex-col relative z-10 animate-slide-up shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
             </div>
             <div className="px-4 py-4 border-b border-white/10 text-center font-black uppercase tracking-widest text-xs text-white relative">
               Comments
-              <button onClick={() => setShowComments(false)} className="absolute right-6 top-1/2 -translate-y-1/2 text-stone-500 hover:text-white transition-colors">✕</button>
+              <button onClick={() => setShowComments(false)} className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors">✕</button>
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
@@ -417,8 +417,8 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
                     />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-black text-white">{c.user} <span className="text-stone-500 font-bold ml-1">{c.time}</span></p>
-                    <p className="text-sm text-stone-300 mt-1 font-medium">{c.text}</p>
+                    <p className="text-xs font-black text-white">{c.user} <span className="text-muted-foreground font-bold ml-1">{c.time}</span></p>
+                    <p className="text-sm text-muted-foreground/80 mt-1 font-medium">{c.text}</p>
                   </div>
                   {c.canDelete && (
                     <button
@@ -443,7 +443,7 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
                 onChange={e => setCommentText(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handlePostComment()}
                 placeholder="Add an elite comment..."
-                className="flex-1 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl text-sm text-white outline-none focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-stone-600"
+                className="flex-1 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl text-sm text-white outline-none focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/40"
               />
               <button 
                 onClick={handlePostComment}
