@@ -77,6 +77,7 @@ model User {
   // Vouches
   vouchesGiven    Vouch[]     @relation("VouchesGiven")
   vouchesReceived Vouch[]     @relation("VouchesReceived")
+  notifications   Notification[]
 }
 
 model Profile {
@@ -410,4 +411,17 @@ model Vouch {
   createdAt DateTime @default(now())
 
   @@unique([vouchById, vouchForId])
+}
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // "MATCH", "MESSAGE", "CALL", "FRIEND_REQUEST", "ROSE"
+  title       String
+  message     String
+  data        String?  // JSON data like conversationId or userId
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, read])
 }

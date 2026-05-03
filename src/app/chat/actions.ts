@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { Message } from "@prisma/client";
 
 /**
  * Fetch all conversations for the current user.
@@ -86,7 +87,7 @@ export async function getConversations() {
 /**
  * Fetch messages for a specific conversation.
  */
-export async function getMessages(conversationId: string) {
+export async function getMessages(conversationId: string): Promise<Message[]> {
   try {
     const user = await getCurrentUser();
     const userId = user?.id;
@@ -148,6 +149,13 @@ export async function sendMessage(conversationId: string, content: string, type:
     await prisma.conversation.update({
       where: { id: conversationId },
       data: { updatedAt: new Date() }
+    });
+
+    // REAL-TIME SIGNALING: Publish to Ably channel
+    const { SignalingService } = await import("@/lib/server/services/SignalingService");
+    await SignalingService.publishMessage(conversationId, {
+      ...msg,
+      senderName: user?.name
     });
 
     revalidatePath("/chat");
@@ -229,7 +237,7 @@ export async function sendRose(conversationId: string, amount = 1) {
 /**
  * Fetch a single conversation's details.
  */
-export async function getConversation(conversationId: string) {
+export async function getConversation(conversationId: string): Promise<{ id: string; name: string; image: string; userId: string } | null> {
   try {
     const user = await getCurrentUser();
     const userId = user?.id;
@@ -322,5 +330,31 @@ export async function getOrCreateConversation(otherUserId: string) {
     console.error("Error get/create conversation:", error);
     return null;
   }
+}
+
+export async function triggerCallSignal(conversationId: string, type: "invite" | "ringing" | "accepted" | "reject" | "hangup", callType: "audio" | "video") {
+  const user = await getCurrentUser();
+  if (!user?.id) return { success: false };
+
+  // Fetch receiverId from conversation
+  const conv = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    include: { userLinks: true }
+  });
+  
+  const receiverLink = conv?.userLinks.find(link => link.userId !== user.id);
+  const receiverId = receiverLink?.userId || null;
+
+  const { SignalingService } = await import("@/lib/server/services/SignalingService");
+  await SignalingService.publishCallEvent(
+    conversationId, 
+    user.id, 
+    receiverId, 
+    type, 
+    callType, 
+    { name: user.name, image: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "U")}&background=050505&color=FFD700` }
+  );
+  
+  return { success: true };
 }
 

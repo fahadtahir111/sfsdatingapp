@@ -30,6 +30,8 @@ import EmojiPicker from "../../components/EmojiPicker";
 import { useStreamVideoClient, Call, StreamCall } from "@stream-io/video-react-sdk";
 import MeetingRoom from "@/app/components/Calls/MeetingRoom";
 import { useToast } from "@/app/providers/ToastProvider";
+import { triggerCallSignal } from "@/app/chat/actions";
+import Ably from "ably";
 
 interface ConversationData {
   id: string;
@@ -58,7 +60,7 @@ const AudioMessagePlayer = ({ url, isMe }: { url: string; isMe: boolean }) => {
     } else {
       audioRef.current
         ?.play()
-        .catch((e) => console.error("Play failed", e));
+        .catch((e: unknown) => console.error("Play failed", e));
       setIsPlaying(true);
     }
   };
@@ -120,6 +122,36 @@ export default function ChatRoomPage() {
   const [callPhase, setCallPhase] = useState<CallPhase>("idle");
   const [callType, setCallType] = useState<"video" | "audio">("video");
   const [streamCall, setStreamCall] = useState<Call | undefined>(undefined);
+  const [isRinging, setIsRinging] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const ringingAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // Standard ringing sound (using a clean public URL)
+    ringingAudioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+    ringingAudioRef.current.loop = true;
+
+    return () => {
+      ringingAudioRef.current?.pause();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (callPhase === "outgoing") {
+      ringingAudioRef.current?.play().catch(() => {});
+    } else {
+      ringingAudioRef.current?.pause();
+      if (ringingAudioRef.current) ringingAudioRef.current.currentTime = 0;
+    }
+  }, [callPhase]);
+
+  // Format timer: 00:00
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const client = useStreamVideoClient();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -147,7 +179,64 @@ export default function ChatRoomPage() {
     data: messages = [],
     setData: setMessages,
     refresh,
-  } = useRealTime(fetchMessages, 2000, [conversationId, user, loading], isAuthenticated);
+  } = useRealTime(fetchMessages, 5000, [conversationId, user, loading], isAuthenticated);
+
+  // ── Ably Real-time Signaling ──────────────────────────────────────────
+  useEffect(() => {
+    if (!isAuthenticated || !conversationId) return;
+
+    const ably = new Ably.Realtime({ authUrl: "/api/ably/auth" }); // You'll need this route
+    const channel = ably.channels.get(`conversation:${conversationId}`);
+
+    channel.subscribe("new_message", (message: Ably.Message) => {
+      setMessages((prev) => {
+        if (!prev) return [message.data];
+        if (prev.find(m => m.id === message.data.id)) return prev;
+        return [...prev, message.data];
+      });
+    });
+
+    channel.subscribe("call_event", (event: Ably.Message) => {
+      const { userId, type, callType: eventCallType } = event.data;
+      if (userId === user?.id) return; // Ignore our own signals
+
+      if (type === "invite") {
+        setCallType(eventCallType);
+        setCallPhase("incoming");
+        // Notify sender that we are ringing
+        triggerCallSignal(conversationId, "ringing", eventCallType);
+      } else if (type === "ringing") {
+        setIsRinging(true);
+      } else if (type === "accepted") {
+        setCallPhase("connected");
+      } else if (type === "reject" || type === "hangup") {
+        setCallPhase("idle");
+        setIsRinging(false);
+        setStreamCall(undefined);
+        showToast(`Call ${type === "reject" ? "declined" : "ended"}`, "info");
+      }
+    });
+
+    return () => {
+      channel.unsubscribe();
+      ably.close();
+    };
+  }, [conversationId, isAuthenticated, user?.id, setMessages, showToast]);
+
+  // ── Call Timer Logic ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (callPhase === "connected") {
+      timerRef.current = setInterval(() => {
+        setCallDuration((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+      setCallDuration(0);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [callPhase]);
 
   // ── Auto-scroll to latest message ─────────────────────────────────────
   useEffect(() => {
@@ -200,23 +289,29 @@ export default function ChatRoomPage() {
     setCallType(type);
     setCallPhase("outgoing");
     try {
+      // 1. Send Signaling Event (Ably)
+      await triggerCallSignal(conversationId, "invite", type);
+
+      // 2. Persist in DB for history
       await sendMessage(
         conversationId,
-        "Calling…",
+        `Started ${type} call`,
         type === "video" ? "video_call" : "audio_call"
       );
+
       const call = client.call("default", conversationId);
       await call.join({ create: true });
+      
       if (type === "audio") {
         await call.camera.disable();
-        try { await call.microphone.enable(); } catch {}
       } else {
-        try { await call.camera.enable(); } catch {}
-        try { await call.microphone.enable(); } catch {}
+        await call.camera.enable();
       }
+      await call.microphone.enable();
+
       setStreamCall(call);
       setCallPhase("connected");
-    } catch (e) {
+    } catch (e: unknown) {
       console.error("Failed to start call:", e);
       showToast("Could not start the call.", "error");
       setCallPhase("idle");
@@ -227,6 +322,9 @@ export default function ChatRoomPage() {
   const answerCall = async () => {
     if (!client) return;
     try {
+      // Notify sender that we accepted
+      await triggerCallSignal(conversationId, "accepted", callType);
+      
       const call = client.call("default", conversationId);
       await call.join({ create: true });
       if (callType === "audio") {
@@ -238,7 +336,7 @@ export default function ChatRoomPage() {
       }
       setStreamCall(call);
       setCallPhase("connected");
-    } catch (e) {
+    } catch (e: unknown) {
       console.error("Failed to answer call:", e);
       showToast("Could not connect to the call.", "error");
       setCallPhase("idle");
@@ -248,12 +346,24 @@ export default function ChatRoomPage() {
   // ── End / decline call ────────────────────────────────────────────────
   const endCall = async () => {
     try {
+      // Send hangup signal
+      await triggerCallSignal(conversationId, "hangup", callType);
       await streamCall?.leave();
-      await sendMessage(conversationId, "Call ended", "info");
+      
+      if (callPhase === "connected") {
+        await sendMessage(conversationId, "Call ended", "info");
+      }
     } catch {}
     setStreamCall(undefined);
     setCallPhase("idle");
     setHandledMsgId(null);
+  };
+
+  const declineCall = async () => {
+    try {
+      await triggerCallSignal(conversationId, "reject", callType);
+    } catch {}
+    setCallPhase("idle");
   };
 
   // ── Rose gift ─────────────────────────────────────────────────────────
@@ -282,7 +392,7 @@ export default function ChatRoomPage() {
       mediaRecorderRef.current = recorder;
       audioChunksRef.current = [];
 
-      recorder.ondataavailable = (e) => {
+      recorder.ondataavailable = (e: BlobEvent) => {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
 
@@ -335,14 +445,19 @@ export default function ChatRoomPage() {
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-[110] bg-stone-950"
           >
-            <button
-              type="button"
-              aria-label="End call"
-              onClick={endCall}
-              className="absolute top-12 left-4 z-50 w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg"
-            >
-              <FaChevronLeft />
-            </button>
+            <div className="absolute top-12 left-4 z-50 flex items-center gap-4">
+              <button
+                type="button"
+                aria-label="End call"
+                onClick={endCall}
+                className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg"
+              >
+                <FaChevronLeft />
+              </button>
+              <div className="px-4 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-black tracking-widest text-white uppercase">
+                {formatDuration(callDuration)}
+              </div>
+            </div>
             <StreamCall call={streamCall}>
               <MeetingRoom onLeaveCall={endCall} />
             </StreamCall>
@@ -373,7 +488,7 @@ export default function ChatRoomPage() {
             <div className="text-center">
               <h2 className="text-2xl font-black">{conversation?.name}</h2>
               <p className="text-stone-400 mt-1 text-sm font-medium animate-pulse">
-                {callType === "video" ? "Video calling…" : "Audio calling…"}
+                {isRinging ? "Ringing…" : "Calling…"}
               </p>
             </div>
             <FaSpinner className="text-primary text-2xl animate-spin opacity-60" />
@@ -425,7 +540,7 @@ export default function ChatRoomPage() {
               <button
                 type="button"
                 aria-label="Decline call"
-                onClick={endCall}
+                onClick={declineCall}
                 className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-red-500/40 active:scale-90 transition-transform"
               >
                 <FaPhone className="rotate-[135deg]" />
@@ -585,8 +700,8 @@ export default function ChatRoomPage() {
               className="absolute bottom-20 right-3 z-50"
             >
               <EmojiPicker
-                onSelect={(e) => {
-                  setInputText((prev) => prev + e);
+                onSelect={(emoji: string) => {
+                  setInputText((prev) => prev + emoji);
                   setShowEmojis(false);
                 }}
               />

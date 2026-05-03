@@ -28,6 +28,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(path)
   );
 
+  const isAuthPage = pathname === '/' || pathname.startsWith('/auth');
+
   if (isProtected) {
     if (!token) {
       const url = new URL('/auth/login', request.url);
@@ -45,11 +47,24 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Redirect authenticated users away from landing/login pages to feed
+  if (isAuthPage && token) {
+    try {
+      await jwtVerify(token, SECRET);
+      return NextResponse.redirect(new URL('/discover', request.url));
+    } catch {
+      // Invalid token, allow staying on auth page
+      return NextResponse.next();
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
+    '/',
+    '/auth/:path*',
     '/discover/:path*',
     '/admin/:path*',
     '/chat/:path*',

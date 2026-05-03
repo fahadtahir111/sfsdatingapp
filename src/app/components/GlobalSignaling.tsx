@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FaVideo, FaTimes, FaComment } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
+import Ably from "ably";
 
 /**
  * GlobalSignaling component monitors for:
@@ -37,7 +38,7 @@ export default function GlobalSignaling() {
   const [newRequest, setNewRequest] = useState<boolean>(false);
 
   // Poll for conversation updates globally every 5 seconds
-  const { data: conversations } = useRealTime(
+  useRealTime(
     getConversations,
     5000,
     [user, loading],
@@ -62,42 +63,41 @@ export default function GlobalSignaling() {
     setPrevCount(requestCount || 0);
   }, [requestCount, prevCount]);
 
-  const [lastChecked, setLastChecked] = useState<Date>(new Date());
-  const [sessionStartTime] = useState<number>(Date.now());
-
+  // ── Ably Global Listeners ──────────────────────────────────────────
   useEffect(() => {
-    if (!conversations) return;
+    if (!isAuthenticated || !user?.id) return;
 
-    // Filter for events that happened AFTER our last check
-    // and ideally after the session started to avoid stale notifications
-    const newEvents = conversations.filter(c => {
-      const eventTime = new Date(c.lastMessageAt).getTime();
-      return eventTime > lastChecked.getTime() && eventTime > sessionStartTime;
+    const ably = new Ably.Realtime({ authUrl: "/api/ably/auth" });
+    
+    // Subscribe to personal user channel for matches and global events
+    const userChannel = ably.channels.get(`user:${user.id}`);
+    
+    userChannel.subscribe("match_created", (event) => {
+      setNewMatch({
+        id: event.data.conversationId,
+        name: event.data.targetName || "New Match",
+        image: event.data.targetImage || "",
+        lastMessage: "You matched!",
+        lastMessageAt: new Date(),
+        time: "Just Now",
+        unread: 0
+      });
+      setTimeout(() => setNewMatch(null), 10000);
     });
 
-    if (newEvents.length === 0) return;
-
-    // 1. Check for incoming calls in new events
-    const incomingCallMsg = newEvents.find(
-      (c) => c.lastMessageType === "video_call" || c.lastMessageType === "audio_call"
-    );
-
-    if (incomingCallMsg && !activeCall) {
-      setActiveCall(incomingCallMsg);
+    // Subscribe to conversation channels (This part is tricky at scale, usually you'd have a 'user_notifications' channel)
+    // For MVP, we can subscribe to a generic user_calls channel or similar
+    // Let's assume MessagingService.initiateCall also publishes to `user:${receiverId}:calls`
+    const callChannel = ably.channels.get(`user:${user.id}:calls`);
+    callChannel.subscribe("incoming_call", (event) => {
+      setActiveCall(event.data);
       setTimeout(() => setActiveCall(null), 30000);
-    }
+    });
 
-    // 2. Check for brand new matches (no messages yet)
-    const freshMatch = newEvents.find(c => c.lastMessage === "No messages yet");
-    if (freshMatch && !newMatch) {
-      setNewMatch(freshMatch);
-      setTimeout(() => setNewMatch(null), 10000);
-    }
-
-    // Update the watermark
-    setLastChecked(new Date());
-
-  }, [conversations, activeCall, newMatch, lastChecked, sessionStartTime]);
+    return () => {
+      ably.close();
+    };
+  }, [isAuthenticated, user?.id]);
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[100] pointer-events-none p-4">
