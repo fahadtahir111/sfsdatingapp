@@ -9,7 +9,12 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const client = new Ably.Rest(process.env.ABLY_API_KEY || "ABLY_PLACEHOLDER_KEY");
+  const apiKey = process.env.ABLY_API_KEY;
+  if (!apiKey || apiKey === "YOUR_ABLY_API_KEY" || apiKey.length < 10) {
+    return NextResponse.json({ error: "Ably is not configured on the server." }, { status: 503 });
+  }
+
+  const client = new Ably.Rest(apiKey);
   
   try {
     const tokenRequestData = await client.auth.createTokenRequest({ 

@@ -1,13 +1,18 @@
 import Ably from "ably";
 
-// Note: In production, ABLY_API_KEY should be in your .env
-const ably = new Ably.Rest(process.env.ABLY_API_KEY || "ABLY_PLACEHOLDER_KEY");
+const getAblyClient = () => {
+  const apiKey = process.env.ABLY_API_KEY;
+  if (!apiKey || apiKey === "YOUR_ABLY_API_KEY" || apiKey.length < 10) return null;
+  return new Ably.Rest(apiKey);
+};
 
 export class SignalingService {
   /**
    * Publishes an instant message event to a specific conversation channel
    */
   public static async publishMessage(conversationId: string, message: Record<string, unknown>) {
+    const ably = getAblyClient();
+    if (!ably) return;
     const channel = ably.channels.get(`conversation:${conversationId}`);
     try {
       await channel.publish("new_message", message);
@@ -20,6 +25,8 @@ export class SignalingService {
    * Publishes a "Typing" status
    */
   public static async publishTypingStatus(conversationId: string, userId: string, isTyping: boolean) {
+    const ably = getAblyClient();
+    if (!ably) return;
     const channel = ably.channels.get(`conversation:${conversationId}`);
     await channel.publish("typing", { userId, isTyping });
   }
@@ -28,6 +35,8 @@ export class SignalingService {
    * Publishes a WebRTC call event (invite, ringing, accepted, reject, hangup)
    */
   public static async publishCallEvent(conversationId: string, senderId: string, receiverId: string | null, type: "invite" | "ringing" | "accepted" | "reject" | "hangup", callType: "audio" | "video", senderData?: Record<string, unknown>) {
+    const ably = getAblyClient();
+    if (!ably) return;
     // 1. Publish to conversation channel for those already in chat
     const channel = ably.channels.get(`conversation:${conversationId}`);
     await channel.publish("call_event", { userId: senderId, type, callType });
@@ -59,6 +68,8 @@ export class SignalingService {
    * Real-time notification for matches
    */
   public static async notifyMatch(userId: string, matchData: Record<string, unknown>) {
+    const ably = getAblyClient();
+    if (!ably) return;
     const channel = ably.channels.get(`user:${userId}`);
     await channel.publish("match_created", matchData);
 
