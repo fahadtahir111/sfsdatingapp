@@ -14,6 +14,7 @@ import {
   FaStop,
   FaSmile,
   FaGift,
+  FaLock,
 } from "react-icons/fa";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useRealTime } from "@/lib/hooks/useRealTime";
@@ -120,8 +121,7 @@ export default function ChatRoomPage() {
   const [callType, setCallType] = useState<"video" | "audio">("video");
   const [streamCall, setStreamCall] = useState<Call | undefined>(undefined);
   const [isRinging, setIsRinging] = useState(false);
-  const [callDuration, setCallDuration] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
   const ringingAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -141,11 +141,6 @@ export default function ChatRoomPage() {
     }
   }, [callPhase]);
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
 
   const client = useStreamVideoClient();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -228,19 +223,6 @@ export default function ChatRoomPage() {
     };
   }, [conversationId, isAuthenticated, user?.id, setMessages, showToast]);
 
-  useEffect(() => {
-    if (callPhase === "connected") {
-      timerRef.current = setInterval(() => {
-        setCallDuration((prev) => prev + 1);
-      }, 1000);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-      setCallDuration(0);
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [callPhase]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -466,21 +448,8 @@ export default function ChatRoomPage() {
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-[110] bg-[#050505]"
           >
-            <div className="absolute top-12 left-4 z-50 flex items-center gap-4">
-              <button
-                type="button"
-                aria-label="End call"
-                onClick={endCall}
-                className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center shadow-lg backdrop-blur-xl"
-              >
-                <FaChevronLeft />
-              </button>
-              <div className="px-4 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-widest text-primary uppercase shadow-shadow-glow">
-                {formatDuration(callDuration)}
-              </div>
-            </div>
             <StreamCall call={streamCall}>
-              <MeetingRoom onLeaveCall={endCall} conversationName={conversation?.name} />
+              <MeetingRoom onLeaveCall={endCall} conversationName={conversation?.name} conversationImage={conversation?.image} />
             </StreamCall>
           </motion.div>
         )}
@@ -491,46 +460,114 @@ export default function ChatRoomPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-2xl flex flex-col items-center justify-center gap-8 text-white"
+            className="absolute inset-0 z-[100] flex flex-col items-center justify-center text-white overflow-hidden"
           >
-            <div className="relative">
-              <div className="w-32 h-32 rounded-[40px] overflow-hidden border-2 border-primary/20 relative shadow-shadow-glow">
+            {/* Layered gradient background */}
+            <div className="absolute inset-0 bg-[#050505]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-black/60" />
+            <div className="bg-aether-mesh absolute inset-0 opacity-40" />
+
+            {/* Animated ring stack */}
+            <div className="relative flex items-center justify-center mb-10">
+              {[160, 200, 240, 280].map((size, i) => (
+                <div
+                  key={size}
+                  className="absolute rounded-full border border-primary/10 animate-ping opacity-20"
+                  style={{
+                    width: size,
+                    height: size,
+                    animationDelay: `${i * 0.4}s`,
+                    animationDuration: "2.5s",
+                  }}
+                />
+              ))}
+
+              {/* Avatar */}
+              <div className="relative w-32 h-32 rounded-[40px] overflow-hidden border-2 border-primary/30 shadow-[0_0_60px_rgba(196,255,0,0.2)] z-10">
                 <Image
                   src={conversation?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(conversation?.name || "?")}&background=050505&color=c4ff00`}
                   alt="Contact"
                   fill
                   className="object-cover"
                 />
+                {/* Live status overlay */}
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black/60 to-transparent" />
               </div>
-              <div className="absolute inset-0 rounded-[40px] animate-ping border border-primary/40 opacity-20" />
+
+              {/* Call type badge */}
+              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 backdrop-blur-xl z-20">
+                <FaVideo className="text-primary text-[9px]" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-primary">
+                  {callType}
+                </span>
+              </div>
             </div>
-            <div className="text-center">
-              <h2 className="text-3xl font-heading text-white tracking-tight">{conversation?.name}</h2>
-              <p className="sub-heading text-primary mt-2 lowercase animate-pulse">
-                {isRinging ? "ringing…" : "connecting secure line…"}
-              </p>
+
+            {/* Name + status */}
+            <div className="text-center z-10 mb-10">
+              <h2 className="text-4xl font-heading text-white tracking-tight mb-3">
+                {conversation?.name}
+              </h2>
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_6px_rgba(196,255,0,0.8)]" />
+                <p className="text-[11px] font-black uppercase tracking-[0.4em] text-primary/80">
+                  {isRinging ? "ringing…" : "connecting…"}
+                </p>
+              </div>
             </div>
+
+            {/* Encrypted session label */}
+            <div className="flex items-center gap-2 mb-12 px-4 py-2 rounded-full bg-white/5 border border-white/10 z-10">
+              <FaLock className="text-white/30 text-[9px]" />
+              <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">
+                End-to-end encrypted
+              </span>
+            </div>
+
+            {/* End button */}
             <button
               type="button"
               aria-label="Cancel call"
               onClick={endCall}
-              className="w-16 h-16 rounded-2xl bg-white/5 border border-red-500/30 text-red-500 flex items-center justify-center text-2xl hover:bg-red-500/10 transition-all shadow-lg"
+              className="w-18 h-18 w-20 h-20 rounded-3xl bg-red-500/90 text-white flex items-center justify-center text-3xl shadow-[0_0_40px_rgba(239,68,68,0.4)] hover:bg-red-500 active:scale-95 transition-all border border-red-400/30 z-10"
             >
               <FaPhone className="rotate-[135deg]" />
             </button>
+            <p className="mt-4 text-[9px] text-white/30 uppercase tracking-widest font-bold z-10">Cancel</p>
           </motion.div>
         )}
 
         {callPhase === "incoming" && (
           <motion.div
             key="incoming-call"
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-2xl flex flex-col items-center justify-center gap-8 text-white"
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="absolute inset-0 z-[100] flex flex-col items-center justify-center text-white overflow-hidden"
           >
-            <div className="relative">
-              <div className="w-32 h-32 rounded-[40px] overflow-hidden border-2 border-primary/40 relative shadow-shadow-glow">
+            {/* Layered gradient background */}
+            <div className="absolute inset-0 bg-[#050505]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-transparent to-black/70" />
+            <div className="bg-aether-mesh absolute inset-0 opacity-40" />
+
+            {/* Pulsing ring stack */}
+            <div className="relative flex items-center justify-center mb-10">
+              {[160, 210, 260, 310].map((size, i) => (
+                <div
+                  key={size}
+                  className="absolute rounded-full border border-primary/15 animate-ping"
+                  style={{
+                    width: size,
+                    height: size,
+                    animationDelay: `${i * 0.35}s`,
+                    animationDuration: "2s",
+                    opacity: 0.15 + i * 0.05,
+                  }}
+                />
+              ))}
+
+              {/* Avatar */}
+              <div className="relative w-36 h-36 rounded-[44px] overflow-hidden border-2 border-primary/40 shadow-[0_0_80px_rgba(196,255,0,0.25)] z-10">
                 <Image
                   src={conversation?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(conversation?.name || "?")}&background=050505&color=c4ff00`}
                   alt="Caller"
@@ -538,37 +575,63 @@ export default function ChatRoomPage() {
                   className="object-cover"
                 />
               </div>
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="absolute inset-0 rounded-[40px] border border-primary/20 animate-ping opacity-20"
-                  style={{ animationDelay: `${i * 0.3}s` }}
-                />
-              ))}
+
+              {/* Call type badge */}
+              <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-black z-20 shadow-[0_0_20px_rgba(196,255,0,0.4)]">
+                {callType === "video" ? (
+                  <FaVideo className="text-[10px]" />
+                ) : (
+                  <FaPhone className="text-[10px]" />
+                )}
+                <span className="text-[9px] font-black uppercase tracking-widest">
+                  {callType} call
+                </span>
+              </div>
             </div>
-            <div className="text-center">
-              <h2 className="text-3xl font-heading text-white tracking-tight">{conversation?.name}</h2>
-              <p className="sub-heading text-primary mt-2 lowercase animate-pulse">
-                incoming {callType} call
+
+            {/* Name + incoming label */}
+            <div className="text-center z-10 mb-12">
+              <h2 className="text-4xl font-heading text-white tracking-tight mb-3">
+                {conversation?.name}
+              </h2>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_6px_rgba(196,255,0,0.8)]" />
+                <p className="text-[11px] font-black uppercase tracking-[0.4em] text-primary/80 animate-pulse">
+                  Incoming {callType} call
+                </p>
+              </div>
+              <p className="text-[9px] text-white/30 uppercase tracking-widest font-bold">
+                End-to-end encrypted
               </p>
             </div>
-            <div className="flex gap-8 mt-4">
-              <button
-                type="button"
-                aria-label="Decline call"
-                onClick={declineCall}
-                className="w-16 h-16 rounded-2xl bg-white/5 border border-red-500/30 text-red-500 flex items-center justify-center text-2xl shadow-lg active:scale-95 transition-all"
-              >
-                <FaPhone className="rotate-[135deg]" />
-              </button>
-              <button
-                type="button"
-                aria-label="Answer call"
-                onClick={answerCall}
-                className="w-16 h-16 rounded-2xl bg-white/5 border border-primary/30 text-primary flex items-center justify-center text-2xl shadow-shadow-glow active:scale-95 transition-all"
-              >
-                {callType === "video" ? <FaVideo /> : <FaPhone />}
-              </button>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-10 z-10">
+              {/* Decline */}
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  aria-label="Decline call"
+                  onClick={declineCall}
+                  className="w-20 h-20 rounded-3xl bg-red-500/90 text-white flex items-center justify-center text-2xl shadow-[0_0_40px_rgba(239,68,68,0.4)] hover:bg-red-600 active:scale-95 transition-all border border-red-400/20"
+                >
+                  <FaPhone className="rotate-[135deg]" />
+                </button>
+                <span className="text-[9px] text-white/30 uppercase tracking-widest font-black">Decline</span>
+              </div>
+
+              {/* Answer */}
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  aria-label="Answer call"
+                  onClick={answerCall}
+                  className="w-20 h-20 rounded-3xl bg-primary text-black flex items-center justify-center text-2xl shadow-[0_0_50px_rgba(196,255,0,0.4)] hover:brightness-110 active:scale-95 transition-all border border-primary/30"
+                >
+                  {callType === "video" ? <FaVideo /> : <FaPhone />}
+                </button>
+                <span className="text-[9px] text-primary/70 uppercase tracking-widest font-black">Answer</span>
+              </div>
             </div>
           </motion.div>
         )}

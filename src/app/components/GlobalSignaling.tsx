@@ -6,7 +6,7 @@ import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getConversations } from "@/app/chat/actions";
 import { getPendingRequestsCount } from "@/app/friends/actions";
 import { AnimatePresence, motion } from "framer-motion";
-import { FaVideo, FaTimes, FaComment } from "react-icons/fa";
+import { FaVideo, FaTimes, FaComment, FaPhone } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 import Ably from "ably";
@@ -121,16 +121,12 @@ export default function GlobalSignaling() {
       setTimeout(() => setNewMatch(null), 10000);
     });
 
-    // Subscribe to conversation channels (This part is tricky at scale, usually you'd have a 'user_notifications' channel)
-    // For MVP, we can subscribe to a generic user_calls channel or similar
-    // Let's assume MessagingService.initiateCall also publishes to `user:${receiverId}:calls`
     const callChannel = ably.channels.get(`user:${user.id}:calls`);
     callChannel.subscribe("incoming_call", async (event) => {
       // Check if already in a call or DND
       if (activeCallRef.current) {
-        // Automatically reject with busy if already in a call
         const { triggerCallSignal } = await import("@/app/chat/actions");
-        await triggerCallSignal(event.data.id, "reject", "video"); // Simple reject
+        await triggerCallSignal(event.data.id, "reject", "video");
         return;
       }
 
@@ -161,97 +157,174 @@ export default function GlobalSignaling() {
   }, [isAuthenticated, user?.id]);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] pointer-events-none p-4">
+    <div className="fixed top-0 left-0 right-0 z-[100] pointer-events-none p-3">
       <AnimatePresence>
-        {/* Incoming Call Notification */}
+
+        {/* ── Incoming Call Notification ── */}
         {activeCall && (
-          <motion.div 
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            className="max-w-md mx-auto bg-black text-white rounded-3xl p-4 shadow-2xl flex items-center gap-4 border border-primary/30 pointer-events-auto"
+          <motion.div
+            key="incoming-call-toast"
+            initial={{ y: -100, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -100, opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 32 }}
+            className="max-w-sm mx-auto pointer-events-auto"
           >
-            <div className="w-12 h-12 rounded-full overflow-hidden relative border-2 border-primary">
-              <Image 
-                src={activeCall.image || "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200"} 
-                alt="Caller" 
-                fill 
-                className="object-cover" 
-              />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-sm">{activeCall.name}</h3>
-              <p className="text-xs text-primary font-black animate-pulse uppercase tracking-widest">Incoming Call</p>
-            </div>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setActiveCall(null)}
-                className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center"
-              >
-                <FaTimes />
-              </button>
-              <Link 
-                href={`/chat/${activeCall.id}`}
-                onClick={() => setActiveCall(null)}
-                className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center"
-              >
-                <FaVideo />
-              </Link>
+            <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0a] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.9)] backdrop-blur-3xl">
+              {/* Animated glow line at top */}
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+
+              <div className="relative flex items-center gap-4 p-4">
+                {/* Avatar with pulse */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-14 h-14 rounded-2xl overflow-hidden relative border border-white/10">
+                    <Image
+                      src={activeCall.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(activeCall.name || "?")}&background=050505&color=c4ff00`}
+                      alt="Caller"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  {/* Ringing indicator */}
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_10px_rgba(196,255,0,0.5)] border-2 border-[#0a0a0a]">
+                    <FaVideo className="text-black text-[7px]" />
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/70 mb-0.5">
+                    Incoming call
+                  </p>
+                  <h3 className="font-heading font-black text-white text-base tracking-tight truncate">
+                    {activeCall.name}
+                  </h3>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">
+                      Video call · secure channel
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Decline */}
+                  <button
+                    onClick={() => setActiveCall(null)}
+                    aria-label="Decline call"
+                    className="w-11 h-11 rounded-2xl bg-red-500/15 border border-red-500/20 text-red-400 flex items-center justify-center transition-all active:scale-95 hover:bg-red-500/25"
+                  >
+                    <FaPhone className="rotate-[135deg] text-sm" />
+                  </button>
+                  {/* Answer */}
+                  <Link
+                    href={`/chat/${activeCall.id}`}
+                    onClick={() => setActiveCall(null)}
+                    aria-label="Answer call"
+                    className="w-11 h-11 rounded-2xl bg-primary text-black flex items-center justify-center transition-all active:scale-95 hover:brightness-110 shadow-[0_0_20px_rgba(196,255,0,0.3)]"
+                  >
+                    <FaVideo className="text-sm" />
+                  </Link>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
 
-        {/* New Match Notification */}
+        {/* ── New Match Notification ── */}
         {newMatch && (
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            className="mt-4 max-w-sm mx-auto bg-white border border-border p-4 rounded-3xl shadow-xl flex items-center gap-4 pointer-events-auto"
+          <motion.div
+            key="new-match-toast"
+            initial={{ scale: 0.8, opacity: 0, y: -20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: -20 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="mt-3 max-w-sm mx-auto pointer-events-auto"
           >
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xl">
-              <FaComment />
+            <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0a] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.9)]">
+              {/* Top highlight */}
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+
+              <div className="relative flex items-center gap-4 p-4">
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center text-primary text-lg flex-shrink-0 shadow-[0_0_20px_rgba(196,255,0,0.1)]">
+                  <FaComment />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/70 mb-0.5">
+                    It&apos;s a match!
+                  </p>
+                  <h3 className="font-heading font-black text-white text-sm tracking-tight">
+                    {newMatch.name} is waiting…
+                  </h3>
+                </div>
+
+                <Link
+                  href={`/chat/${newMatch.id}`}
+                  onClick={() => setNewMatch(null)}
+                  className="px-4 py-2 bg-primary text-black rounded-xl text-[9px] font-black uppercase tracking-widest flex-shrink-0 shadow-[0_0_15px_rgba(196,255,0,0.3)] hover:brightness-110 transition-all active:scale-95"
+                >
+                  Chat
+                </Link>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="font-black text-xs text-foreground uppercase tracking-wider">It&apos;s a Match!</h3>
-              <p className="text-sm font-medium text-muted-foreground">{newMatch.name} is waiting...</p>
-            </div>
-            <Link 
-              href={`/chat/${newMatch.id}`}
-              onClick={() => setNewMatch(null)}
-              className="px-4 py-2 bg-black text-white rounded-xl text-xs font-black uppercase tracking-widest"
-            >
-              Chat
-            </Link>
           </motion.div>
         )}
 
-        {/* New Friend Request Notification */}
+        {/* ── New Friend Request Notification ── */}
         {newRequest && (
-          <motion.div 
-            initial={{ x: 300, opacity: 0 }}
+          <motion.div
+            key="friend-request-toast"
+            initial={{ x: 320, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 300, opacity: 0 }}
-            className="mt-4 max-w-sm ml-auto bg-stone-900 text-white border border-primary/30 p-4 rounded-3xl shadow-xl flex items-center gap-4 pointer-events-auto"
+            exit={{ x: 320, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 350, damping: 30 }}
+            className="mt-3 max-w-xs ml-auto pointer-events-auto"
           >
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-pink-950 text-xl font-bold">
-              🤝
+            <div className="relative overflow-hidden rounded-3xl bg-[#0a0a0a] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.9)]">
+              {/* Top highlight */}
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+              <div className="relative flex items-center gap-3 p-4">
+                <div className="w-11 h-11 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center text-xl flex-shrink-0">
+                  🤝
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-black uppercase tracking-[0.35em] text-primary/70 mb-0.5">
+                    New connection
+                  </p>
+                  <p className="text-xs font-bold text-white/70 truncate">
+                    Someone wants to connect
+                  </p>
+                </div>
+
+                <Link
+                  href="/profile?tab=friends"
+                  onClick={() => setNewRequest(false)}
+                  className="px-3 py-2 bg-primary text-black rounded-xl text-[9px] font-black uppercase tracking-widest flex-shrink-0 hover:brightness-110 transition-all active:scale-95"
+                >
+                  View
+                </Link>
+
+                <button
+                  onClick={() => setNewRequest(false)}
+                  className="w-7 h-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/30 hover:text-white/60 transition-colors flex-shrink-0"
+                  aria-label="Dismiss"
+                >
+                  <FaTimes className="text-[9px]" />
+                </button>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="font-black text-xs text-primary uppercase tracking-wider">New Connection!</h3>
-              <p className="text-sm font-medium opacity-90">Someone wants to be your friend.</p>
-            </div>
-            <Link 
-              href="/profile?tab=friends"
-              onClick={() => setNewRequest(false)}
-              className="px-4 py-2 bg-primary text-pink-950 rounded-xl text-xs font-black uppercase tracking-widest"
-            >
-              View
-            </Link>
           </motion.div>
         )}
+
       </AnimatePresence>
     </div>
   );
 }
-
