@@ -42,7 +42,7 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
     try {
       await submitSwipe(card.id, direction === "right" ? "LIKE" : "PASS");
       if (direction === "right") {
-        showToast(`Friend request sent to ${card.name}!`, "success");
+        showToast(`Friend request sent to ${card.name}! ✨`, "success");
       }
       // The SwipeableCardStack handles the local index update
     } catch (e) {
@@ -65,7 +65,7 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
         />
         <button 
           onClick={() => setShowFilters(true)}
-          className="w-12 h-12 bg-card rounded-2xl border border-border shadow-xl flex items-center justify-center text-foreground hover:border-primary transition-colors"
+          className="w-12 h-12 bg-card rounded-xl border border-border shadow-xl flex items-center justify-center text-foreground hover:border-primary transition-all hover:scale-110 active:scale-95"
         >
           <FaSlidersH />
         </button>
@@ -84,20 +84,20 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowFilters(false)}
-              className="fixed inset-0 bg-background/40 backdrop-blur-md z-[60]"
+              className="fixed inset-0 bg-background/60 backdrop-blur-md z-[60]"
             />
             <motion.div 
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-full max-w-md bg-card p-10 z-[70] shadow-2xl border-l border-border"
+              className="fixed top-0 right-0 h-full w-full max-w-md bg-card p-10 z-[70] shadow-2xl border-l border-border backdrop-blur-xl"
             >
               <div className="flex items-center justify-between mb-12">
-                <h3 className="text-3xl font-black tracking-tight">Filters</h3>
+                <h3 className="text-3xl font-heading tracking-tight">Filters</h3>
                 <button 
                   onClick={() => setShowFilters(false)}
-                  className="text-sm font-black text-muted-foreground hover:text-foreground"
+                  className="sub-heading text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Close
                 </button>
@@ -106,8 +106,8 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
               <div className="space-y-12">
                 <div>
                   <div className="flex justify-between items-end mb-6">
-                    <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Age Range</label>
-                    <span className="text-xl font-black text-foreground">{filters.minAge} — {filters.maxAge}</span>
+                    <label className="sub-heading text-muted-foreground">Age Range</label>
+                    <span className="text-xl font-black text-primary font-heading">{filters.minAge} — {filters.maxAge}</span>
                   </div>
                   <input 
                     type="range" 
@@ -115,18 +115,18 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
                     max="80" 
                     value={filters.maxAge}
                     onChange={(e) => setFilters(prev => ({ ...prev, maxAge: parseInt(e.target.value) }))}
-                    className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary" 
+                    className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary" 
                   />
                 </div>
 
-                <div className="pt-8 border-t border-stone-100">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-6">Preferences</h4>
+                <div className="pt-8 border-t border-border">
+                  <h4 className="sub-heading text-muted-foreground mb-6">Preferences</h4>
                   <div className="space-y-4">
                     {["Verified Only", "Networking Mode", "Elite Members"].map((pref) => (
                       <label key={pref} className="flex items-center justify-between group cursor-pointer">
                         <span className="font-bold text-muted-foreground group-hover:text-foreground transition-colors">{pref}</span>
-                        <div className="w-12 h-6 bg-secondary rounded-full relative transition-colors group-hover:bg-secondary/80">
-                          <div className="absolute top-1 left-1 w-4 h-4 bg-foreground rounded-full shadow-sm" />
+                        <div className="w-12 h-6 bg-white/5 border border-border rounded-full relative transition-colors group-hover:bg-white/10">
+                          <div className="absolute top-1 left-1 w-4 h-4 bg-primary rounded-full shadow-shadow-glow" />
                         </div>
                       </label>
                     ))}
@@ -135,7 +135,7 @@ export default function DiscoverClient({ initialCards }: { initialCards: CardDat
 
                 <button 
                   onClick={() => setShowFilters(false)}
-                  className="w-full py-5 bg-primary text-primary-foreground rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-transform mt-12"
+                  className="btn-aether w-full py-5 text-xs shadow-shadow-glow mt-12"
                 >
                   Apply & Discover
                 </button>

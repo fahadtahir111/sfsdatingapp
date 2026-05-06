@@ -2,7 +2,7 @@ import Ably from "ably";
 
 const getAblyClient = () => {
   const apiKey = process.env.ABLY_API_KEY;
-  if (!apiKey || apiKey === "YOUR_ABLY_API_KEY" || apiKey.length < 10) return null;
+  if (!apiKey || apiKey === "YOUR_ABLY_API_KEY" || !apiKey.includes(":")) return null;
   return new Ably.Rest(apiKey);
 };
 
@@ -37,22 +37,27 @@ export class SignalingService {
   public static async publishCallEvent(conversationId: string, senderId: string, receiverId: string | null, type: "invite" | "ringing" | "accepted" | "reject" | "hangup", callType: "audio" | "video", senderData?: Record<string, unknown>) {
     const ably = getAblyClient();
     if (!ably) return;
-    // 1. Publish to conversation channel for those already in chat
-    const channel = ably.channels.get(`conversation:${conversationId}`);
-    await channel.publish("call_event", { userId: senderId, type, callType });
+    try {
+      // 1. Publish to conversation channel for those already in chat
+      const channel = ably.channels.get(`conversation:${conversationId}`);
+      await channel.publish("call_event", { userId: senderId, type, callType });
 
-    // 2. If it's an invite, also publish to receiver's private channel for global alert
+      // 2. If it's an invite, also publish to receiver's private channel for global alert
+      if (type === "invite" && receiverId) {
+        const userChannel = ably.channels.get(`user:${receiverId}:calls`);
+        await userChannel.publish("incoming_call", { 
+          id: conversationId, 
+          name: senderData?.name || "Member",
+          image: senderData?.image || "",
+          lastMessageType: `${callType}_call`
+        });
+      }
+    } catch (error) {
+      console.error("Ably Call Signal Error:", error);
+    }
+
+    // 3. Persistent Notification (Independent of real-time signal)
     if (type === "invite" && receiverId) {
-      // Real-time signal
-      const userChannel = ably.channels.get(`user:${receiverId}:calls`);
-      await userChannel.publish("incoming_call", { 
-        id: conversationId, 
-        name: senderData?.name || "Member",
-        image: senderData?.image || "",
-        lastMessageType: `${callType}_call`
-      });
-
-      // Persistent Notification
       const { NotificationService } = await import("./NotificationService");
       await NotificationService.createNotification({
         userId: receiverId,
@@ -70,8 +75,12 @@ export class SignalingService {
   public static async notifyMatch(userId: string, matchData: Record<string, unknown>) {
     const ably = getAblyClient();
     if (!ably) return;
-    const channel = ably.channels.get(`user:${userId}`);
-    await channel.publish("match_created", matchData);
+    try {
+      const channel = ably.channels.get(`user:${userId}`);
+      await channel.publish("match_created", matchData);
+    } catch (error) {
+      console.error("Ably Match Notify Error:", error);
+    }
 
     // Persistent Notification
     const { NotificationService } = await import("./NotificationService");

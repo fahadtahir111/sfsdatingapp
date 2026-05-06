@@ -95,7 +95,11 @@ export default function GlobalSignaling() {
     });
 
     return () => {
-      ably.close();
+      try {
+        ably.close();
+      } catch (e) {
+        console.warn("Ably signaling cleanup error:", e);
+      }
     };
   }, [isAuthenticated, user?.id]);
 

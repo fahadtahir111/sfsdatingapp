@@ -3,43 +3,44 @@
 
 @layer base {
   :root {
-    /* Forced Dark Luxury Theme — Deep charcoal/black surfaces with vibrant gold accents */
+    /* Aether Brand Design System — Cyber-organic aesthetic */
     --background: #050505;
     --foreground: #f5f2ed;
-    --card: #0a0a0a;
+    --card: rgba(255, 255, 255, 0.03);
     --card-foreground: #f5f2ed;
     --popover: #0a0a0a;
     --popover-foreground: #f5f2ed;
 
-    --primary: #FFD700; /* Elite Gold */
+    --primary: #c4ff00; /* Electric Lime */
     --primary-foreground: #050505;
 
-    --secondary: #1a1a1a;
-    --secondary-foreground: #ffffff;
+    --secondary: #00f2ff; /* Cobalt Blue */
+    --secondary-foreground: #050505;
 
     --muted: #0f0f0f;
     --muted-foreground: #a1a1aa;
 
-    --accent: #1a1600;
-    --accent-foreground: #FFD700;
+    --accent: #1a1a1a;
+    --accent-foreground: #c4ff00;
 
     --destructive: #ef4444;
     --destructive-foreground: #f8fafc;
 
-    --border: #1a1a1a;
-    --input: #1a1a1a;
-    --ring: #FFD700;
+    --border: rgba(255, 255, 255, 0.1);
+    --input: rgba(255, 255, 255, 0.05);
+    --ring: #c4ff00;
 
-    --radius-sm: 0.5rem;
-    --radius-md: 0.75rem;
-    --radius-lg: 1rem;
-    --radius-xl: 1.5rem;
-    --radius-2xl: 2rem;
+    --radius-sm: 12px;
+    --radius-md: 20px;
+    --radius-lg: 32px;
+    --radius-xl: 40px;
+    --radius-2xl: 60px;
 
     /* Elevation */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
     --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.7);
     --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.9);
+    --shadow-glow: 0 0 30px rgba(196, 255, 0, 0.3);
 
     /* Layout */
     --page-max: 80rem;
@@ -78,6 +79,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-cobalt: var(--secondary);
 
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -86,7 +88,7 @@
   --radius-2xl: var(--radius-2xl);
 
   --font-sans: var(--font-inter);
-  --font-heading: var(--font-outfit);
+  --font-heading: var(--font-plus-jakarta);
   --font-mono: monospace;
 }
 
@@ -95,6 +97,21 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   overflow-x: hidden;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.sub-heading {
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
 }
 
 @layer utilities {
@@ -124,7 +141,14 @@ body {
     color: var(--card-foreground);
     border: 1px solid var(--border);
     border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(20px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  }
+
+  .surface-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 30px rgba(196, 255, 0, 0.15);
+    border-color: rgba(196, 255, 0, 0.3);
   }
 
   .surface-elevated {
@@ -132,30 +156,44 @@ body {
   }
 
   .focus-ring {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2 ring-offset-background;
   }
 
   .glass {
-    @apply bg-white/70 backdrop-blur-xl border border-white/20 dark:bg-black/40 dark:border-white/10;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .glass-dark {
-    @apply bg-black/70 backdrop-blur-xl border border-white/10;
+  .btn-aether {
+    @apply relative overflow-hidden transition-all duration-300 active:scale-95;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: 40px;
+    font-weight: 700;
+    padding: 1rem 2rem;
   }
 
-  .bg-luxury-mesh {
+  .btn-aether:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(196, 255, 0, 0.33);
+  }
+
+  .bg-aether-mesh {
     background-color: #050505;
     background-image:
-      radial-gradient(at 0% 0%, rgba(255, 215, 0, 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(255, 215, 0, 0.05) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(196, 255, 0, 0.08) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(0, 242, 255, 0.05) 0px, transparent 50%);
   }
 
-  .text-gradient-primary {
-    @apply bg-gradient-to-b from-[#FFF080] via-[#FFD700] to-[#B8860B] bg-clip-text text-transparent;
+  .text-gradient-aether {
+    background: linear-gradient(135deg, #c4ff00 0%, #00f2ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  .border-primary-gradient {
-    @apply border border-primary/25 hover:border-primary/45 transition-colors;
+  .border-aether {
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .premium-shadow {
@@ -163,7 +201,7 @@ body {
   }
 
   .text-glow {
-    text-shadow: 0 0 18px rgba(255, 215, 0, 0.35);
+    text-shadow: 0 0 15px rgba(196, 255, 0, 0.4);
   }
 
   .no-scrollbar::-webkit-scrollbar {

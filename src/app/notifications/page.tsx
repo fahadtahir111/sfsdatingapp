@@ -117,30 +117,32 @@ export default function NotificationsPage() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case "LIKE": return <FaHeart className="text-primary" />;
-      case "FRIEND_REQUEST": return <FaUserPlus className="text-blue-400" />;
-      case "MATCH": return <FaFire className="text-orange-500" />;
-      case "MESSAGE": return <FaCommentDots className="text-green-400" />;
-      default: return <FaBell className="text-muted-foreground" />;
+      case "LIKE": return <FaHeart className="text-primary shadow-shadow-glow" />;
+      case "FRIEND_REQUEST": return <FaUserPlus className="text-primary shadow-shadow-glow" />;
+      case "MATCH": return <FaFire className="text-primary shadow-shadow-glow" />;
+      case "MESSAGE": return <FaCommentDots className="text-primary shadow-shadow-glow" />;
+      default: return <FaBell className="text-muted-foreground/50" />;
     }
   };
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
+      <div className="max-w-2xl mx-auto space-y-10 relative">
+        <div className="aether-mesh absolute inset-0 pointer-events-none opacity-20 -z-10" />
+        
+        <div className="flex items-end justify-between px-2">
           <div>
-            <h1 className="text-3xl font-black tracking-tight uppercase">Notifications</h1>
-            <p className="text-muted-foreground font-black uppercase tracking-widest text-[10px] mt-1">
-              Your elite activity feed
+            <h1 className="text-4xl font-heading text-white tracking-tight">Notifications</h1>
+            <p className="sub-heading text-[10px] lowercase text-primary/60 mt-1">
+              Your aether activity feed
             </p>
           </div>
           {notifications.length > 0 && (
             <button 
               onClick={() => setNotifications([])}
-              className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+              className="sub-heading text-[9px] text-white/30 hover:text-primary transition-colors lowercase"
             >
-              Clear All
+              clear all
             </button>
           )}
         </div>
@@ -148,54 +150,55 @@ export default function NotificationsPage() {
         {loading ? (
           <NotificationsLoading />
         ) : notifications.length === 0 ? (
-          <div className="text-center py-24 bg-card rounded-[2.5rem] border border-border shadow-xl">
-            <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaBell className="text-muted-foreground text-2xl" />
+          <div className="text-center py-24 bg-white/5 rounded-[40px] border border-white/5 shadow-2xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-all duration-700" />
+            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/10 shadow-xl">
+              <FaBell className="text-white/20 text-xl" />
             </div>
-            <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">
-              No new alerts in the circle
+            <p className="sub-heading text-[11px] text-white/30 lowercase">
+              no new alerts in the circle
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4 px-1">
             <AnimatePresence mode="popLayout">
               {notifications.map((n, i) => (
                 <motion.div
                   key={n.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: i * 0.05 }}
-                  className={`group relative bg-card border border-border p-5 rounded-3xl hover:border-primary/20 transition-all shadow-lg ${!n.isRead ? 'border-l-4 border-l-primary' : ''}`}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4, delay: i * 0.05 }}
+                  className={`group relative bg-white/5 backdrop-blur-xl border border-white/5 p-5 rounded-[24px] hover:bg-white/10 hover:border-primary/20 transition-all shadow-xl ${!n.isRead ? 'after:absolute after:left-0 after:top-6 after:bottom-6 after:w-1 after:bg-primary after:rounded-r-full after:shadow-shadow-glow' : ''}`}
                 >
-                  <div className="flex gap-4">
-                    <div className="relative">
+                  <div className="flex gap-5">
+                    <div className="relative flex-shrink-0">
                       {n.sender?.image ? (
-                        <div className="w-12 h-12 rounded-2xl overflow-hidden relative border border-white/5 shadow-inner">
-                          <Image src={n.sender.image} alt={n.sender.name || ""} fill className="object-cover" unoptimized />
+                        <div className="w-14 h-14 rounded-2xl overflow-hidden relative border border-white/10 shadow-2xl">
+                          <Image src={n.sender.image} alt={n.sender.name || ""} fill className="object-cover grayscale hover:grayscale-0 transition-all duration-500" unoptimized />
                         </div>
                       ) : (
-                        <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center border border-white/5">
-                          <span className="text-lg">{getIcon(n.type)}</span>
+                        <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 shadow-inner">
+                          <span className="text-xl">{getIcon(n.type)}</span>
                         </div>
                       )}
                       {!n.sender?.image && (
-                         <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-card rounded-lg flex items-center justify-center text-[10px] border border-border shadow-sm">
+                         <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-background rounded-lg flex items-center justify-center text-[10px] border border-white/10 shadow-shadow-glow">
                            {getIcon(n.type)}
                          </div>
                       )}
                     </div>
 
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
                       <div className="flex justify-between items-start mb-1">
-                        <h3 className="font-black text-sm text-foreground truncate uppercase tracking-tight">
+                        <h3 className="font-heading text-sm text-white tracking-tight truncate">
                           {n.title}
                         </h3>
-                        <span className="text-[9px] font-bold text-muted-foreground whitespace-nowrap ml-2">
+                        <span className="sub-heading text-[9px] text-white/20 whitespace-nowrap ml-2 lowercase">
                           {formatRelativeTime(new Date(n.createdAt))}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground font-medium line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-white/60 font-medium line-clamp-1 leading-relaxed lowercase">
                         {n.content}
                       </p>
                       
@@ -203,18 +206,18 @@ export default function NotificationsPage() {
                         <Link 
                           href={n.link} 
                           onClick={() => markAsRead(n.id)}
-                          className="inline-flex items-center gap-1.5 mt-3 text-[10px] font-black uppercase tracking-widest text-primary hover:gap-2 transition-all"
+                          className="inline-flex items-center gap-2 mt-3 sub-heading text-[10px] text-primary hover:gap-3 transition-all lowercase"
                         >
-                          View Details <span className="text-xs">→</span>
+                          view details <span className="text-[8px]">→</span>
                         </Link>
                       )}
                     </div>
 
                     <button 
                       onClick={() => deleteNotification(n.id)}
-                      className="opacity-0 group-hover:opacity-100 p-2 text-muted-foreground hover:text-red-500 transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-500 transition-all flex-shrink-0"
                     >
-                      <FaTrash className="text-xs" />
+                      <FaTrash className="text-[10px]" />
                     </button>
                   </div>
                 </motion.div>
@@ -223,9 +226,9 @@ export default function NotificationsPage() {
           </div>
         )}
         
-        <div className="text-center pt-8 pb-12">
-          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em]">
-            SFS Elite Security System · 256-bit Encryption
+        <div className="text-center pt-12 pb-16 opacity-30">
+          <p className="sub-heading text-[9px] text-white/40 lowercase tracking-[0.5em]">
+            aether security protocol · 256-bit encryption
           </p>
         </div>
       </div>

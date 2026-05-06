@@ -14,7 +14,6 @@ import {
   FaStop,
   FaSmile,
   FaGift,
-  FaSpinner,
 } from "react-icons/fa";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useRealTime } from "@/lib/hooks/useRealTime";
@@ -71,8 +70,8 @@ const AudioMessagePlayer = ({ url, isMe }: { url: string; isMe: boolean }) => {
         type="button"
         aria-label={isPlaying ? "Stop voice message" : "Play voice message"}
         onClick={togglePlay}
-        className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center ${
-          isMe ? "bg-black/20 text-white" : "bg-primary text-black"
+        className={`w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center transition-all ${
+          isMe ? "bg-black/40 text-primary border border-primary/20 shadow-shadow-glow" : "bg-primary text-black"
         }`}
       >
         {isPlaying ? (
@@ -81,10 +80,10 @@ const AudioMessagePlayer = ({ url, isMe }: { url: string; isMe: boolean }) => {
           <FaPlay className="text-[10px] ml-0.5" />
         )}
       </button>
-      <div className="flex-1 h-1 bg-black/20 rounded-full overflow-hidden relative">
+      <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden relative">
         <div
           className={`absolute left-0 top-0 h-full rounded-full ${
-            isMe ? "bg-white/60" : "bg-primary"
+            isMe ? "bg-primary/60" : "bg-black"
           } ${
             isPlaying
               ? "w-full transition-all duration-[3000ms] ease-linear"
@@ -92,7 +91,7 @@ const AudioMessagePlayer = ({ url, isMe }: { url: string; isMe: boolean }) => {
           }`}
         />
       </div>
-      <span className="text-[9px] font-black uppercase opacity-60 tracking-wider">
+      <span className="sub-heading text-[8px] opacity-60 lowercase">
         Voice
       </span>
     </div>
@@ -114,10 +113,6 @@ export default function ChatRoomPage() {
   const [sendingRose, setSendingRose] = useState(false);
 
   // ── Call state ──────────────────────────────────────────────────────────
-  // "idle"         — no call active
-  // "outgoing"     — we started a call, waiting for stream join
-  // "incoming"     — we received a call signal, showing accept/decline overlay
-  // "connected"    — StreamCall is live
   type CallPhase = "idle" | "outgoing" | "incoming" | "connected";
   const [callPhase, setCallPhase] = useState<CallPhase>("idle");
   const [callType, setCallType] = useState<"video" | "audio">("video");
@@ -128,10 +123,8 @@ export default function ChatRoomPage() {
   const ringingAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Standard ringing sound (using a clean public URL)
     ringingAudioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
     ringingAudioRef.current.loop = true;
-
     return () => {
       ringingAudioRef.current?.pause();
     };
@@ -146,7 +139,6 @@ export default function ChatRoomPage() {
     }
   }, [callPhase]);
 
-  // Format timer: 00:00
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -158,7 +150,6 @@ export default function ChatRoomPage() {
   const audioChunksRef = useRef<Blob[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // ── Load conversation details ───────────────────────────────────────────
   useEffect(() => {
     if (!isAuthenticated) return;
     (async () => {
@@ -169,7 +160,6 @@ export default function ChatRoomPage() {
     })();
   }, [conversationId, isAuthenticated]);
 
-  // ── Real-time message polling ──────────────────────────────────────────
   const fetchMessages = useCallback(
     () => getMessages(conversationId),
     [conversationId]
@@ -181,11 +171,9 @@ export default function ChatRoomPage() {
     refresh,
   } = useRealTime(fetchMessages, 5000, [conversationId, user, loading], isAuthenticated);
 
-  // ── Ably Real-time Signaling ──────────────────────────────────────────
   useEffect(() => {
     if (!isAuthenticated || !conversationId) return;
-
-    const ably = new Ably.Realtime({ authUrl: "/api/ably/auth" }); // You'll need this route
+    const ably = new Ably.Realtime({ authUrl: "/api/ably/auth" });
     const channel = ably.channels.get(`conversation:${conversationId}`);
 
     channel.subscribe("new_message", (message: Ably.Message) => {
@@ -198,12 +186,11 @@ export default function ChatRoomPage() {
 
     channel.subscribe("call_event", (event: Ably.Message) => {
       const { userId, type, callType: eventCallType } = event.data;
-      if (userId === user?.id) return; // Ignore our own signals
+      if (userId === user?.id) return;
 
       if (type === "invite") {
         setCallType(eventCallType);
         setCallPhase("incoming");
-        // Notify sender that we are ringing
         triggerCallSignal(conversationId, "ringing", eventCallType);
       } else if (type === "ringing") {
         setIsRinging(true);
@@ -218,12 +205,15 @@ export default function ChatRoomPage() {
     });
 
     return () => {
-      channel.unsubscribe();
-      ably.close();
+      try {
+        channel.unsubscribe();
+        ably.close();
+      } catch (e) {
+        console.warn("Ably cleanup error:", e);
+      }
     };
   }, [conversationId, isAuthenticated, user?.id, setMessages, showToast]);
 
-  // ── Call Timer Logic ───────────────────────────────────────────────────
   useEffect(() => {
     if (callPhase === "connected") {
       timerRef.current = setInterval(() => {
@@ -238,14 +228,12 @@ export default function ChatRoomPage() {
     };
   }, [callPhase]);
 
-  // ── Auto-scroll to latest message ─────────────────────────────────────
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // ── Detect incoming call signals in the message stream ─────────────────
   const [handledMsgId, setHandledMsgId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -267,7 +255,6 @@ export default function ChatRoomPage() {
     }
   }, [messages, user?.id, callPhase, handledMsgId]);
 
-  // ── Send text message ──────────────────────────────────────────────────
   const handleSend = async () => {
     const text = inputText.trim();
     if (!text) return;
@@ -280,7 +267,6 @@ export default function ChatRoomPage() {
     }
   };
 
-  // ── Start outgoing call ───────────────────────────────────────────────
   const startCall = async (type: "video" | "audio") => {
     if (!client) {
       showToast("Video calling is not available.", "error");
@@ -289,10 +275,7 @@ export default function ChatRoomPage() {
     setCallType(type);
     setCallPhase("outgoing");
     try {
-      // 1. Send Signaling Event (Ably)
       await triggerCallSignal(conversationId, "invite", type);
-
-      // 2. Persist in DB for history
       await sendMessage(
         conversationId,
         `Started ${type} call`,
@@ -318,13 +301,10 @@ export default function ChatRoomPage() {
     }
   };
 
-  // ── Answer incoming call ──────────────────────────────────────────────
   const answerCall = async () => {
     if (!client) return;
     try {
-      // Notify sender that we accepted
       await triggerCallSignal(conversationId, "accepted", callType);
-      
       const call = client.call("default", conversationId);
       await call.join({ create: true });
       if (callType === "audio") {
@@ -343,13 +323,10 @@ export default function ChatRoomPage() {
     }
   };
 
-  // ── End / decline call ────────────────────────────────────────────────
   const endCall = async () => {
     try {
-      // Send hangup signal
       await triggerCallSignal(conversationId, "hangup", callType);
       await streamCall?.leave();
-      
       if (callPhase === "connected") {
         await sendMessage(conversationId, "Call ended", "info");
       }
@@ -366,7 +343,6 @@ export default function ChatRoomPage() {
     setCallPhase("idle");
   };
 
-  // ── Rose gift ─────────────────────────────────────────────────────────
   const handleSendRose = async () => {
     if (sendingRose) return;
     setSendingRose(true);
@@ -384,7 +360,6 @@ export default function ChatRoomPage() {
     }
   };
 
-  // ── Voice recording ──────────────────────────────────────────────────
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -433,28 +408,29 @@ export default function ChatRoomPage() {
   };
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col z-[60]">
+    <div className="fixed inset-0 bg-[#050505] flex flex-col z-[60]">
+      <div className="aether-mesh absolute inset-0 pointer-events-none opacity-40" />
+
       {/* ════════════════════ CALL OVERLAYS ════════════════════ */}
       <AnimatePresence>
-        {/* — Connected call (Stream video/audio) — */}
         {callPhase === "connected" && streamCall && (
           <motion.div
             key="stream-call"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[110] bg-stone-950"
+            className="absolute inset-0 z-[110] bg-black"
           >
             <div className="absolute top-12 left-4 z-50 flex items-center gap-4">
               <button
                 type="button"
                 aria-label="End call"
                 onClick={endCall}
-                className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg"
+                className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white flex items-center justify-center shadow-lg backdrop-blur-xl"
               >
                 <FaChevronLeft />
               </button>
-              <div className="px-4 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-black tracking-widest text-white uppercase">
+              <div className="px-4 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-widest text-primary uppercase shadow-shadow-glow">
                 {formatDuration(callDuration)}
               </div>
             </div>
@@ -464,76 +440,71 @@ export default function ChatRoomPage() {
           </motion.div>
         )}
 
-        {/* — Outgoing call (waiting for stream to join) — */}
         {callPhase === "outgoing" && (
           <motion.div
             key="outgoing-call"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            className="absolute inset-0 z-[100] bg-stone-950 flex flex-col items-center justify-center gap-6 text-white"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-2xl flex flex-col items-center justify-center gap-8 text-white"
           >
-            {/* Avatar */}
             <div className="relative">
-              <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white/10 relative">
+              <div className="w-32 h-32 rounded-[40px] overflow-hidden border-2 border-primary/20 relative shadow-shadow-glow">
                 <Image
-                  src={conversation?.image ?? "https://ui-avatars.com/api/?name=?"}
+                  src={conversation?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(conversation?.name || "?")}&background=050505&color=c4ff00`}
                   alt="Contact"
                   fill
                   className="object-cover"
                 />
               </div>
-              <div className="absolute inset-0 rounded-full animate-ping border-4 border-white/10" />
+              <div className="absolute inset-0 rounded-[40px] animate-ping border border-primary/40 opacity-20" />
             </div>
             <div className="text-center">
-              <h2 className="text-2xl font-black">{conversation?.name}</h2>
-              <p className="text-stone-400 mt-1 text-sm font-medium animate-pulse">
-                {isRinging ? "Ringing…" : "Calling…"}
+              <h2 className="text-3xl font-heading text-white tracking-tight">{conversation?.name}</h2>
+              <p className="sub-heading text-primary mt-2 lowercase animate-pulse">
+                {isRinging ? "ringing…" : "connecting secure line…"}
               </p>
             </div>
-            <FaSpinner className="text-primary text-2xl animate-spin opacity-60" />
             <button
               type="button"
               aria-label="Cancel call"
               onClick={endCall}
-              className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-2xl shadow-red-500/40"
+              className="w-16 h-16 rounded-2xl bg-white/5 border border-red-500/30 text-red-500 flex items-center justify-center text-2xl hover:bg-red-500/10 transition-all shadow-lg"
             >
               <FaPhone className="rotate-[135deg]" />
             </button>
           </motion.div>
         )}
 
-        {/* — Incoming call — */}
         {callPhase === "incoming" && (
           <motion.div
             key="incoming-call"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute inset-0 z-[100] bg-stone-950 flex flex-col items-center justify-center gap-6 text-white"
+            className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-2xl flex flex-col items-center justify-center gap-8 text-white"
           >
             <div className="relative">
-              <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary/40 relative shadow-2xl shadow-primary/20">
+              <div className="w-32 h-32 rounded-[40px] overflow-hidden border-2 border-primary/40 relative shadow-shadow-glow">
                 <Image
-                  src={conversation?.image ?? "https://ui-avatars.com/api/?name=?"}
+                  src={conversation?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(conversation?.name || "?")}&background=050505&color=c4ff00`}
                   alt="Caller"
                   fill
                   className="object-cover"
                 />
               </div>
-              {/* Ripple */}
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping"
+                  className="absolute inset-0 rounded-[40px] border border-primary/20 animate-ping opacity-20"
                   style={{ animationDelay: `${i * 0.3}s` }}
                 />
               ))}
             </div>
             <div className="text-center">
-              <h2 className="text-2xl font-black">{conversation?.name}</h2>
-              <p className="text-primary mt-1 text-sm font-black uppercase tracking-widest animate-pulse">
-                Incoming {callType === "video" ? "Video" : "Audio"} Call
+              <h2 className="text-3xl font-heading text-white tracking-tight">{conversation?.name}</h2>
+              <p className="sub-heading text-primary mt-2 lowercase animate-pulse">
+                incoming {callType} call
               </p>
             </div>
             <div className="flex gap-8 mt-4">
@@ -541,7 +512,7 @@ export default function ChatRoomPage() {
                 type="button"
                 aria-label="Decline call"
                 onClick={declineCall}
-                className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-red-500/40 active:scale-90 transition-transform"
+                className="w-16 h-16 rounded-2xl bg-white/5 border border-red-500/30 text-red-500 flex items-center justify-center text-2xl shadow-lg active:scale-95 transition-all"
               >
                 <FaPhone className="rotate-[135deg]" />
               </button>
@@ -549,7 +520,7 @@ export default function ChatRoomPage() {
                 type="button"
                 aria-label="Answer call"
                 onClick={answerCall}
-                className="w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-green-500/40 active:scale-90 transition-transform"
+                className="w-16 h-16 rounded-2xl bg-white/5 border border-primary/30 text-primary flex items-center justify-center text-2xl shadow-shadow-glow active:scale-95 transition-all"
               >
                 {callType === "video" ? <FaVideo /> : <FaPhone />}
               </button>
@@ -559,21 +530,21 @@ export default function ChatRoomPage() {
       </AnimatePresence>
 
       {/* ════════════════════ CHAT HEADER ════════════════════ */}
-      <div className="flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm flex-shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-4 py-4 bg-[#050505]/80 backdrop-blur-2xl border-b border-white/5 shadow-sm flex-shrink-0 z-10">
+        <div className="flex items-center gap-4">
           <Link
             href="/chat"
-            className="w-9 h-9 flex items-center justify-center -ml-1 text-muted-foreground rounded-full hover:bg-secondary transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-muted-foreground rounded-xl hover:bg-white/5 transition-colors border border-white/5"
             aria-label="Back to chats"
           >
             <FaChevronLeft className="text-lg" />
           </Link>
-          <Link href={conversation?.userId ? `/profile/${conversation.userId}` : "#"} className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full overflow-hidden relative bg-secondary flex-shrink-0">
+          <Link href={conversation?.userId ? `/profile/${conversation.userId}` : "#"} className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-[14px] overflow-hidden relative bg-white/5 border border-white/10 flex-shrink-0">
               <Image
                 src={
-                  conversation?.image ??
-                  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200"
+                  conversation?.image ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(conversation?.name || "?")}&background=050505&color=c4ff00`
                 }
                 alt="Avatar"
                 fill
@@ -581,34 +552,33 @@ export default function ChatRoomPage() {
               />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-foreground leading-tight">
+              <h2 className="text-sm font-heading text-white leading-tight">
                 {conversation?.name ?? "Loading…"}
               </h2>
-              <p className="text-[10px] text-green-500 font-semibold">● Online</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-shadow-glow" />
+                <span className="sub-heading text-[8px] lowercase opacity-60">online</span>
+              </div>
             </div>
           </Link>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Rose balance badge */}
-          <div className="hidden sm:flex items-center gap-1 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-widest">
-            🌹 {roseBalance}
-          </div>
+        <div className="flex items-center gap-2">
           <button
             type="button"
             aria-label="Start audio call"
             onClick={() => startCall("audio")}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-foreground hover:bg-white/5 transition-colors border border-white/5"
           >
-            <FaPhone />
+            <FaPhone className="text-sm" />
           </button>
           <button
             type="button"
             aria-label="Start video call"
             onClick={() => startCall("video")}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-foreground hover:bg-white/5 transition-colors border border-white/5"
           >
-            <FaVideo />
+            <FaVideo className="text-sm" />
           </button>
         </div>
       </div>
@@ -616,12 +586,11 @@ export default function ChatRoomPage() {
       {/* ════════════════════ MESSAGES AREA ════════════════════ */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 bg-background"
+        className="flex-1 overflow-y-auto px-4 py-8 flex flex-col gap-6 bg-transparent relative no-scrollbar"
       >
-        {/* E2E label */}
-        <div className="flex justify-center">
-          <span className="bg-white/5 text-muted-foreground text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-            End-to-End Encrypted
+        <div className="flex justify-center mb-4">
+          <span className="sub-heading text-[8px] text-muted-foreground/40 lowercase px-4 py-1.5 rounded-full border border-white/5 bg-white/[0.02]">
+            encrypted quantum channel active
           </span>
         </div>
 
@@ -636,51 +605,53 @@ export default function ChatRoomPage() {
             return (
               <motion.div
                 key={msg.id}
-                initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0, x: isMe ? 10 : -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2, delay: 0.05 }}
                 className={`flex ${isMe ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[78%] rounded-2xl px-4 py-3 shadow-lg ${
+                  className={`max-w-[85%] rounded-2xl px-5 py-4 shadow-xl relative group transition-all ${
                     isMe
-                      ? "bg-primary text-white rounded-br-[4px] shadow-primary/20"
-                      : "bg-secondary text-foreground rounded-bl-[4px] border border-border"
+                      ? "bg-primary text-black rounded-tr-[2px] shadow-shadow-glow"
+                      : "bg-white/5 text-white rounded-tl-[2px] border border-white/10 backdrop-blur-md"
                   }`}
                 >
                   {msg.messageType === "audio" ? (
                     <AudioMessagePlayer url={msg.content} isMe={isMe} />
                   ) : msg.messageType === "video_call" ||
                     msg.messageType === "audio_call" ? (
-                    <div className="flex items-center gap-2 text-xs font-bold italic opacity-70">
+                    <div className="flex items-center gap-3 text-xs font-bold italic">
                       {msg.messageType === "video_call" ? (
                         <FaVideo className="text-[10px]" />
                       ) : (
                         <FaPhone className="text-[10px]" />
                       )}
-                      {isMe ? "You initiated a call" : "Incoming call…"}
+                      <span className="lowercase sub-heading text-[10px]">
+                        {isMe ? "outgoing call" : "incoming call"}
+                      </span>
                     </div>
                   ) : msg.messageType === "rose" ? (
-                    <div className="flex items-center gap-2 text-xs font-bold text-rose-600">
-                      <span className="text-base">🌹</span>
-                      <span>{isMe ? "You sent a rose" : "Sent you a rose"}</span>
+                    <div className="flex items-center gap-3 text-[11px] font-bold">
+                      <span className="text-lg">🌹</span>
+                      <span className="sub-heading text-[10px] lowercase">{isMe ? "gift sent" : "gift received"}</span>
                     </div>
                   ) : (
-                    <p className="text-sm leading-relaxed font-medium">
+                    <p className="text-[13px] leading-relaxed font-medium">
                       {msg.content}
                     </p>
                   )}
 
-                  <span
-                    className={`text-[10px] mt-1.5 block font-semibold text-right ${
-                      isMe ? "text-white/60" : "text-muted-foreground"
+                  <div
+                    className={`text-[9px] mt-2 flex items-center justify-end gap-1 font-bold ${
+                      isMe ? "text-black/40" : "text-muted-foreground/40"
                     }`}
                   >
-                    {time}
+                    <span className="lowercase">{time}</span>
                     {isMe && (
-                      <span className="ml-1 text-blue-400">✓✓</span>
+                      <span className="text-black/60">✓</span>
                     )}
-                  </span>
+                  </div>
                 </div>
               </motion.div>
             );
@@ -689,15 +660,14 @@ export default function ChatRoomPage() {
       </div>
 
       {/* ════════════════════ INPUT AREA ════════════════════ */}
-      <div className="px-3 py-2 pb-safe bg-card/80 backdrop-blur-xl border-t border-border flex-shrink-0">
-        {/* Emoji picker */}
+      <div className="px-4 py-4 pb-safe bg-[#050505]/95 backdrop-blur-2xl border-t border-white/5 flex-shrink-0 z-10">
         <AnimatePresence>
           {showEmojis && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-20 right-3 z-50"
+              className="absolute bottom-24 right-4 z-50 shadow-2xl border border-white/10 rounded-2xl overflow-hidden"
             >
               <EmojiPicker
                 onSelect={(emoji: string) => {
@@ -709,74 +679,54 @@ export default function ChatRoomPage() {
           )}
         </AnimatePresence>
 
-        <div className="flex items-center gap-2">
-          {/* Rose */}
+        <div className="flex items-center gap-3">
           <button
             type="button"
             aria-label="Send rose"
             disabled={roseBalance < 1 || sendingRose}
             onClick={handleSendRose}
-            className="w-9 h-9 flex-shrink-0 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-100 disabled:opacity-40 transition-colors"
+            className="w-11 h-11 flex-shrink-0 rounded-xl bg-white/5 text-rose-500 border border-white/10 flex items-center justify-center hover:bg-rose-500/10 disabled:opacity-20 transition-all"
           >
             <FaGift className="text-sm" />
           </button>
 
-          {/* Emoji */}
-          <button
-            type="button"
-            aria-label="Emoji picker"
-            onClick={() => setShowEmojis((v) => !v)}
-            className="w-9 h-9 flex-shrink-0 rounded-full bg-secondary text-muted-foreground flex items-center justify-center hover:bg-secondary/80 transition-colors"
-          >
-            <FaSmile className="text-sm" />
-          </button>
-
-          {/* Text input */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative flex items-center">
             <input
               id="chat-input"
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-              placeholder={isRecording ? "Recording…" : "Type a message…"}
+              placeholder={isRecording ? "Listening…" : "Type something…"}
               disabled={isRecording}
-              className={`w-full bg-secondary/50 text-foreground py-2.5 px-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/40 font-medium text-sm transition-all ${
-                isRecording ? "opacity-50 bg-red-50 placeholder:text-red-400" : ""
+              className={`w-full bg-white/5 text-foreground py-3.5 pl-5 pr-12 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary/30 font-medium text-sm transition-all border border-white/10 placeholder:text-stone-700 ${
+                isRecording ? "opacity-30 border-red-500/30" : ""
               }`}
             />
-            {isRecording && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full animate-ping" />
-            )}
+            <button
+              type="button"
+              aria-label="Emoji picker"
+              onClick={() => setShowEmojis((v) => !v)}
+              className="absolute right-3 w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+            >
+              <FaSmile className="text-lg" />
+            </button>
           </div>
 
-          {/* Send / Voice */}
           <button
             type="button"
-            aria-label={
+            aria-label={inputText.trim() ? "Send" : isRecording ? "Stop" : "Record"}
+            onClick={inputText.trim() ? handleSend : isRecording ? stopRecording : startRecording}
+            className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95 border ${
               inputText.trim()
-                ? "Send message"
+                ? "bg-primary text-black border-primary shadow-shadow-glow"
                 : isRecording
-                ? "Stop recording"
-                : "Record voice message"
-            }
-            onClick={
-              inputText.trim()
-                ? handleSend
-                : isRecording
-                ? stopRecording
-                : startRecording
-            }
-            className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all shadow-sm active:scale-90 ${
-              inputText.trim()
-                ? "bg-green-500 text-white hover:bg-green-600"
-                : isRecording
-                ? "bg-red-500 text-white animate-pulse"
-                : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                ? "bg-red-500 text-white border-red-500 animate-pulse shadow-shadow-glow"
+                : "bg-white/5 text-muted-foreground border-white/10 hover:bg-white/10"
             }`}
           >
             {inputText.trim() ? (
-              <FaPaperPlane className="text-sm -ml-0.5" />
+              <FaPaperPlane className="text-sm" />
             ) : isRecording ? (
               <FaStop className="text-sm" />
             ) : (

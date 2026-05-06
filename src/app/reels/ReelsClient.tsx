@@ -48,15 +48,15 @@ export default function ReelsClient({ initialReels }: { initialReels: ReelData[]
     return (
       <div className="absolute inset-0 bg-background flex flex-col items-center justify-center text-center p-8">
         <FaMusic className="text-6xl text-primary mb-6 animate-pulse" />
-        <h2 className="text-3xl font-black text-white mb-2">
+        <h2 className="text-3xl font-heading text-foreground mb-2">
           {feedMode === "following" ? "No Following Reels Yet" : "The Stage is Set"}
         </h2>
-        <p className="text-muted-foreground mb-8 max-w-xs">
+        <p className="text-muted-foreground mb-8 max-w-xs font-medium">
           {feedMode === "following"
             ? "Follow more people to build your following reel stream."
             : "Be the first to share an elite moment with the community."}
         </p>
-        <button className="px-8 py-4 bg-primary text-black font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-primary/20">
+        <button className="btn-aether">
           Upload Reel
         </button>
       </div>
@@ -64,17 +64,17 @@ export default function ReelsClient({ initialReels }: { initialReels: ReelData[]
   }
 
   return (
-    <div className="absolute inset-0 bg-black overflow-hidden pointer-events-auto snap-y snap-mandatory overflow-y-scroll no-scrollbar pb-safe">
+    <div className="absolute inset-0 bg-background overflow-hidden pointer-events-auto snap-y snap-mandatory overflow-y-scroll no-scrollbar pb-safe">
       {/* Persistent Global Header */}
       <div className="fixed top-0 left-0 right-0 z-[100] flex justify-center items-center pt-10 pb-10 px-6 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-none">
         <div className="flex items-center gap-8 pointer-events-auto">
           <button
             type="button"
             onClick={() => setFeedMode("discover")}
-            className={`text-lg uppercase pb-1 drop-shadow-lg transition-colors ${
+            className={`text-lg uppercase pb-1 drop-shadow-lg transition-all ${
               feedMode === "discover"
-                ? "text-white font-black tracking-widest border-b-2 border-primary"
-                : "text-white/50 font-bold tracking-widest hover:text-white"
+                ? "text-primary font-black tracking-[0.2em] border-b-2 border-primary"
+                : "text-white/50 font-bold tracking-[0.2em] hover:text-white"
             }`}
           >
             Discover
@@ -82,10 +82,10 @@ export default function ReelsClient({ initialReels }: { initialReels: ReelData[]
           <button
             type="button"
             onClick={() => setFeedMode("following")}
-            className={`text-lg uppercase pb-1 drop-shadow-lg transition-colors ${
+            className={`text-lg uppercase pb-1 drop-shadow-lg transition-all ${
               feedMode === "following"
-                ? "text-white font-black tracking-widest border-b-2 border-primary"
-                : "text-white/50 font-bold tracking-widest hover:text-white"
+                ? "text-primary font-black tracking-[0.2em] border-b-2 border-primary"
+                : "text-white/50 font-bold tracking-[0.2em] hover:text-white"
             }`}
           >
             Following
@@ -202,7 +202,7 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
     try {
       if (navigator.share) {
         await navigator.share({
-          title: 'SFS Elite Reel',
+          title: 'Aether Elite Reel',
           text: `Check out this reel by ${reel.user}`,
           url: window.location.href,
         });
@@ -240,19 +240,19 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
   if (isDeleted) return null;
 
   return (
-    <div className="relative w-full h-[100dvh] snap-center bg-black flex items-center justify-center overflow-hidden group">
+    <div className="relative w-full h-[100dvh] snap-center bg-background flex items-center justify-center overflow-hidden group">
 
       {/* Blurred Background */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         <video
           src={optimizedUrl}
-          className="w-full h-full object-cover blur-3xl opacity-30 scale-110"
+          className="w-full h-full object-cover blur-3xl opacity-20 scale-110"
           loop
           playsInline
           muted
           autoPlay
         />
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-background/40" />
       </div>
 
       <motion.div
@@ -303,7 +303,7 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
             exit={{ scale: 2, opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
           >
-            <FaHeart className="text-primary text-8xl drop-shadow-[0_0_20px_rgba(255,20,147,0.5)]" />
+            <FaHeart className="text-primary text-8xl shadow-shadow-glow" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -313,10 +313,10 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
           {/* Bottom Left: Info */}
           <div className="flex-1 max-w-[75%] text-white pointer-events-auto drop-shadow-md">
             <Link href={`/profile/${reel.userId}`} onClick={(e) => e.stopPropagation()}>
-              <h3 className="font-black text-lg mb-1 tracking-tight hover:underline cursor-pointer inline-block drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{reel.user}</h3>
+              <h3 className="font-heading text-lg mb-1 tracking-tight hover:underline cursor-pointer inline-block drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{reel.user}</h3>
             </Link>
-            <p className="text-sm mb-4 text-white/90 line-clamp-3 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] leading-snug">{reel.caption}</p>
-            <div className="flex items-center gap-2 text-[10px] bg-black/30 rounded-full py-1.5 px-4 w-fit backdrop-blur-md border border-white/10 font-black uppercase tracking-widest shadow-lg">
+            <p className="text-sm mb-4 text-white/90 font-medium line-clamp-3 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] leading-relaxed">{reel.caption}</p>
+            <div className="flex items-center gap-2 text-[10px] bg-black/40 rounded-full py-1.5 px-4 w-fit backdrop-blur-md border border-white/10 font-black uppercase tracking-[0.2em] shadow-lg">
               <FaMusic className="animate-spin-slow text-primary" />
               <div className="w-32 overflow-hidden whitespace-nowrap">
                 <span className="inline-block animate-marquee">{reel.song}</span>
@@ -324,7 +324,7 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
             </div>
             
             {/* Swipe hint */}
-            <div className="mt-4 flex items-center gap-2 text-white/80 text-xs font-bold animate-pulse drop-shadow-md bg-black/20 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm">
+            <div className="mt-4 flex items-center gap-2 text-primary/80 text-[10px] font-black uppercase tracking-widest animate-pulse drop-shadow-md bg-black/40 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm border border-primary/20">
               <span>👉 Swipe right to Match</span>
             </div>
           </div>
@@ -334,7 +334,7 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
             {/* Avatar with Match Button */}
             <div className="relative group mb-2">
               <Link href={`/profile/${reel.userId}`}>
-                <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-secondary shadow-lg">
+                <div className="w-12 h-12 rounded-full border-2 border-white/20 overflow-hidden bg-muted shadow-lg transition-transform hover:scale-105">
                   <Image 
                     src={reel.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reel.user)}`}
                     alt={reel.user}
@@ -345,7 +345,7 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
                 </div>
               </Link>
               <button 
-                className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-7 h-7 bg-gradient-to-r from-[#FF6B6B] to-[#FF1493] text-white rounded-full flex items-center justify-center border-[2.5px] border-black hover:scale-110 transition-transform shadow-lg"
+                className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-7 h-7 bg-primary text-black rounded-full flex items-center justify-center border-[2.5px] border-background hover:scale-110 transition-transform shadow-shadow-glow"
                 onClick={(e) => {
                   e.stopPropagation();
                   showToast("Matched! ✨", "success");
@@ -357,28 +357,28 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
             </div>
 
             <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors drop-shadow-lg ${isLiked ? 'text-[#FF1493]' : 'text-white hover:text-white/80'}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all drop-shadow-lg group-hover:scale-110 ${isLiked ? 'text-primary' : 'text-white hover:text-white/80'}`}>
                 <FaHeart className="text-[32px]" />
               </div>
               <span className="text-xs font-bold drop-shadow-md">{likesCount >= 1000 ? (likesCount/1000).toFixed(1)+'K' : likesCount}</span>
             </button>
 
             <button onClick={() => setShowComments(true)} className="flex flex-col items-center gap-1 group">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:text-white/80 transition-colors drop-shadow-lg">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:text-white/80 transition-all group-hover:scale-110 drop-shadow-lg">
                 <FaComment className="text-[32px]" />
               </div>
               <span className="text-xs font-bold drop-shadow-md">{reel.comments}</span>
             </button>
 
             <button onClick={handleShare} className="flex flex-col items-center gap-1 group">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:text-white/80 transition-colors drop-shadow-lg">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:text-white/80 transition-all group-hover:scale-110 drop-shadow-lg">
                 <FaShare className="text-[28px]" />
               </div>
               <span className="text-xs font-bold drop-shadow-md">Share</span>
             </button>
 
             <button onClick={(e) => { e.stopPropagation(); onToggleMute(); }} className="flex flex-col items-center gap-1 group">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:text-white/80 transition-colors drop-shadow-lg">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:text-white/80 transition-all group-hover:scale-110 drop-shadow-lg">
                 {isMuted ? <FaVolumeMute className="text-[24px]" /> : <FaVolumeUp className="text-[24px]" />}
               </div>
             </button>
@@ -394,12 +394,12 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
 
       {showComments && (
         <div className="absolute inset-0 z-50 flex flex-col justify-end pointer-events-auto">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowComments(false)} />
-          <div className="bg-card border-t border-border w-full h-[60vh] rounded-t-[2.5rem] flex flex-col relative z-10 animate-slide-up shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowComments(false)} />
+          <div className="surface-card bg-card w-full h-[60vh] rounded-t-[2.5rem] flex flex-col relative z-10 animate-slide-up shadow-lg">
             <div className="flex justify-center pt-3 pb-1">
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+              <div className="w-12 h-1 bg-white/10 rounded-full"></div>
             </div>
-            <div className="px-4 py-4 border-b border-white/10 text-center font-black uppercase tracking-widest text-xs text-white relative">
+            <div className="px-4 py-4 border-b border-border text-center sub-heading text-xs text-white relative">
               Comments
               <button onClick={() => setShowComments(false)} className="absolute right-6 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors">✕</button>
             </div>
@@ -407,7 +407,7 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
               {comments.map(c => (
                 <div key={c.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-secondary flex-shrink-0 overflow-hidden relative">
+                  <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0 overflow-hidden relative border border-white/10">
                     <Image
                       src={c.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.user || "User")}`}
                       alt={c.user}
@@ -418,7 +418,7 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
                   </div>
                   <div className="flex-1">
                     <p className="text-xs font-black text-white">{c.user} <span className="text-muted-foreground font-bold ml-1">{c.time}</span></p>
-                    <p className="text-sm text-muted-foreground/80 mt-1 font-medium">{c.text}</p>
+                    <p className="text-sm text-muted-foreground mt-1 font-medium leading-relaxed">{c.text}</p>
                   </div>
                   {c.canDelete && (
                     <button
@@ -443,12 +443,12 @@ const Reel = ({ reel, isMuted, onToggleMute, onDeleted }: { reel: ReelData, isMu
                 onChange={e => setCommentText(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handlePostComment()}
                 placeholder="Add an elite comment..."
-                className="flex-1 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl text-sm text-white outline-none focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/40"
+                className="flex-1 bg-white/5 border border-border px-4 py-3 rounded-2xl text-sm text-white outline-none focus:ring-1 focus:ring-primary/30 transition-all placeholder:text-muted-foreground/40"
               />
               <button 
                 onClick={handlePostComment}
                 disabled={!commentText.trim()}
-                className="font-bold text-primary disabled:opacity-50"
+                className="font-black uppercase tracking-widest text-[10px] text-primary disabled:opacity-50"
               >
                 Post
               </button>

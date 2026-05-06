@@ -39,47 +39,49 @@ export default function DailyCheckIn({ userId }: { userId: string }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl"
         >
           <motion.div 
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
-            className="w-full max-w-sm bg-white rounded-[3rem] p-8 text-center shadow-2xl relative overflow-hidden"
+            className="w-full max-w-sm bg-white/5 backdrop-blur-2xl rounded-[48px] p-10 text-center shadow-2xl relative overflow-hidden border border-white/10"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+            <div className="aether-mesh absolute inset-0 opacity-20 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -mr-24 -mt-24 blur-3xl" />
             
-            <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-               {claimed ? <FaCheckCircle className="text-4xl" /> : <FaGift className="text-4xl" />}
+            <div className="w-24 h-24 bg-primary/10 border border-primary/20 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-shadow-glow group">
+               {claimed ? <FaCheckCircle className="text-4xl group-hover:scale-110 transition-transform" /> : <FaGift className="text-4xl group-hover:scale-110 transition-transform" />}
             </div>
 
-            <h2 className="text-2xl font-black text-stone-900 mb-2">
-              {claimed ? "Boost Active!" : "Daily Status"}
+            <h2 className="text-3xl font-heading text-white tracking-tight mb-3">
+              {claimed ? "Boost Synced" : "Daily Protocol"}
             </h2>
-            <p className="text-stone-500 text-sm font-medium mb-8">
-              {claimed ? "Your profile visibility is now prioritized." : "Check in daily to maintain your Elite status and visibility."}
+            <p className="sub-heading text-[11px] text-white/40 lowercase mb-10 leading-relaxed max-w-[240px] mx-auto">
+              {claimed ? "your profile visibility is now prioritized within the aether network." : "check in daily to maintain your status and ignite visibility protocols."}
             </p>
 
             {!claimed ? (
               <button 
                 onClick={handleClaim}
                 disabled={loading}
-                className="w-full py-4 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 active:scale-95 transition-transform"
+                className="btn-aether w-full py-5 flex items-center justify-center gap-3 active:scale-95 transition-all"
               >
-                {loading ? "Processing..." : (
+                {loading ? <span className="sub-heading lowercase">Processing…</span> : (
                   <>
-                    <FaFire className="text-primary" /> Activate Boost
+                    <FaFire className="text-sm" /> 
+                    <span className="sub-heading lowercase">Activate Boost</span>
                   </>
                 )}
               </button>
             ) : (
-              <div className="text-green-500 font-black text-xs uppercase tracking-widest">
+              <div className="sub-heading text-[10px] text-primary lowercase tracking-[0.2em] shadow-shadow-glow">
                 Priority Visibility Enabled
               </div>
             )}
 
             <button 
               onClick={() => setShow(false)}
-              className="mt-6 text-stone-400 text-[10px] font-black uppercase tracking-widest hover:text-stone-900 transition-colors"
+              className="mt-8 sub-heading text-[9px] text-white/20 hover:text-white transition-colors lowercase tracking-widest"
             >
               Maybe Later
             </button>

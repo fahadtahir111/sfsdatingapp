@@ -10,8 +10,8 @@ export async function GET() {
   }
 
   const apiKey = process.env.ABLY_API_KEY;
-  if (!apiKey || apiKey === "YOUR_ABLY_API_KEY" || apiKey.length < 10) {
-    return NextResponse.json({ error: "Ably is not configured on the server." }, { status: 503 });
+  if (!apiKey || apiKey === "YOUR_ABLY_API_KEY" || !apiKey.includes(":")) {
+    return NextResponse.json({ error: "Ably is not properly configured. API Key must follow accountID.appID:key format." }, { status: 503 });
   }
 
   const client = new Ably.Rest(apiKey);
@@ -21,7 +21,8 @@ export async function GET() {
       clientId: user.id 
     });
     return NextResponse.json(tokenRequestData);
-  } catch {
+  } catch (error) {
+    console.error("Ably Token Request Error:", error);
     return NextResponse.json({ error: "Failed to create token request" }, { status: 500 });
   }
 }

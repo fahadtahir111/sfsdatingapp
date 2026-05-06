@@ -81,58 +81,62 @@ export default function EventsClient({ initialEvents }: { initialEvents: EventDa
   const isElite = userProfile?.tier === "Elite";
 
   return (
-    <div className="min-h-screen bg-[#f8f7f5] pt-8 px-4 pb-24">
-      <div className="flex justify-between items-end mb-8 px-4 mt-6">
+    <div className="min-h-screen bg-background pt-12 px-4 pb-28 relative overflow-hidden">
+      {/* Aether Visual Foundation */}
+      <div className="aether-mesh absolute inset-0 pointer-events-none opacity-20" />
+
+      <div className="flex justify-between items-end mb-12 px-4 relative z-10">
         <div>
-          <h1 className="text-4xl font-black text-stone-900 tracking-tight">Mixers</h1>
-          <p className="text-stone-400 font-medium font-serif italic">Exclusive offline connections.</p>
+          <h1 className="text-5xl font-heading text-white tracking-tight leading-none">Mixers</h1>
+          <p className="sub-heading text-[10px] lowercase text-primary/60 mt-2 tracking-widest">exclusive offline connections within the aether</p>
         </div>
       </div>
 
-      <div className="space-y-8 px-2">
+      <div className="space-y-10 px-2 relative z-10">
         {displayEvents.length === 0 && !loading && (
-          <div className="text-center py-24 bg-white rounded-[40px] border border-stone-100 shadow-xl shadow-stone-200/50 p-8">
-            <p className="text-5xl mb-6">🗓️</p>
-            <h2 className="text-xl font-black text-stone-800">No mixers scheduled</h2>
-            <p className="text-stone-400 text-sm font-medium px-10 leading-relaxed">The elite social season is preparing some exclusive Galas. Check back soon for your invite.</p>
+          <div className="text-center py-24 bg-white/5 backdrop-blur-xl rounded-[48px] border border-white/5 shadow-2xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-all duration-1000" />
+            <p className="text-6xl mb-8 group-hover:scale-110 transition-transform duration-700 relative z-10">🗓️</p>
+            <h2 className="text-2xl font-heading text-white tracking-tight relative z-10">No mixers scheduled</h2>
+            <p className="sub-heading text-[11px] text-white/30 lowercase mt-2 max-w-[280px] mx-auto leading-relaxed relative z-10 tracking-wide">the elite social season is preparing some exclusive galas. check back soon for your invitation.</p>
           </div>
         )}
 
         {displayEvents.map((evt) => (
-          <div key={evt.id} className="bg-white rounded-[40px] overflow-hidden shadow-2xl shadow-stone-200/60 border border-stone-100">
-            <div className="relative h-72 w-full">
-              <Image src={evt.image} alt={evt.title} fill className="object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div key={evt.id} className="bg-white/5 backdrop-blur-2xl rounded-[48px] overflow-hidden shadow-2xl border border-white/10 group transition-all duration-700">
+            <div className="relative h-80 w-full overflow-hidden">
+              <Image src={evt.image} alt={evt.title} fill className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-90" />
               {evt.isEliteOnly && (
-                <div className="absolute top-6 left-6 bg-black backdrop-blur-md text-white text-[10px] font-black px-4 py-2 rounded-full flex items-center gap-2 border border-white/20 uppercase tracking-widest shadow-2xl">
-                  <FaCrown className="text-amber-400" /> Elite Concierge
+                <div className="absolute top-8 left-8 bg-black/80 backdrop-blur-md text-primary sub-heading text-[9px] px-5 py-2.5 rounded-full flex items-center gap-2 border border-primary/20 lowercase tracking-[0.2em] shadow-shadow-glow">
+                  <FaCrown className="text-primary" /> elite concierge exclusive
                 </div>
               )}
-              <div className="absolute bottom-8 left-8 right-8 text-white">
-                 <h2 className="text-3xl font-black mb-2 tracking-tight">{evt.title}</h2>
-                 <p className="text-white/70 text-sm font-medium line-clamp-2 max-w-xl">{evt.description}</p>
+              <div className="absolute bottom-10 left-10 right-10">
+                 <h2 className="text-4xl font-heading text-white tracking-tight mb-3 leading-none group-hover:text-primary transition-colors">{evt.title}</h2>
+                 <p className="sub-heading text-[11px] text-white/40 lowercase line-clamp-2 max-w-xl leading-relaxed">{evt.description}</p>
               </div>
             </div>
             
-            <div className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-stone-100">
-                <div className="space-y-5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center text-stone-900 shadow-inner">
-                      <FaCalendarAlt />
+            <div className="p-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10 pb-10 border-b border-white/5">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary shadow-inner">
+                      <FaCalendarAlt className="text-sm" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest leading-none mb-1.5">Date & Time</p>
-                      <p className="font-bold text-stone-900">{new Date(evt.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' })}</p>
+                      <p className="sub-heading text-[9px] text-white/20 lowercase tracking-widest mb-1.5 leading-none">date & protocol time</p>
+                      <p className="font-heading text-[13px] text-white tracking-tight lowercase">{new Date(evt.date).toLocaleString([], { dateStyle: 'long', timeStyle: 'short' })}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center text-stone-900 shadow-inner">
-                      <FaMapMarkerAlt />
+                  <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-primary shadow-inner">
+                      <FaMapMarkerAlt className="text-sm" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest leading-none mb-1.5">Elite Venue</p>
-                      <p className="font-bold text-stone-900">{evt.location}</p>
+                      <p className="sub-heading text-[9px] text-white/20 lowercase tracking-widest mb-1.5 leading-none">elite venue coordinate</p>
+                      <p className="font-heading text-[13px] text-white tracking-tight lowercase">{evt.location}</p>
                     </div>
                   </div>
                 </div>
@@ -141,38 +145,39 @@ export default function EventsClient({ initialEvents }: { initialEvents: EventDa
                    <button 
                     onClick={() => handleRSVP(evt.id)}
                     disabled={isProcessing === evt.id}
-                    className={`w-full md:w-auto px-12 py-5 rounded-2xl font-black transition-all shadow-xl active:scale-95 disabled:opacity-50 ${
+                    className={`btn-aether w-full md:w-auto px-12 py-5 disabled:opacity-40 sub-heading text-[10px] lowercase ${
                       evt.isRSVPed
-                        ? 'bg-stone-100 text-stone-500 border border-stone-200'
-                        : 'bg-stone-900 text-white hover:bg-stone-800'
+                        ? 'bg-white/5 text-white/40 border border-white/10 pointer-events-none'
+                        : ''
                     }`}
                   >
-                    {evt.isRSVPed ? 'Managing Access...' : evt.isEliteOnly ? 'Request Invitation' : 'Book Access'}
+                    {evt.isRSVPed ? 'access confirmed' : evt.isEliteOnly ? 'request invitation' : 'book access'}
                   </button>
-                  <div className="mt-4 flex items-center gap-2">
-                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                     <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em]">{evt.rsvpsCount} attendees confirmed</p>
+                  <div className="mt-5 flex items-center gap-2.5">
+                     <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-shadow-glow" />
+                     <p className="sub-heading text-[9px] text-primary/60 lowercase tracking-[0.2em]">{evt.rsvpsCount} attendees synced</p>
                   </div>
                 </div>
               </div>
 
               {/* Guest List Preview */}
-              <div className="bg-[#faf9f6] rounded-[32px] p-6 border border-stone-100/50">
-                <div className="flex justify-between items-center mb-6">
-                   <h3 className="text-[11px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-2">
-                     <FaUserFriends className="text-stone-900" /> Guest List Intelligence
+              <div className="bg-white/5 backdrop-blur-md rounded-[36px] p-8 border border-white/5 relative overflow-hidden group/list">
+                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover/list:opacity-100 transition-all duration-700" />
+                <div className="flex justify-between items-center mb-8 relative z-10">
+                   <h3 className="sub-heading text-[10px] text-white/30 lowercase tracking-widest flex items-center gap-2.5">
+                     <FaUserFriends className="text-primary" /> guest list intelligence
                    </h3>
                    {!isElite && (
-                     <Link href="/premium" className="text-[10px] font-black text-stone-900 bg-white px-3 py-1.5 rounded-full border border-stone-200 shadow-sm hover:bg-stone-50 transition-all">Verify Connection</Link>
+                     <Link href="/store" className="sub-heading text-[9px] text-primary bg-primary/10 px-5 py-2.5 rounded-full border border-primary/20 shadow-shadow-glow hover:bg-primary hover:text-black transition-all lowercase">verify connection</Link>
                    )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-6 relative z-10">
                   {attendees[evt.id]?.length > 0 ? (
                     <>
-                      <div className="flex -space-x-4 overflow-hidden">
+                      <div className="flex -space-x-5 overflow-hidden">
                         {attendees[evt.id].slice(0, 5).map((att) => (
-                          <div key={att.id} className={`relative w-12 h-12 rounded-2xl border-4 border-white bg-stone-100 overflow-hidden shadow-sm ${!isElite ? 'blur-[4px] grayscale' : ''}`}>
+                          <div key={att.id} className={`relative w-14 h-14 rounded-2xl border-4 border-[#0a0a0a] bg-white/5 overflow-hidden shadow-2xl transition-all duration-500 ${!isElite ? 'blur-[6px] grayscale opacity-50' : 'group-hover:scale-110'}`}>
                             <Image src={att.image} alt="Guest" fill className="object-cover" />
                           </div>
                         ))}
@@ -180,22 +185,22 @@ export default function EventsClient({ initialEvents }: { initialEvents: EventDa
                       
                       {isElite ? (
                          <div className="ml-2">
-                           <p className="text-[13px] font-bold text-stone-800">
+                           <p className="font-heading text-sm text-white tracking-tight">
                              {attendees[evt.id][0].name} {attendees[evt.id].length > 1 && `& ${attendees[evt.id].length - 1} others`}
                            </p>
-                           <p className="text-[10px] font-bold text-primary uppercase tracking-tighter">Elite Connections Verified</p>
+                           <p className="sub-heading text-[9px] text-primary lowercase tracking-widest mt-1 opacity-80 shadow-shadow-glow">elite connections verified</p>
                          </div>
                       ) : (
                          <div className="ml-2">
-                           <p className="text-[11px] font-black text-stone-400 uppercase tracking-wide">Elite members are Networking</p>
-                           <p className="text-[9px] font-bold text-stone-300 mt-0.5">Upgrade to Signature or Elite to view profiles</p>
+                           <p className="sub-heading text-[10px] text-white/40 lowercase tracking-widest">elite members are networking</p>
+                           <p className="sub-heading text-[8px] text-white/20 lowercase mt-1">upgrade to signature or elite to view profiles</p>
                          </div>
                       )}
                     </>
                   ) : (
-                    <div className="flex items-center gap-3">
-                       <div className="w-10 h-10 rounded-xl bg-stone-100 animate-pulse" />
-                       <p className="text-[10px] font-bold text-stone-300 uppercase tracking-widest italic">Guest list forming...</p>
+                    <div className="flex items-center gap-4 opacity-30">
+                       <div className="w-12 h-12 rounded-2xl bg-white/5 animate-pulse" />
+                       <p className="sub-heading text-[10px] text-white lowercase tracking-widest italic">guest list forming...</p>
                     </div>
                   )}
                 </div>
