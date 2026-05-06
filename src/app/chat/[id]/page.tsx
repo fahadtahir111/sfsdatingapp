@@ -32,6 +32,8 @@ import { useToast } from "@/app/providers/ToastProvider";
 import { triggerCallSignal } from "@/app/chat/actions";
 import Ably from "ably";
 
+const CALL_TIMEOUT_MS = 45000;
+
 interface ConversationData {
   id: string;
   name: string;
@@ -195,12 +197,24 @@ export default function ChatRoomPage() {
       } else if (type === "ringing") {
         setIsRinging(true);
       } else if (type === "accepted") {
+        if (callTimeoutRef.current) {
+          clearTimeout(callTimeoutRef.current);
+          callTimeoutRef.current = null;
+        }
         setCallPhase("connected");
-      } else if (type === "reject" || type === "hangup") {
+      } else if (type === "reject" || type === "hangup" || type === "timeout") {
+        if (callTimeoutRef.current) {
+          clearTimeout(callTimeoutRef.current);
+          callTimeoutRef.current = null;
+        }
         setCallPhase("idle");
         setIsRinging(false);
         setStreamCall(undefined);
-        showToast(`Call ${type === "reject" ? "declined" : "ended"}`, "info");
+        if (type !== "timeout") {
+          showToast(`Call ${type === "reject" ? "declined" : "ended"}`, "info");
+        } else if (userId !== user?.id) {
+          showToast("Missed call", "info");
+        }
       }
     });
 
@@ -235,6 +249,25 @@ export default function ChatRoomPage() {
   }, [messages]);
 
   const [handledMsgId, setHandledMsgId] = useState<string | null>(null);
+  const [otherPresence, setOtherPresence] = useState<string | null>(null);
+  const callTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { data: presenceInfo } = useRealTime(
+    async () => {
+      if (!conversation?.userId) return null;
+      const { getUserPresence } = await import("@/app/actions/presence");
+      return await getUserPresence(conversation.userId);
+    },
+    10000,
+    [conversation?.userId],
+    !!conversation?.userId
+  );
+
+  useEffect(() => {
+    if (presenceInfo?.presence) {
+      setOtherPresence(presenceInfo.presence);
+    }
+  }, [presenceInfo]);
 
   useEffect(() => {
     if (!messages || messages.length === 0) return;
@@ -294,6 +327,18 @@ export default function ChatRoomPage() {
 
       setStreamCall(call);
       setCallPhase("connected");
+
+      // Set timeout for acceptance
+      callTimeoutRef.current = setTimeout(() => {
+        setCallPhase((currentPhase) => {
+          if (currentPhase !== "connected") {
+            endCall();
+            showToast("No answer from user.", "info");
+            triggerCallSignal(conversationId, "timeout", type);
+          }
+          return currentPhase;
+        });
+      }, CALL_TIMEOUT_MS);
     } catch (e: unknown) {
       console.error("Failed to start call:", e);
       showToast("Could not start the call.", "error");
@@ -419,7 +464,7 @@ export default function ChatRoomPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[110] bg-black"
+            className="absolute inset-0 z-[110] bg-[#050505]"
           >
             <div className="absolute top-12 left-4 z-50 flex items-center gap-4">
               <button
@@ -435,7 +480,7 @@ export default function ChatRoomPage() {
               </div>
             </div>
             <StreamCall call={streamCall}>
-              <MeetingRoom onLeaveCall={endCall} />
+              <MeetingRoom onLeaveCall={endCall} conversationName={conversation?.name} />
             </StreamCall>
           </motion.div>
         )}
@@ -550,15 +595,22 @@ export default function ChatRoomPage() {
                 fill
                 className="object-cover"
               />
+              {/* Presence Indicator */}
+              <div 
+                className={`absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full border-2 border-[#050505] z-10 ${
+                  otherPresence === "online" ? "bg-primary shadow-shadow-glow" :
+                  otherPresence === "away" ? "bg-yellow-500" :
+                  otherPresence === "dnd" ? "bg-red-500" : "bg-white/20"
+                }`}
+              />
             </div>
             <div>
-              <h2 className="text-sm font-heading text-white leading-tight">
-                {conversation?.name ?? "Loading…"}
-              </h2>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary shadow-shadow-glow" />
-                <span className="sub-heading text-[8px] lowercase opacity-60">online</span>
-              </div>
+              <h1 className="text-sm font-black text-white uppercase tracking-wider">{conversation?.name}</h1>
+              <p className={`text-[10px] font-black uppercase tracking-widest ${
+                otherPresence === "online" ? "text-primary animate-pulse" : "text-white/30"
+              }`}>
+                {otherPresence || "offline"}
+              </p>
             </div>
           </Link>
         </div>

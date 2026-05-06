@@ -81,6 +81,7 @@ export async function getProfile() {
       networkingGoals: dbUser.profile?.networkingGoals ? JSON.parse(dbUser.profile.networkingGoals) : [],
       tokens: dbUser.roseBalance || 0,
       professionalVerified: (dbUser.profile as any)?.professionalVerified || false,
+      presence: (dbUser as any).presence,
     };
   } catch (error) {
     console.error("Error fetching profile:", error);

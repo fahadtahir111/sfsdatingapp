@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { prisma } from "@/lib/prisma";
@@ -73,7 +74,8 @@ export async function getConversations() {
         lastMessageAt: lastMsg?.createdAt || conv.updatedAt,
         time: lastMsg ? formatRelativeTime(lastMsg.createdAt) : "New Match",
         unread: unreadCount,
-        userId: otherUser?.id
+        userId: otherUser?.id,
+        presence: (otherUser as any)?.presence || "offline"
       };
     }));
 
@@ -332,7 +334,7 @@ export async function getOrCreateConversation(otherUserId: string) {
   }
 }
 
-export async function triggerCallSignal(conversationId: string, type: "invite" | "ringing" | "accepted" | "reject" | "hangup", callType: "audio" | "video") {
+export async function triggerCallSignal(conversationId: string, type: "invite" | "ringing" | "accepted" | "reject" | "hangup" | "timeout", callType: "audio" | "video") {
   const user = await getCurrentUser();
   if (!user?.id) return { success: false };
 

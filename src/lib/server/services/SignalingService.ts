@@ -34,7 +34,7 @@ export class SignalingService {
   /**
    * Publishes a WebRTC call event (invite, ringing, accepted, reject, hangup)
    */
-  public static async publishCallEvent(conversationId: string, senderId: string, receiverId: string | null, type: "invite" | "ringing" | "accepted" | "reject" | "hangup", callType: "audio" | "video", senderData?: Record<string, unknown>) {
+  public static async publishCallEvent(conversationId: string, senderId: string, receiverId: string | null, type: "invite" | "ringing" | "accepted" | "reject" | "hangup" | "timeout", callType: "audio" | "video", senderData?: Record<string, unknown>) {
     const ably = getAblyClient();
     if (!ably) return;
     try {

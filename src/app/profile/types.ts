@@ -22,6 +22,7 @@ export interface ProfileData {
   tokens: number;
   professionalVerified: boolean;
   incognito: boolean;
+  presence?: string;
 }
 
 export interface FriendData {

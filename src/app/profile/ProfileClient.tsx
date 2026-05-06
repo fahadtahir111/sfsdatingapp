@@ -20,6 +20,7 @@ import {
 } from "react-icons/fa";
 import { claimDailyBonus, boostProfile } from "./economy-actions";
 import { toggleGhostMode } from "./actions";
+import { updateUserPresence } from "@/app/actions/presence";
 import { useToast } from "@/app/providers/ToastProvider";
 import type { ProfileData, FriendData, PendingRequestData } from "./types";
 import { EditProfileModal } from "./components/EditProfileModal";
@@ -43,6 +44,7 @@ export default function ProfileClient({
   const [activeTab, setActiveTab] = useState<"posts" | "reels" | "friends">("posts");
   const [pendingRequests, setPendingRequests] = useState<PendingRequestData[]>(initialPendingRequests);
   const [friends] = useState<FriendData[]>(initialFriends);
+  const [presence, setPresence] = useState<string>(initialProfile.presence || "online");
 
   const fetchProfile = useCallback(async () => {
     const { getProfile } = await import("./actions");
@@ -76,7 +78,16 @@ export default function ProfileClient({
       setProfile((prev) => ({ ...prev, tokens: prev.tokens - 300 }));
       showToast("Profile boosted for 24 hours!", "success");
     } else {
-      showToast(result.error || "Failed to boost profile", "error");
+    }
+  };
+
+  const handlePresenceChange = async (newPresence: string) => {
+    setPresence(newPresence);
+    const result = await updateUserPresence(newPresence);
+    if (result.success) {
+      showToast(`Status updated to ${newPresence}`, "success");
+    } else {
+      showToast("Failed to update status", "error");
     }
   };
 
@@ -108,6 +119,21 @@ export default function ProfileClient({
                 <div className="px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 text-primary rounded-xl flex items-center gap-2 shadow-shadow-glow text-xs sm:text-sm font-black">
                   <span>{profile.tokens}</span>
                   <span aria-hidden>💎</span>
+                </div>
+                <div className="hidden sm:flex items-center gap-1 p-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl">
+                  {["online", "away", "dnd"].map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => handlePresenceChange(p)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                        presence === p 
+                          ? "bg-primary text-black shadow-shadow-glow" 
+                          : "text-white/40 hover:text-white/70"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
                 </div>
                 <Link
                   href="/settings"

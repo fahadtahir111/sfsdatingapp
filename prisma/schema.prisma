@@ -17,6 +17,7 @@ model User {
   // Settings & Status
   isSuspended   Boolean   @default(false)
   lastActive    DateTime  @default(now())
+  presence      String    @default("offline") // "online", "offline", "dnd", "away"
   roseBalance   Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

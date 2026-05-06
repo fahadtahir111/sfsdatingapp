@@ -15,6 +15,7 @@ interface ConversationData {
   lastMessage: string;
   time: string;
   unread: number;
+  presence?: string;
 }
 
 export default function ChatClient({ initialConversations }: { initialConversations: ConversationData[] }) {
@@ -94,6 +95,14 @@ export default function ChatClient({ initialConversations }: { initialConversati
                         className="object-cover group-hover:scale-110 transition-transform duration-500" 
                         unoptimized={match.image?.startsWith("/")}
                       />
+                      {/* Presence Badge */}
+                      <div 
+                        className={`absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full border-2 border-[#050505] z-10 ${
+                          match.presence === "online" ? "bg-primary shadow-shadow-glow" :
+                          match.presence === "away" ? "bg-yellow-500" :
+                          match.presence === "dnd" ? "bg-red-500" : "bg-white/20"
+                        }`}
+                      />
                     </div>
                   </div>
                   <span className="sub-heading text-[10px] text-white lowercase">{match.name.split(' ')[0]}</span>
@@ -134,6 +143,14 @@ export default function ChatClient({ initialConversations }: { initialConversati
                       fill 
                       className="object-cover group-hover:scale-105 transition-transform duration-500" 
                       unoptimized={msg.image?.startsWith("/")}
+                    />
+                    {/* Presence Badge */}
+                    <div 
+                      className={`absolute bottom-1 right-1 w-3 h-3 rounded-full border-2 border-[#050505] z-10 ${
+                        msg.presence === "online" ? "bg-primary shadow-shadow-glow" :
+                        msg.presence === "away" ? "bg-yellow-500" :
+                        msg.presence === "dnd" ? "bg-red-500" : "bg-white/20"
+                      }`}
                     />
                 </div>
                 <div className="flex-1 min-w-0">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useRealTime } from "@/lib/hooks/useRealTime";
 import { getConversations } from "@/app/chat/actions";
@@ -10,6 +10,7 @@ import { FaVideo, FaTimes, FaComment } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 import Ably from "ably";
+import { updateUserPresence } from "@/app/actions/presence";
 
 /**
  * GlobalSignaling component monitors for:
@@ -63,6 +64,41 @@ export default function GlobalSignaling() {
     setPrevCount(requestCount || 0);
   }, [requestCount, prevCount]);
 
+  // Presence & Heartbeat
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const setOnline = () => updateUserPresence("online");
+    const setOffline = () => updateUserPresence("offline");
+
+    setOnline();
+
+    const interval = setInterval(setOnline, 30000); // Heartbeat every 30s
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        setOnline();
+      } else {
+        setOnline(); // Stay online for a bit
+      }
+    };
+
+    window.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", setOffline);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", setOffline);
+      setOffline();
+    };
+  }, [isAuthenticated]);
+
+  const activeCallRef = useRef(activeCall);
+  useEffect(() => {
+    activeCallRef.current = activeCall;
+  }, [activeCall]);
+
   // ── Ably Global Listeners ──────────────────────────────────────────
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
@@ -89,9 +125,30 @@ export default function GlobalSignaling() {
     // For MVP, we can subscribe to a generic user_calls channel or similar
     // Let's assume MessagingService.initiateCall also publishes to `user:${receiverId}:calls`
     const callChannel = ably.channels.get(`user:${user.id}:calls`);
-    callChannel.subscribe("incoming_call", (event) => {
+    callChannel.subscribe("incoming_call", async (event) => {
+      // Check if already in a call or DND
+      if (activeCallRef.current) {
+        // Automatically reject with busy if already in a call
+        const { triggerCallSignal } = await import("@/app/chat/actions");
+        await triggerCallSignal(event.data.id, "reject", "video"); // Simple reject
+        return;
+      }
+
+      const { getUserPresence } = await import("@/app/actions/presence");
+      const presenceData = await getUserPresence(user.id);
+      
+      if (presenceData?.presence === "dnd") {
+        console.log("Suppressed incoming call due to DND");
+        return;
+      }
+      
       setActiveCall(event.data);
-      setTimeout(() => setActiveCall(null), 30000);
+    });
+
+    callChannel.subscribe("call_event", (event) => {
+      if (event.data.type === "hangup" || event.data.type === "timeout" || event.data.type === "reject") {
+        setActiveCall(null);
+      }
     });
 
     return () => {
